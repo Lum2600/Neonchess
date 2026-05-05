@@ -514,10 +514,39 @@ body[data-team="B"] .board .piece { --rot: 180deg; }
 body[data-team="B"] .coords-y, body[data-team="B"] .coords-x { transform: rotate(180deg) !important; }
 body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transform: rotate(180deg) !important; }
 
-/* Invertiamo i pannelli se giochi col Nero */
+/* --- DISPOSIZIONE E GRANDEZZA PANNELLI (Solo su schermi grandi PC) --- */
 @media (min-width: 901px) {
+    
+    /* 1. Blocchiamo la scacchiera ESATTAMENTE in centro */
+    .center-column { 
+        order: 2 !important; 
+        margin: 0 30px; /* Un po' di respiro tra scacchiera e pannelli */
+    }
+    
+    /* 2. Ordine di base (Se sei Bianco: Bianco a sx, Nero a dx) */
+    #w-mods { order: 1 !important; }
+    #b-mods { order: 3 !important; }
+
+    /* 3. Ordine invertito (Se sei Nero: Nero a sx, Bianco a dx) */
     body[data-team="B"] #w-mods { order: 3 !important; }
     body[data-team="B"] #b-mods { order: 1 !important; }
+
+    /* 4. Effetto visivo: Pannello dell'Avversario (più piccolo e in ombra) */
+    .side-panel {
+        width: 240px !important;
+        transform: scale(0.95);
+        opacity: 0.5; /* Lo rendiamo mezzo trasparente per dare meno importanza */
+        transition: all 0.4s ease; /* Animazione fluida */
+    }
+
+    /* 5. Effetto visivo: IL TUO PANNELLO (Più largo, luminoso e in primo piano) */
+    body[data-team="W"] #w-mods,
+    body[data-team="B"] #b-mods {
+        width: 340px !important;
+        transform: scale(1.02);
+        opacity: 1 !important; /* Luminosità massima */
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.05); /* Leggero bagliore */
+    }
 }
 
 /* --- VERSIONE DEL GIOCO --- */
