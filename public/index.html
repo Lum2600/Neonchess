@@ -163,11 +163,14 @@
             <button class="settings-btn" onclick="openSettings()">⚙️</button>
         </div>
 
+        <!-- PANNELLO SINISTRO (Di base BIANCO) -->
         <div id="w-mods" class="side-panel">
-            <h3 style="color: var(--white); font-family:'Orbitron'; text-align:center; margin:0; font-size: 1rem;">WHITE MODS</h3>
-            <div id="w-mods-list" style="overflow-y: auto; padding-right: 5px;"></div>
+            <h2 id="name-w" class="player-name W" style="text-align: center; margin: 0 0 5px 0; font-size: 1.2rem;">WHITE</h2>
+            <h3 style="color: var(--white); font-family:'Orbitron'; text-align:center; margin:0; font-size: 0.8rem; opacity: 0.7;">MODS</h3>
+            <div id="w-mods-list" style="overflow-y: auto; padding-right: 5px; margin-top: 10px;"></div>
         </div>
 
+        <!-- COLONNA CENTRALE -->
         <div class="center-column">
             <div class="timers-container" id="timers-container">
                 <div id="w-timer" class="timer-box W">05:00.0</div>
@@ -175,15 +178,9 @@
             </div>
 
             <div class="turn-header-container">
-                <div class="captures-box w-caps">
-                    <span id="name-w" class="player-name W">WHITE</span>
-                    <div id="w-captures" style="display:inline-flex;"></div>
-                </div>
+                <div id="w-captures" class="captures-box w-caps"></div>
                 <div id="turn-display" class="turn-display" style="color:var(--white); text-shadow: 0 0 10px var(--white);">TURN: WHITE</div>
-                <div class="captures-box b-caps" style="flex-direction:row-reverse;">
-                    <span id="name-b" class="player-name B">BLACK</span>
-                    <div id="b-captures" style="display:inline-flex;"></div>
-                </div>
+                <div id="b-captures" class="captures-box b-caps"></div>
             </div>
             
             <div style="width: 100%;">
@@ -204,9 +201,11 @@
             <div id="kills-counter" class="kills-counter">NEXT MOD IN: 2 KILLS (MOD 1/4)</div>
         </div>
 
+        <!-- PANNELLO DESTRO (Di base NERO) -->
         <div id="b-mods" class="side-panel">
-            <h3 style="color: var(--black); font-family:'Orbitron'; text-align:center; margin:0; font-size: 1rem;">BLACK MODS</h3>
-            <div id="b-mods-list" style="overflow-y: auto; padding-right: 5px;"></div>
+            <h2 id="name-b" class="player-name B" style="text-align: center; margin: 0 0 5px 0; font-size: 1.2rem;">BLACK</h2>
+            <h3 style="color: var(--black); font-family:'Orbitron'; text-align:center; margin:0; font-size: 0.8rem; opacity: 0.7;">MODS</h3>
+            <div id="b-mods-list" style="overflow-y: auto; padding-right: 5px; margin-top: 10px;"></div>
         </div>
     </div>
 
