@@ -13,16 +13,18 @@ function closeMultiplayerMenu() {
 }
 
 function createRoom() {
-    if(!socket) return alert("Errore: Server Multiplayer non rilevato. Hai avviato 'node server.js'?");
-    socket.emit('createRoom');
+    if(!socket) return alert("Errore: Server Multiplayer non rilevato.");
+    const username = document.getElementById('player-username').value.trim() || "GIOCATORE 1";
+    socket.emit('createRoom', username);
 }
 
 function joinRoom() {
-    if(!socket) return alert("Errore: Server Multiplayer non rilevato. Hai avviato 'node server.js'?");
+    if(!socket) return alert("Errore: Server Multiplayer non rilevato.");
     const code = document.getElementById('join-code').value.toUpperCase();
+    const username = document.getElementById('player-username').value.trim() || "GIOCATORE 2";
     if(code.length > 0) {
-        roomCode = code; // Salva il codice!
-        socket.emit('joinRoom', code);
+        roomCode = code; 
+        socket.emit('joinRoom', { code: code, username: username });
     }
 }
 
@@ -46,11 +48,16 @@ if(socket) {
         else document.body.classList.remove('play-as-black');
     });
 
-    socket.on('gameStart', () => {
-        isMultiplayer = true; // IL FIX SUPREMO: Ora il Player 2 sa di essere online!
+    socket.on('gameStart', (names) => {
+        isMultiplayer = true; 
+        
+        // Imposta gli username a schermo
+        document.getElementById('name-w').innerText = names.p1Name;
+        document.getElementById('name-b').innerText = names.p2Name;
+        
         startGame(false, true); 
         closeMultiplayerMenu(); 
-        showModAlert("PLAYER CONNECTED", "mod-c1");
+        showModAlert("VS " + (myTeam === 'W' ? names.p2Name : names.p1Name), "mod-c1");
     });
 
     socket.on('errorMsg', (msg) => { alert(msg); });

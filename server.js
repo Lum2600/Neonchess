@@ -6,69 +6,76 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Diciamo al server di "servire" i file della cartella 'public' (il tuo index.html, musica, ecc.)
 app.use(express.static('public'));
 
-// Oggetto per memorizzare le stanze di gioco
 const rooms = {};
 
-// Quando un utente si collega al sito...
 io.on('connection', (socket) => {
     console.log('Un utente si è connesso:', socket.id);
 
-    // Quando un utente clicca "Crea Partita"
-    socket.on('createRoom', () => {
-        // Genera un codice di 4 caratteri (es. A4B9)
+    // Quando un utente clicca "Crea Partita" (Player 1 - Bianco)
+    socket.on('createRoom', (username) => {
         const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
         
-        rooms[roomCode] = { players: [socket.id] };
-        socket.join(roomCode); // Il giocatore entra nella stanza
+        // Salviamo anche l'username
+        rooms[roomCode] = { 
+            players: [socket.id],
+            usernames: { [socket.id]: username || "Player 1" } 
+        };
         
+        socket.join(roomCode);
         socket.emit('roomCreated', roomCode);
-        socket.emit('assignTeam', 'W'); // Chi crea la stanza è sempre il BIANCO
+        socket.emit('assignTeam', 'W');
         
-        console.log(`Stanza creata: ${roomCode} dal player ${socket.id}`);
+        console.log(`Stanza creata: ${roomCode} dal player ${username}`);
     });
 
-    // Quando un utente inserisce il codice per entrare
-    socket.on('joinRoom', (roomCode) => {
-        // Se la stanza esiste e c'è solo 1 giocatore in attesa...
+    // Quando un utente entra (Player 2 - Nero)
+    socket.on('joinRoom', (data) => {
+        const roomCode = data.code;
+        const username = data.username || "Player 2";
+
         if (rooms[roomCode] && rooms[roomCode].players.length === 1) {
             rooms[roomCode].players.push(socket.id);
+            rooms[roomCode].usernames[socket.id] = username;
+            
             socket.join(roomCode);
+            socket.emit('assignTeam', 'B');
             
-            socket.emit('assignTeam', 'B'); // Il secondo giocatore è il NERO
+            // Recuperiamo i due nomi
+            const p1Id = rooms[roomCode].players[0];
+            const p2Id = socket.id;
+            const p1Name = rooms[roomCode].usernames[p1Id];
+            const p2Name = username;
+
+            // Inviamo l'ordine di inizio partita con i nomi completi!
+            io.to(roomCode).emit('gameStart', {
+                p1Name: p1Name,
+                p2Name: p2Name
+            });
             
-            // Avvisiamo entrambi i giocatori nella stanza che la partita inizia!
-            io.to(roomCode).emit('gameStart');
-            console.log(`Player ${socket.id} entrato nella stanza ${roomCode}`);
+            console.log(`Player ${username} entrato nella stanza ${roomCode}`);
         } else {
-            socket.emit('errorMsg', 'Stanza piena o inesistente!');
+            socket.emit('errorMsg', 'Stanza piena o codice errato!');
         }
     });
 
-    // Quando un giocatore muove un pezzo, riceve i dati e li passa all'avversario
     socket.on('sendMove', (data) => {
-        // "broadcast.to" manda il pacchetto a tutti nella stanza TRANNE a chi l'ha inviato
         socket.broadcast.to(data.roomCode).emit('receiveMove', data.moveData);
     });
 
-    // Quando un giocatore chiude la pagina o gli cade la connessione
     socket.on('disconnect', () => {
         console.log('Utente disconnesso:', socket.id);
-        
-        // Cerchiamo in quale stanza era e avvisiamo l'altro giocatore
         for (const roomCode in rooms) {
             if (rooms[roomCode].players.includes(socket.id)) {
                 io.to(roomCode).emit('opponentDisconnected');
-                delete rooms[roomCode]; // Chiudiamo la stanza per pulizia
+                delete rooms[roomCode];
                 break;
             }
         }
     });
 });
 
-// Avviamo il server sulla porta 3000 (o quella fornita dal servizio di hosting in futuro)
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server online! Vai su http://localhost:${PORT}`);

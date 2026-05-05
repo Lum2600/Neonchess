@@ -70,6 +70,8 @@
             <h2 style="color:var(--t2); border-bottom-color:var(--t2);">MULTIPLAYER ONLINE</h2>
             
             <div id="mp-menu">
+                <input type="text" id="player-username" placeholder="IL TUO USERNAME" maxlength="12" style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:rgba(0,0,0,0.5); color:var(--t1); border:1px solid var(--t1); border-radius:6px; margin-bottom:20px;">
+                
                 <p>Crea una stanza e invita un amico, oppure inserisci un codice per entrare.</p>
                 <button class="play-btn" style="width:100%; margin-bottom: 20px;" onclick="createRoom()">CREA STANZA (BIANCO)</button>
                 
@@ -173,9 +175,15 @@
             </div>
 
             <div class="turn-header-container">
-                <div id="w-captures" class="captures-box w-caps"></div>
+                <div class="captures-box w-caps">
+                    <span id="name-w" class="player-name W">WHITE</span>
+                    <div id="w-captures" style="display:inline-flex;"></div>
+                </div>
                 <div id="turn-display" class="turn-display" style="color:var(--white); text-shadow: 0 0 10px var(--white);">TURN: WHITE</div>
-                <div id="b-captures" class="captures-box b-caps"></div>
+                <div class="captures-box b-caps" style="flex-direction:row-reverse;">
+                    <span id="name-b" class="player-name B">BLACK</span>
+                    <div id="b-captures" style="display:inline-flex;"></div>
+                </div>
             </div>
             
             <div style="width: 100%;">
