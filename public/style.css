@@ -508,17 +508,27 @@ body.play-as-black .coords-x, body.play-as-black .coords-x span { transform: rot
 /* Rotazione scacchiera completa per il NERO online (FORZATA) */
 body.play-as-black .board { transform: rotate(180deg) !important; }
 body.play-as-black .board .piece { --rot: 180deg; }
-body.play-as-black .coords-y, body.play-as-black .coords-x { transform: rotate(180deg) !important; }
-body.play-as-black .coords-y span, body.play-as-black .coords-x span { transform: rotate(180deg) !important; }
+/* --- FORZATURA ROTAZIONE IN BASE AL TEAM (Indistruttibile) --- */
+body[data-team="B"] .board { transform: rotate(180deg) !important; }
+body[data-team="B"] .board .piece { --rot: 180deg; }
+body[data-team="B"] .coords-y, body[data-team="B"] .coords-x { transform: rotate(180deg) !important; }
+body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transform: rotate(180deg) !important; }
 
-/* Rotazione scacchiera completa per il NERO online (FORZATA) */
-body.play-as-black .board { transform: rotate(180deg) !important; }
-body.play-as-black .board .piece { --rot: 180deg; }
-body.play-as-black .coords-y, body.play-as-black .coords-x { transform: rotate(180deg) !important; }
-body.play-as-black .coords-y span, body.play-as-black .coords-x span { transform: rotate(180deg) !important; }
-
-/* Invertiamo i pannelli se giochi col Nero (solo su schermi grandi) */
+/* Invertiamo i pannelli se giochi col Nero */
 @media (min-width: 901px) {
-    body.play-as-black #w-mods { order: 3 !important; }
-    body.play-as-black #b-mods { order: 1 !important; }
+    body[data-team="B"] #w-mods { order: 3 !important; }
+    body[data-team="B"] #b-mods { order: 1 !important; }
+}
+
+/* --- VERSIONE DEL GIOCO --- */
+.version-tag {
+    position: fixed;
+    bottom: 5px;
+    right: 15px;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    z-index: 100000;
+    pointer-events: none;
+    letter-spacing: 2px;
 }

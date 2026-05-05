@@ -162,8 +162,16 @@ function setOpponent(mode) {
     tryStartMusic();
 }
 
-function setTeam(t) { myTeam = t; document.getElementById('btn-team-w').classList.toggle('active', t==='W'); document.getElementById('btn-team-b').classList.toggle('active', t==='B'); tryStartMusic(); }
-
+function setTeam(t) { 
+    myTeam = t; 
+    document.getElementById('btn-team-w').classList.toggle('active', t==='W'); 
+    document.getElementById('btn-team-b').classList.toggle('active', t==='B'); 
+    
+    // IL MARCHIO INDISTRUTTIBILE: Assegna l'attributo direttamente al body
+    document.body.setAttribute('data-team', t); 
+    
+    tryStartMusic(); 
+}
 function setGraphics(lvl) {
     gfxLevel = lvl;
     document.getElementById('btn-gfx-hi').classList.toggle('active', lvl === 'HI');
