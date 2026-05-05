@@ -292,10 +292,11 @@ function startGame(classic = false, fromMultiplayer = false) {
         document.getElementById('resign-row').style.display = 'flex';
         
         // Solo in Umano vs Umano LOCALE ruota i pezzi neri
-        if (opponentMode === 'HUMAN' && !isMultiplayer) {
-            document.body.classList.add('human-vs-human');
+        // FORZATURA ROTAZIONE: Se gioco online e sono il Nero, gira la scacchiera!
+        if (isMultiplayer && myTeam === 'B') {
+            document.body.classList.add('play-as-black');
         } else {
-            document.body.classList.remove('human-vs-human');
+            document.body.classList.remove('play-as-black');
         }
         
         if (isClassicMode) {
@@ -348,7 +349,7 @@ function init() {
     initialPositions = {};
     for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (grid[r][c]) initialPositions[`${r},${c}`] = grid[r][c];
 
-    document.body.classList.remove('mod-level-1', 'mod-level-2', 'mod-level-3', 'overdrive', 'human-vs-human', 'play-as-black');
+    document.body.classList.remove('mod-level-1', 'mod-level-2', 'mod-level-3', 'overdrive', 'human-vs-human');
     document.getElementById('w-mods-list').innerHTML = ''; document.getElementById('b-mods-list').innerHTML = '';
     
     let bgm = document.getElementById('bg-music');
