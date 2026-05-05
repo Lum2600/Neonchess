@@ -505,7 +505,20 @@ body.play-as-black .coords-x, body.play-as-black .coords-x span { transform: rot
 
 /* Chicca: Se giochi col Nero online, invertiamo i pannelli! 
    Il tuo pannello (Nero) andrà a sinistra, l'avversario a destra. */
+/* Rotazione scacchiera completa per il NERO online (FORZATA) */
+body.play-as-black .board { transform: rotate(180deg) !important; }
+body.play-as-black .board .piece { --rot: 180deg; }
+body.play-as-black .coords-y, body.play-as-black .coords-x { transform: rotate(180deg) !important; }
+body.play-as-black .coords-y span, body.play-as-black .coords-x span { transform: rotate(180deg) !important; }
+
+/* Rotazione scacchiera completa per il NERO online (FORZATA) */
+body.play-as-black .board { transform: rotate(180deg) !important; }
+body.play-as-black .board .piece { --rot: 180deg; }
+body.play-as-black .coords-y, body.play-as-black .coords-x { transform: rotate(180deg) !important; }
+body.play-as-black .coords-y span, body.play-as-black .coords-x span { transform: rotate(180deg) !important; }
+
+/* Invertiamo i pannelli se giochi col Nero (solo su schermi grandi) */
 @media (min-width: 901px) {
-    body.play-as-black #w-mods { order: 3; }
-    body.play-as-black #b-mods { order: 1; }
+    body.play-as-black #w-mods { order: 3 !important; }
+    body.play-as-black #b-mods { order: 1 !important; }
 }

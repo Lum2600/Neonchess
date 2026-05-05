@@ -875,7 +875,15 @@ function updateScores() {
 }
 
 function draw() {
-    let b = document.getElementById('board'); b.innerHTML = ''; let chK = findKing(turno); let inCheck = isInCheck(turno);
+    let b = document.getElementById('board'); b.innerHTML = '';
+    let chK = findKing(turno); let inCheck = isInCheck(turno);
+
+    // FIX DEFINITIVO: Se sono online e sono il Nero, inchioda la scacchiera capovolta!
+    if (isMultiplayer && myTeam === 'B') {
+        document.body.classList.add('play-as-black');
+    }
+
+    
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             let cl = `cell ${(r + c) % 2 == 0 ? 'l' : 'd'}`;
