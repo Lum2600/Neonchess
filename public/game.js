@@ -388,31 +388,31 @@ function startClock() {
 }
 
 function triggerEnd(winnerColor, title, desc) {
-    gameOver = true;
+    gameOver = true; 
     clearInterval(timerInterval);
 
     let endTitle = "PATTA";
-    let titleColor = "var(--t2)";
-
+    let titleColor = "var(--t2)"; 
+    
     if (winnerColor) {
         if (winnerColor === myTeam) {
             endTitle = "VITTORIA";
-            titleColor = "var(--t1)";
+            titleColor = "var(--t1)"; 
         } else {
             endTitle = "SCONFITTA";
-            titleColor = "var(--t4)";
+            titleColor = "var(--t4)"; 
         }
     } else if (title === 'DISCONNESSO') {
         endTitle = "ABBANDONO";
     }
 
-    // FIX: Tira fuori la schermata di Game Over dalla scacchiera per evitare che scompaia!
+    // FIX: Tira fuori la schermata di Game Over dalla scacchiera
     let goScreen = document.getElementById('game-over-screen');
-    document.body.appendChild(goScreen);
+    document.body.appendChild(goScreen); 
 
-    if (gfxLevel !== 'LO') {
+    if(gfxLevel !== 'LO') { 
         let wrapper = document.getElementById('main-board-wrapper');
-
+        
         // Sfuma la musica
         let bgm = document.getElementById('bg-music');
         if (bgm) {
@@ -426,19 +426,19 @@ function triggerEnd(winnerColor, title, desc) {
         wrapper.classList.remove('zoom-finish', 'crash-finish', 'board-overdrive-jump');
         wrapper.classList.add('board-vibrate');
         playMoveSound('check'); // Suono d'allarme
-
+        
         // 2. Dopo mezzo secondo di tremore, le pedine perdono la gravità e cadono
         setTimeout(() => {
             let pieces = document.querySelectorAll('.piece');
             pieces.forEach(p => {
-                // Genera un ritardo casuale tra 0 e 0.4 secondi per non farle cadere in sincrono come robot
+                // Genera un ritardo casuale per non farle cadere in sincrono
                 let randomDelay = Math.random() * 0.4;
                 p.style.animationDelay = `${randomDelay}s`;
                 p.classList.add('piece-falling');
             });
             playMoveSound('capture'); // Suono di sgancio/rottura
         }, 500);
-
+        
         // 3. Dopo che sono cadute tutte, ferma la vibrazione e mostra chi ha vinto
         setTimeout(() => {
             wrapper.classList.remove('board-vibrate');
@@ -450,10 +450,11 @@ function triggerEnd(winnerColor, title, desc) {
         if (bgm) bgm.pause();
         setTimeout(() => showGameOver(endTitle, titleColor, desc), 500);
     }
+} // <-- Questa è la parentesi graffa vitale che probabilmente era saltata!
 
     // Funzione di utilità per mostrare la schermata finale
     // Funzione di utilità per mostrare la schermata finale
-    function showGameOver(title, color, desc) {
+function showGameOver(title, color, desc) {
         // Nascondiamo l'interfaccia di gioco sottostante per eliminare i "simboli" in trasparenza
         let gameUi = document.getElementById('game-ui');
         if (gameUi) gameUi.style.display = 'none';
