@@ -920,65 +920,55 @@ function draw() {
 }
 
 // ==========================================
-// SISTEMA FRECCE STRATEGICHE (TASTO DESTRO - NUCLEARE)
+// SISTEMA FRECCE STRATEGICHE (TASTO SINISTRO - TRASCINAMENTO)
 // ==========================================
 let arrowStartCell = null;
 
-// 1. ZITTISCE IL MENU A TENDINA SU TUTTA LA FINESTRA (Impossibile che si apra)
-window.oncontextmenu = function(e) {
-    e.preventDefault();
-    return false;
-};
-
-// 2. Registra la cella di partenza (Click Tasto Destro)
-window.onmousedown = function(e) {
-    if (e.button !== 2) return; // Solo tasto destro
+// 1. Registra la cella di partenza (Quando PREMI il Tasto Sinistro)
+window.addEventListener('mousedown', e => {
+    if (e.button !== 0) return; 
+    if (!e.target.closest('.board-wrapper')) return;
     
-    let board = document.getElementById('board');
-    if (!board) return;
-
-    let rect = board.getBoundingClientRect();
-    // Se clicchi fuori dalla scacchiera, non fare nulla
-    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
-
-    let cellSize = rect.width / 8;
+    let boardEl = document.getElementById('board');
+    const rect = boardEl.getBoundingClientRect();
+    const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
     let r = Math.floor((e.clientY - rect.top) / cellSize);
+    
+    if(r < 0 || r > 7 || c < 0 || c > 7) return;
 
-    // Inverti coordinate se sei il Nero online
     if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
     arrowStartCell = {r, c};
-};
+});
 
-// 3. Registra la cella di arrivo e disegna (Rilascio Tasto Destro)
-window.onmouseup = function(e) {
-    if (e.button !== 2 || !arrowStartCell) return;
+// 2. Registra la cella di arrivo e disegna (Quando RILASCI il Tasto Sinistro)
+window.addEventListener('mouseup', e => {
+    if (e.button !== 0) return;
+    if (!arrowStartCell) return;
     
-    let board = document.getElementById('board');
-    if (!board) return;
-
-    let rect = board.getBoundingClientRect();
-    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-        arrowStartCell = null;
-        return;
-    }
-
-    let cellSize = rect.width / 8;
+    let boardEl = document.getElementById('board');
+    const rect = boardEl.getBoundingClientRect();
+    const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
     let r = Math.floor((e.clientY - rect.top) / cellSize);
-
-    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
-
-    // Disegna solo se ti sei spostato
-    if (arrowStartCell.r !== r || arrowStartCell.c !== c) {
-        drawArrow(arrowStartCell.r, arrowStartCell.c, r, c);
+    
+    if(r >= 0 && r <= 7 && c >= 0 && c <= 7) {
+        if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+        
+        if (arrowStartCell.r !== r || arrowStartCell.c !== c) {
+            drawArrow(arrowStartCell.r, arrowStartCell.c, r, c);
+        }
     }
     arrowStartCell = null;
-};
+});
 
-// 4. Funzione che disegna fisicamente la linea
+// 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
 function drawArrow(r1, c1, r2, c2) {
-    let wrapper = document.getElementById('main-board-wrapper');
+    let brd = document.getElementById('board');
+    
+    // FIX CENTRATURA: Agganciamo il foglio direttamente alla griglia 8x8
+    brd.style.position = 'relative'; 
+
     let svg = document.getElementById('arrow-svg');
     
     if (!svg) {
@@ -990,25 +980,31 @@ function drawArrow(r1, c1, r2, c2) {
         svg.style.width = '100%';
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
-        svg.style.zIndex = '1000'; // Altissimo per essere visibile
+        svg.style.zIndex = '500';
+        
+        // EFFETTO NEON GLOW PER TUTTE LE FRECCE
+        svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
         
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         marker.setAttribute('id', 'arrowhead');
-        marker.setAttribute('markerWidth', '5');
-        marker.setAttribute('markerHeight', '5');
-        marker.setAttribute('refX', '3');
-        marker.setAttribute('refY', '2.5');
+        marker.setAttribute('markerWidth', '4');
+        marker.setAttribute('markerHeight', '4');
+        marker.setAttribute('refX', '2.5');
+        marker.setAttribute('refY', '2');
         marker.setAttribute('orient', 'auto');
         
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', '0 0, 5 2.5, 0 5');
-        polygon.setAttribute('fill', 'rgba(255, 170, 0, 0.9)'); // Arancione scuro
+        polygon.setAttribute('points', '0 0, 4 2, 0 4');
+        // NUOVO COLORE: Azzurro Neon Cyberpunk
+        polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)'); 
         
         marker.appendChild(polygon);
         defs.appendChild(marker);
         svg.appendChild(defs);
-        wrapper.appendChild(svg);
+        
+        // Lo agganciamo DENTRO la scacchiera, non fuori!
+        brd.appendChild(svg);
     }
 
     const cellSize = 100 / 8; 
@@ -1022,7 +1018,8 @@ function drawArrow(r1, c1, r2, c2) {
     line.setAttribute('y1', y1 + '%');
     line.setAttribute('x2', x2 + '%');
     line.setAttribute('y2', y2 + '%');
-    line.setAttribute('stroke', 'rgba(255, 170, 0, 0.9)'); 
+    // NUOVO COLORE: Azzurro Neon Cyberpunk
+    line.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)'); 
     line.setAttribute('stroke-width', '1.5%'); 
     line.setAttribute('marker-end', 'url(#arrowhead)');
     line.setAttribute('stroke-linecap', 'round');
@@ -1030,7 +1027,7 @@ function drawArrow(r1, c1, r2, c2) {
     svg.appendChild(line);
 }
 
-// 5. Funzione per pulire le frecce (si attiva quando clicchi una pedina)
+// 4. Funzione per pulire le frecce
 function clearArrows() {
     let svg = document.getElementById('arrow-svg');
     if (svg) {
