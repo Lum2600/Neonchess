@@ -66,7 +66,8 @@ if(socket) {
         isRemoteMoveExecuting = true;
         document.querySelectorAll('.cell').forEach(el => el.classList.remove('h-c', 'h-m', 'sel'));
         animateMovement(data.fr, data.fc, data.tr, data.tc, data.color, () => {
-            executeMove(data.fr, data.fc, data.tr, data.tc, data.special, true, data.promoPiece);
+            // FIX MULTIPLAYER: Passiamo anche il seme di casualità ricevuto dall'avversario
+            executeMove(data.fr, data.fc, data.tr, data.tc, data.special, true, data.promoPiece, data.seedSync);
         });
     });
 
@@ -153,7 +154,15 @@ function playDropSound(tier) {
     }
 }
 
+// --- MOTORE DI GIOCO ---
 let myTeam = 'W', gameHasStarted = false, opponentMode = 'HUMAN', timerEnabled = false, timeLimitMinutes = 5;
+
+// === FIX MULTIPLAYER: MOTORE NUMERI CASUALI SINCRONIZZATO ===
+let gameSeed = Math.floor(Math.random() * 1000000); 
+function getGameRandom() {
+    gameSeed = (gameSeed * 9301 + 49297) % 233280;
+    return gameSeed / 233280;
+}
 
 function setOpponent(mode) {
     opponentMode = mode; document.getElementById('btn-opp-hum').classList.toggle('active', mode === 'HUMAN'); document.getElementById('btn-opp-ai').classList.toggle('active', mode === 'AI');
@@ -166,10 +175,7 @@ function setTeam(t) {
     myTeam = t; 
     document.getElementById('btn-team-w').classList.toggle('active', t==='W'); 
     document.getElementById('btn-team-b').classList.toggle('active', t==='B'); 
-    
-    // IL MARCHIO INDISTRUTTIBILE: Assegna l'attributo direttamente al body
     document.body.setAttribute('data-team', t); 
-    
     tryStartMusic(); 
 }
 function setGraphics(lvl) {
@@ -186,7 +192,6 @@ function setTimeVal(mins, btnElement) { timeLimitMinutes = mins; document.queryS
 function openTutorial() { document.getElementById('tutorial-overlay').classList.add('show'); }
 function closeTutorial() { document.getElementById('tutorial-overlay').classList.remove('show'); }
 
-// Nascondi tasto Dev se sei online!
 function openSettings() { 
     document.getElementById('start-screen').style.display = 'flex'; 
     let devBtn = document.getElementById('dev-mode-btn');
@@ -291,7 +296,7 @@ const openingBook = {
 };
 
 function startGame(classic = false, fromMultiplayer = false) {
-    if (isMultiplayer && !fromMultiplayer) return; // Disabilita tasti Start se sei in coda
+    if (isMultiplayer && !fromMultiplayer) return; 
 
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-ui').classList.add('show');
@@ -305,12 +310,8 @@ function startGame(classic = false, fromMultiplayer = false) {
         document.getElementById('classic-play-btn').style.display = 'none';
         document.getElementById('resign-row').style.display = 'flex';
         
-        // FORZATURA ROTAZIONE: Se gioco online e sono il Nero, gira la scacchiera!
-        if (isMultiplayer && myTeam === 'B') {
-            document.body.classList.add('play-as-black');
-        } else {
-            document.body.classList.remove('play-as-black');
-        }
+        if (isMultiplayer && myTeam === 'B') { document.body.classList.add('play-as-black'); } 
+        else { document.body.classList.remove('play-as-black'); }
         
         if (isClassicMode) {
             document.body.classList.add('classic-mode');
@@ -482,14 +483,16 @@ function giveModTo(targetColor) {
     let pool = livingClasses.filter(c => !classMods[targetColor][c]);
     let targetClass = '', isOverwrite = false;
 
-    if (pool.length > 0) targetClass = pool[Math.floor(Math.random() * pool.length)];
-    else { targetClass = livingClasses[Math.floor(Math.random() * livingClasses.length)]; isOverwrite = true; }
+    // FIX MULTIPLAYER: Usa il seme di gioco sincronizzato
+    if (pool.length > 0) targetClass = pool[Math.floor(getGameRandom() * pool.length)];
+    else { targetClass = livingClasses[Math.floor(getGameRandom() * livingClasses.length)]; isOverwrite = true; }
 
     let tier = nextThresholdIndex < 2 ? ['common', 'rare'] : ['epic', 'legend'];
     let mods = db[targetClass].filter(x => tier.includes(x.t));
     if (mods.length === 0) mods = db[targetClass]; 
     
-    let mod = mods[Math.floor(Math.random() * mods.length)];
+    // FIX MULTIPLAYER: Usa il seme di gioco sincronizzato
+    let mod = mods[Math.floor(getGameRandom() * mods.length)];
     if (targetColor === 'W') playDropSound(mod.t);
 
     let listId = targetColor === 'W' ? 'w-mods-list' : 'b-mods-list';
@@ -518,7 +521,8 @@ function triggerInstantMods(color, mod) {
             for(let i=0; i<8; i++) for(let j=0; j<8; j++) if(!grid[i][j]) { let backup = grid.map(row => [...row]); backup[i][j] = myQ; if(!isInCheck(enemyColor, backup)) empties.push({r:i, c:j}); }
             if(empties.length === 0) for(let i=0; i<8; i++) for(let j=0; j<8; j++) if(!grid[i][j]) empties.push({r:i, c:j});
             if(empties.length > 0) {
-                let spot = empties[Math.floor(Math.random() * empties.length)]; grid[spot.r][spot.c] = myQ; recentSpawns.push({r: spot.r, c: spot.c});
+                // FIX MULTIPLAYER: Usa il seme di gioco sincronizzato
+                let spot = empties[Math.floor(getGameRandom() * empties.length)]; grid[spot.r][spot.c] = myQ; recentSpawns.push({r: spot.r, c: spot.c});
                 if (isPromoted(qPos.r, qPos.c)) { promotedPieces = promotedPieces.filter(p => p.r !== qPos.r || p.c !== qPos.c); promotedPieces.push({r: spot.r, c: spot.c}); }
                 let idx = originalQueens.indexOf(qPos.r+","+qPos.c); if(idx !== -1) originalQueens.splice(idx, 1);
             }
@@ -527,7 +531,8 @@ function triggerInstantMods(color, mod) {
     if (mod.n === 'Great Resurrection') {
         let myHalf = [], enemyHalf = [];
         for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(!grid[r][c]) { if (color === 'W' && r >= 4) myHalf.push({r,c}); else if (color === 'B' && r <= 3) myHalf.push({r,c}); else enemyHalf.push({r,c}); }
-        myHalf = myHalf.sort(() => Math.random() - 0.5); enemyHalf = enemyHalf.sort(() => Math.random() - 0.5);
+        // FIX MULTIPLAYER: Usa il seme di gioco sincronizzato
+        myHalf = myHalf.sort(() => getGameRandom() - 0.5); enemyHalf = enemyHalf.sort(() => getGameRandom() - 0.5);
         let emptiesForPop = enemyHalf.concat(myHalf); 
         while(deadPieces[color].length > 0 && emptiesForPop.length > 0) { let p = deadPieces[color].pop(); let pos = emptiesForPop.pop(); grid[pos.r][pos.c] = color === 'W' ? p.toUpperCase() : p.toLowerCase(); recentSpawns.push({r: pos.r, c: pos.c}); }
         updateScores();
@@ -710,7 +715,6 @@ function animateMovement(fr, fc, tr, tc, pColor, callback) {
     let dX = (endRect.left + endRect.width/2) - (startRect.left + startRect.width/2);
     let dY = (endRect.top + endRect.height/2) - (startRect.top + startRect.height/2);
 
-    // FIX DI ROTAZIONE: Se la scacchiera è ruotata per il giocatore online, invertire le direzioni dell'animazione
     if (document.body.classList.contains('play-as-black')) { dX = -dX; dY = -dY; }
 
     let glowColor = pColor === 'W' ? 'var(--t2)' : 'var(--t4)';
@@ -734,7 +738,6 @@ function clickCell(r, c) {
     
     if (gameOver || isAnimating || (opponentMode === 'AI' && turno === 'B') || isRemoteMoveExecuting) return;
     
-    // Blocco mossa se non è il tuo turno online!
     if (isMultiplayer && turno !== myTeam) return;
     
     recentSpawns = []; let p = grid[r][c]; let col = p ? (p == p.toUpperCase() ? 'W' : 'B') : null;
@@ -771,7 +774,8 @@ function createParticles() {
     }
 }
 
-function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null) {
+// FIX MULTIPLAYER: executeMove adesso accetta il parametro remoteSeed
+function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null, remoteSeed = null) {
     let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
     let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
     let pendingAnims = []; let isAttackerDead = false;
@@ -803,8 +807,11 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     }
 
     let finishMove = (promoPiece) => {
-        if (isMultiplayer && !isRemote) socket.emit('sendMove', { roomCode: roomCode, moveData: { fr, fc, tr, tc, special, promoPiece, color: pColor } });
-        if (isRemote) isRemoteMoveExecuting = false;
+        let startingSeed = gameSeed; // FIX MULTIPLAYER: Salviamo lo stato del dado prima di usarlo
+        
+        if (isRemote && remoteSeed !== null) {
+            gameSeed = remoteSeed; // Sincronizzazione forzata per il giocatore in ricezione
+        }
 
         if (needsPromotion && promoPiece) { grid[tr][tc] = pColor === 'W' ? promoPiece.toUpperCase() : promoPiece.toLowerCase(); recentSpawns.push({r: tr, c: tc}); promotedPieces.push({r: tr, c: tc}); cl = promoPiece.toLowerCase(); mod = getMod(tr, tc, pColor, cl); } 
         else if (wasPromoted && !isAttackerDead) promotedPieces.push({r: tr, c: tc}); 
@@ -819,7 +826,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             if (cl === 'r' && mod?.n === 'Factory') { if(fr>=0 && fr<8 && fc>=0 && fc<8 && !grid[fr][fc]) { grid[fr][fc] = pColor === 'W' ? 'R' : 'r'; recentSpawns.push({r: fr, c: fc}); } }
         }
 
-        if (cl === 'p' && mod?.n === 'Necromancy' && target && deadPieces[pColor].length > 0) { let empties = []; for(let i=0; i<8; i++) for(let j=0; j<8; j++) if(!grid[i][j]) empties.push({r:i, c:j}); if(empties.length > 0) { let spot = empties[Math.floor(Math.random()*empties.length)]; grid[spot.r][spot.c] = pColor === 'W' ? 'P' : 'p'; deadPieces[pColor].shift(); recentSpawns.push({r: spot.r, c: spot.c}); } }
+        if (cl === 'p' && mod?.n === 'Necromancy' && target && deadPieces[pColor].length > 0) { let empties = []; for(let i=0; i<8; i++) for(let j=0; j<8; j++) if(!grid[i][j]) empties.push({r:i, c:j}); if(empties.length > 0) { let spot = empties[Math.floor(getGameRandom()*empties.length)]; grid[spot.r][spot.c] = pColor === 'W' ? 'P' : 'p'; deadPieces[pColor].shift(); recentSpawns.push({r: spot.r, c: spot.c}); } }
         if (classMods[pColor]['p']?.n === 'Mass Infection') { for(let i=0; i<8; i++) for(let j=0; j<8; j++) { if(grid[i][j] && grid[i][j].toLowerCase()==='p' && (grid[i][j]===grid[i][j].toUpperCase()?'W':'B')===pColor) { [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(d => { let nr=i+d[0], nc=j+d[1]; if(nr>=0 && nr<8 && nc>=0 && nc<8 && grid[nr][nc]) { let t = grid[nr][nc]; if((t===t.toUpperCase()?'W':'B')!==pColor && t.toLowerCase()!=='k' && t.toLowerCase()!=='p') { grid[nr][nc] = enemyColor === 'W' ? 'P' : 'p'; recentSpawns.push({r: nr, c: nc}); } } }); } } }
 
         updateCastlingRights(p, fr, fc); lastMove = { piece: p, from: {r: fr, c: fc}, to: {r: tr, c: tc} };
@@ -846,6 +853,15 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         turno = (turno === 'W') ? 'B' : 'W';
         let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
         checkGameState();
+
+        // FIX MULTIPLAYER: Inviamo la mossa *insieme* allo stato del dado alla fine!
+        if (isMultiplayer && !isRemote) {
+            socket.emit('sendMove', { 
+                roomCode: roomCode, 
+                moveData: { fr, fc, tr, tc, special, promoPiece, color: pColor, seedSync: startingSeed } 
+            });
+        }
+        if (isRemote) isRemoteMoveExecuting = false;
 
         if (opponentMode === 'AI' && turno === 'B' && !gameOver && !isMultiplayer) { if (!overdriveTriggered) { let delay = gaveDrop ? 3000 : 800; setTimeout(playAI, delay); } }
     };
@@ -892,12 +908,10 @@ function draw() {
     let b = document.getElementById('board'); b.innerHTML = '';
     let chK = findKing(turno); let inCheck = isInCheck(turno);
 
-    // FIX DEFINITIVO: Se sono online e sono il Nero, inchioda la scacchiera capovolta!
     if (isMultiplayer && myTeam === 'B') {
         document.body.classList.add('play-as-black');
     }
 
-    
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             let cl = `cell ${(r + c) % 2 == 0 ? 'l' : 'd'}`;
@@ -965,8 +979,6 @@ window.addEventListener('mouseup', e => {
 // 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
 function drawArrow(r1, c1, r2, c2) {
     let brd = document.getElementById('board');
-    
-    // FIX CENTRATURA: Agganciamo il foglio direttamente alla griglia 8x8
     brd.style.position = 'relative'; 
 
     let svg = document.getElementById('arrow-svg');
@@ -981,8 +993,6 @@ function drawArrow(r1, c1, r2, c2) {
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
         svg.style.zIndex = '500';
-        
-        // EFFETTO NEON GLOW PER TUTTE LE FRECCE
         svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
         
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -996,14 +1006,11 @@ function drawArrow(r1, c1, r2, c2) {
         
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         polygon.setAttribute('points', '0 0, 4 2, 0 4');
-        // NUOVO COLORE: Azzurro Neon Cyberpunk
         polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)'); 
         
         marker.appendChild(polygon);
         defs.appendChild(marker);
         svg.appendChild(defs);
-        
-        // Lo agganciamo DENTRO la scacchiera, non fuori!
         brd.appendChild(svg);
     }
 
@@ -1018,7 +1025,6 @@ function drawArrow(r1, c1, r2, c2) {
     line.setAttribute('y1', y1 + '%');
     line.setAttribute('x2', x2 + '%');
     line.setAttribute('y2', y2 + '%');
-    // NUOVO COLORE: Azzurro Neon Cyberpunk
     line.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)'); 
     line.setAttribute('stroke-width', '1.5%'); 
     line.setAttribute('marker-end', 'url(#arrowhead)');
