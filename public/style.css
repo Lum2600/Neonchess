@@ -1,22 +1,25 @@
 :root {
-    /* COLORI BASE (Fissi fino al colpo finale per garantire la leggibilità) */
-    --bg: #02040a; 
-    --panel: #0a0f1a;
-    --white: #ffffff; 
-    --black: #f43f5e;
-    --glass-border: rgba(255, 255, 255, 0.1);
-    
-    /* VARIABILE DI PROGRESSIONE (Gestita dal Javascript) */
+    /* VARIABILE DI PROGRESSIONE (Gestita dal JS, da 0% a 100%) */
     --od-mix: 0%;
 
-    /* COLORI NEON (Sfumano gradualmente verso il loro negativo matematico) */
+    /* --- SFONDI (Sempre più tendenti al bianco) --- */
+    --bg: color-mix(in srgb, #fdfbf5 var(--od-mix), #02040a); 
+    --panel: color-mix(in srgb, #e2e8f0 var(--od-mix), #0a0f1a);
+    
+    /* --- COLORI BIANCO E NERO (Si scuriscono per rimanere leggibili sul bianco) --- */
+    --white: color-mix(in srgb, #0a0a0a var(--od-mix), #ffffff); 
+    --black: color-mix(in srgb, #0044ff var(--od-mix), #f43f5e); 
+    
+    /* --- COLORI NEON (Sfumano verso la loro versione Overdrive) --- */
     --t1: color-mix(in srgb, #c600eb var(--od-mix), #39ff14); 
     --t2: color-mix(in srgb, #ff7700 var(--od-mix), #0088ff); 
     --t3: color-mix(in srgb, #43ec01 var(--od-mix), #bc13fe); 
     --legend: color-mix(in srgb, #0055ff var(--od-mix), #ffaa00); 
     --t4: color-mix(in srgb, #00ffc3 var(--od-mix), #ff003c); 
+    
+    /* --- DETTAGLI E BORDI --- */
+    --glass-border: color-mix(in srgb, rgba(0, 0, 0, 0.3) var(--od-mix), rgba(255, 255, 255, 0.1));
 }
-
 /* --- COLORI OVERDRIVE (NEGATIVI MATEMATICI) --- */
 body.overdrive {
     --bg: #fdfbf5;
