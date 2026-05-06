@@ -907,11 +907,11 @@ function createCaptureExplosion(r, c, color) {
 }
 
 function createParticles() {
+    return; // Questa riga blocca istantaneamente la generazione della colonna
+    
     if(gfxLevel === 'LO') return; const colors = ['#00d9ff', '#ff003c', '#00ff88', '#bc13fe', '#ffaa00']; let count = gfxLevel === 'HI' ? 45 : 15;
     for(let i=0; i<count; i++) {
-        let p = document.createElement('div'); p.className = 'particle'; let size = Math.random() * 8 + 3; p.style.width = size+'px'; p.style.height = size+'px';
-        p.style.background = colors[Math.floor(Math.random()*colors.length)]; p.style.boxShadow = `0 0 12px ${p.style.background}`;
-        p.style.left = (Math.random()*100)+'vw'; p.style.top = (Math.random()*100)+'vh'; p.style.animationDuration = (Math.random()*2.5+1.5)+'s'; document.body.appendChild(p);
+        // ... resto del codice ...
     }
 }
 
