@@ -86,9 +86,10 @@ body[data-gfx="MED"] .board-overdrive-jump { animation: none !important; transfo
 @keyframes bgMove { 0% { background-position: 0% 0%; filter: hue-rotate(0deg) brightness(1); } 50% { filter: hue-rotate(15deg) brightness(1.2); } 100% { background-position: 100% 100%; filter: hue-rotate(-15deg) brightness(1); } }
 
 /* --- EFFETTO TV CRT NORMALE E OVERDRIVE --- */
+/* --- EFFETTO TV CRT NORMALE E OVERDRIVE --- */
 .crt-overlay {
     position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-    /* Rimosso il gradiente 90deg difettoso */
+    /* Rimosso il gradiente 90deg che generava la striscia arcobaleno */
     background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); 
     background-size: 100% 3px; 
     box-shadow: inset 0 0 120px rgba(0,0,0,0.9); animation: crt-flicker 0.15s infinite;
@@ -265,7 +266,7 @@ input[type="range"] { accent-color: var(--t2); }
     border-radius: 6px; font-size: 1.2rem; cursor: pointer; transition: 0.2s; 
 }
 
-.center-column { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px; box-sizing: border-box; }
+.center-column { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 580px; box-sizing: border-box; }
 .turn-header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding: 0 5px; box-sizing: border-box; }
 .captures-box { display: flex; flex-wrap: wrap; width: 32%; font-size: clamp(1rem, 4vw, 1.3rem); min-height: 24px; align-items: center; }
 .w-caps { color: var(--black); justify-content: flex-start; text-shadow: 0 0 8px var(--black); }
@@ -320,15 +321,28 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
     100% { transform: scale(1) translateY(0); }
 }
 
-.zoom-finish { transform: scale(1.1) translateY(2vh); filter: contrast(1.3) brightness(1.2); box-shadow: 0 0 60px rgba(255, 0, 60, 0.6); z-index: 50; }
-
-/* --- CYBERPUNK GAME OVER SCREEN --- */
-.game-over-screen h1 { 
-    font-family: 'Orbitron'; font-size: clamp(2rem, 6vw, 3.5rem); 
-    margin: 0 0 15px 0; /* Aggiunto margine sotto al titolo */
-    text-align: center; text-transform: uppercase; letter-spacing: 4px; 
+/* --- ANIMAZIONE CRASH DI FINE PARTITA (SLOW MOTION GLITCH) --- */
+.crash-finish { 
+    animation: glitch-crash 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important; 
+    z-index: 50; 
 }
-#go-desc { margin-bottom: 25px !important; } /* Spinge il bottone ancora più giù */
+
+@keyframes glitch-crash {
+    0% { transform: scale(1); filter: contrast(1) hue-rotate(0deg); }
+    10% { transform: scale(1.05) translate(5px, -5px) skewX(2deg); filter: contrast(1.5) hue-rotate(-20deg); }
+    15% { transform: scale(1.02) translate(-5px, 5px) skewX(-2deg); filter: invert(0.2) hue-rotate(90deg); }
+    25% { transform: scale(1.1) translate(3px, -3px); filter: contrast(2) saturate(2); }
+    35% { transform: scale(1.12) translate(-8px, 2px) skewY(3deg); filter: hue-rotate(40deg); }
+    50% { transform: scale(1.15) translate(4px, 0); filter: blur(2px) contrast(1.5); }
+    70% { transform: scale(1.18) translate(0, 5px); filter: blur(4px) brightness(1.5); }
+    100% { transform: scale(1.2) translateY(2vh); filter: blur(0px) contrast(1.2) brightness(0.4) grayscale(0.5); box-shadow: 0 0 60px rgba(0, 0, 0, 0.8); }
+}
+/* --- CYBERPUNK GAME OVER SCREEN --- */
+.game-over-screen { 
+    position: absolute; inset: 0; 
+    display: none; flex-direction: column; align-items: center; justify-content: center; 
+    z-index: 200; border-radius: 10px; overflow: hidden;
+}
 
 body:not([data-gfx="LO"]) .game-over-screen {
     background: rgba(10, 15, 26, 0.85); backdrop-filter: blur(5px);
@@ -487,12 +501,6 @@ body[data-gfx="LO"] .mod-receive-anim { animation: modReceiveAnimLo 1s ease-in-o
     .kills-counter { width: 100%; margin: 15px 0 10px 0;}
 }
 
-/* Rotazione scacchiera completa per il NERO online */
-body.play-as-black .board { transform: rotate(180deg); }
-body.play-as-black .board .piece { --rot: 180deg; }
-body.play-as-black .coords-y, body.play-as-black .coords-y span { transform: rotate(180deg); }
-body.play-as-black .coords-x, body.play-as-black .coords-x span { transform: rotate(180deg); }
-
 /* Stile per gli Username sopra i pannelli */
 .player-name { 
     font-family: 'Orbitron'; 
@@ -506,24 +514,28 @@ body.play-as-black .coords-x, body.play-as-black .coords-x span { transform: rot
 .player-name.W { color: var(--white); text-shadow: 0 0 8px var(--white); }
 .player-name.B { color: var(--black); text-shadow: 0 0 8px var(--black); }
 
-/* Chicca: Se giochi col Nero online, invertiamo i pannelli! 
-   Il tuo pannello (Nero) andrà a sinistra, l'avversario a destra. */
-/* Rotazione scacchiera completa per il NERO online (FORZATA) */
-body.play-as-black .board { transform: rotate(180deg) !important; }
-body.play-as-black .board .piece { --rot: 180deg; }
 /* --- FORZATURA ROTAZIONE IN BASE AL TEAM (Indistruttibile) --- */
 body[data-team="B"] .board { transform: rotate(180deg) !important; }
 body[data-team="B"] .board .piece { --rot: 180deg; }
 body[data-team="B"] .coords-y, body[data-team="B"] .coords-x { transform: rotate(180deg) !important; }
 body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transform: rotate(180deg) !important; }
 
-/* --- DISPOSIZIONE E GRANDEZZA PANNELLI (Solo su schermi grandi PC) --- */
+/* --- DISPOSIZIONE E GRANDEZZA PANNELLI E SCACCHIERA (Solo su schermi grandi PC) --- */
 @media (min-width: 901px) {
-    
+    /* Scacchiera più grande */
+    .board {
+        width: 580px !important;
+        height: 580px !important;
+    }
+    .board-wrapper {
+        width: 580px !important;
+        max-width: 580px !important;
+    }
+
     /* 1. Blocchiamo la scacchiera ESATTAMENTE in centro */
     .center-column { 
         order: 2 !important; 
-        margin: 0 30px; /* Un po' di respiro tra scacchiera e pannelli */
+        margin: 0 30px; 
     }
     
     /* 2. Ordine di base (Se sei Bianco: Bianco a sx, Nero a dx) */
@@ -538,8 +550,8 @@ body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transfo
     .side-panel {
         width: 240px !important;
         transform: scale(0.95);
-        opacity: 0.5; /* Lo rendiamo mezzo trasparente per dare meno importanza */
-        transition: all 0.4s ease; /* Animazione fluida */
+        opacity: 0.5;
+        transition: all 0.4s ease;
     }
 
     /* 5. Effetto visivo: IL TUO PANNELLO (Più largo, luminoso e in primo piano) */
@@ -547,9 +559,20 @@ body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transfo
     body[data-team="B"] #b-mods {
         width: 340px !important;
         transform: scale(1.02);
-        opacity: 1 !important; /* Luminosità massima */
-        box-shadow: 0 0 25px rgba(255, 255, 255, 0.05); /* Leggero bagliore */
+        opacity: 1 !important; 
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.05); 
     }
+}
+
+/* --- SFONDO IMPOSTAZIONI PIU' SCURO --- */
+#start-screen {
+    background: rgba(0, 0, 0, 0.96) !important;
+    backdrop-filter: blur(8px);
+}
+
+/* --- ROTAZIONE FRECCE PER IL NERO --- */
+body[data-team="B"] #arrow-svg { 
+    transform: rotate(180deg) !important; 
 }
 
 /* --- VERSIONE DEL GIOCO --- */
@@ -566,21 +589,31 @@ body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transfo
 }
 
 
-/* --- ANIMAZIONI SCOMPARSA BIANCA --- */
+/* --- FIX: GAME OVER SCREEN SCLEGATO DALLA SCACCHIERA --- */
+.game-over-screen { 
+    position: fixed !important; /* Sganciato dalla scacchiera, copre tutto lo schermo */
+    inset: 0 !important; 
+    z-index: 9000 !important; 
+    border-radius: 0 !important; 
+    background: rgba(10, 15, 26, 0.92) !important;
+}
+
+/* --- RIPRISTINO ZOOM FINISH (FINE NORMALE) --- */
 .zoom-finish { 
-    transform: scale(1.1) translateY(2vh); filter: contrast(1.3) brightness(1.2); 
-    box-shadow: 0 0 60px rgba(0, 217, 255, 0.6); z-index: 50; 
+    transform: scale(1.1) translateY(2vh); 
+    filter: contrast(1.3) brightness(1.2); 
+    box-shadow: 0 0 60px rgba(0, 217, 255, 0.6); 
+    z-index: 50; 
     transition: transform 1s ease, filter 1s ease !important;
 }
 
-.disintegrate-board {
-    opacity: 0 !important; filter: blur(10px) grayscale(1) !important;
-    transform: scale(0.8) translateY(5vh) !important;
-    transition: all 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) !important;
-}
-
+/* --- CUBETTI DISINTEGRAZIONE VERSO L'ALTO --- */
 .pixel-cube {
-    position: fixed; width: 8px; height: 8px; z-index: 9999; pointer-events: none;
+    position: fixed;
+    width: 8px; /* Cubetti più piccoli ed eleganti */
+    height: 8px;
+    z-index: 9999;
+    pointer-events: none;
     animation: cube-fly-up 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 

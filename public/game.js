@@ -388,48 +388,188 @@ function startClock() {
 }
 
 function triggerEnd(winnerColor, title, desc) {
-    if (gameOver) return;
     gameOver = true; 
     clearInterval(timerInterval);
 
-    let endTitle = "PATTA"; let titleColor = "var(--t2)"; 
-    if (winnerColor) { if (winnerColor === myTeam) { endTitle = "VITTORIA"; titleColor = "var(--t1)"; } else { endTitle = "SCONFITTA"; titleColor = "var(--t4)"; } } else if (title === 'DISCONNESSO') { endTitle = "ABBANDONO"; }
+    let endTitle = "PATTA";
+    let titleColor = "var(--t2)"; 
+    
+    if (winnerColor) {
+        if (winnerColor === myTeam) {
+            endTitle = "VITTORIA";
+            titleColor = "var(--t1)"; 
+        } else {
+            endTitle = "SCONFITTA";
+            titleColor = "var(--t4)"; 
+        }
+    } else if (title === 'DISCONNESSO') {
+        endTitle = "ABBANDONO";
+    }
+
+    // FIX: Tira fuori la schermata di Game Over dalla scacchiera per evitare che scompaia!
+    let goScreen = document.getElementById('game-over-screen');
+    document.body.appendChild(goScreen); 
 
     if(gfxLevel !== 'LO') { 
         let wrapper = document.getElementById('main-board-wrapper');
+        
         if (document.body.classList.contains('overdrive')) {
-            wrapper.classList.add('crash-finish'); createParticles(); 
+            // --- SCENARIO 1: FINE IN OVERDRIVE (Slowmo Crash) ---
+            wrapper.classList.add('crash-finish'); 
+            createParticles(); 
+            
             let bgm = document.getElementById('bg-music');
-            if (bgm) { bgm.preservesPitch = false; let slowdown = setInterval(() => { if (bgm.playbackRate > 0.15) { bgm.playbackRate -= 0.1; } else { bgm.pause(); clearInterval(slowdown); } }, 100); }
-            let wipe = document.createElement('div'); wipe.className = 'laser-wipe'; document.body.appendChild(wipe);
-            setTimeout(() => { document.body.classList.remove('overdrive'); wrapper.classList.remove('board-overdrive-jump'); }, 1300);
+            if (bgm) {
+                bgm.preservesPitch = false; 
+                let slowdown = setInterval(() => {
+                    if (bgm.playbackRate > 0.15) bgm.playbackRate -= 0.1; 
+                    else { bgm.pause(); clearInterval(slowdown); }
+                }, 100); 
+            }
+
+            let wipe = document.createElement('div'); 
+            wipe.className = 'laser-wipe'; 
+            document.body.appendChild(wipe);
+            
+            setTimeout(() => {
+                document.body.classList.remove('overdrive');
+                wrapper.classList.remove('board-overdrive-jump');
+            }, 1300);
+            
             setTimeout(() => wipe.remove(), 3000);
+            setTimeout(() => showGameOver(endTitle, titleColor, desc), 2500);
+            
         } else {
-            wrapper.classList.add('zoom-finish'); createParticles();
+            // --- SCENARIO 2: FINE NORMALE (Zoom + Disintegrazione Thanos) ---
+            wrapper.classList.add('zoom-finish');
+            createParticles();
+            
             let bgm = document.getElementById('bg-music');
-            if (bgm) { let fade = setInterval(() => { if (bgm.volume > 0.1) bgm.volume -= 0.1; else { bgm.pause(); clearInterval(fade); } }, 100); }
-            // Parte la smaterializzazione
-            setTimeout(() => { wrapper.classList.add('disintegrate-board'); createPixelDisintegration(wrapper); playMoveSound('capture'); }, 1000);
+            if (bgm) {
+                let fade = setInterval(() => {
+                    if (bgm.volume > 0.1) bgm.volume -= 0.1;
+                    else { bgm.pause(); clearInterval(fade); }
+                }, 100);
+            }
+            
+            // Dopo 1 secondo, disintegra lentamente dal basso verso l'alto
+            setTimeout(() => {
+                playMoveSound('capture'); 
+                createPixelDisintegration(wrapper);
+            }, 1000);
+            
+            // La schermata appare DOPO che la scacchiera si è smaterializzata (a 2.6s)
+            setTimeout(() => showGameOver(endTitle, titleColor, desc), 2600);
         }
     } else {
-        let bgm = document.getElementById('bg-music'); if (bgm) bgm.pause();
+        let bgm = document.getElementById('bg-music');
+        if (bgm) bgm.pause();
+        setTimeout(() => showGameOver(endTitle, titleColor, desc), 500);
     }
-    setTimeout(() => {
-        document.getElementById('game-over-screen').classList.add('show'); let t = document.getElementById('go-title'); t.innerText = endTitle; t.style.color = titleColor; t.style.textShadow = `0 0 20px ${titleColor}`; document.getElementById('go-desc').innerText = desc;
-    }, gfxLevel !== 'LO' ? 2500 : 500); 
 }
 
-function createPixelDisintegration(boardWrapper) {
-    if(gfxLevel === 'LO') return; 
-    const rect = boardWrapper.getBoundingClientRect(); 
-    const colors = ['#ffffff']; 
-    for(let i = 0; i < 150; i++) {
-        let cube = document.createElement('div'); cube.className = 'pixel-cube';
-        cube.style.left = (rect.left + Math.random() * rect.width) + 'px'; cube.style.top = (rect.top + Math.random() * rect.height) + 'px';
-        cube.style.background = colors[0]; cube.style.boxShadow = `0 0 10px #ffffff`;
-        let angle = Math.random() * Math.PI * 2; let distance = Math.random() * 300 + 50; let dx = Math.cos(angle) * distance; let dy = Math.sin(angle) * distance;
-        cube.style.setProperty('--dx', `${dx}px`); cube.style.setProperty('--dy', `${dy}px`); cube.style.setProperty('--rot', `${Math.random() * 720}deg`);
-        document.body.appendChild(cube); setTimeout(() => cube.remove(), 1500);
+// Funzione di utilità per mostrare la schermata finale
+function showGameOver(title, color, desc) {
+    let goScreen = document.getElementById('game-over-screen');
+    goScreen.classList.add('show');
+    let t = document.getElementById('go-title'); 
+    t.innerText = title;
+    t.style.color = color;
+    t.style.textShadow = `0 0 20px ${color}`; 
+    document.getElementById('go-desc').innerText = desc;
+}
+
+// NUOVA FUNZIONE: Disintegrazione cinematografica dal basso verso l'alto
+function createPixelDisintegration(wrapper) {
+    if(gfxLevel === 'LO') return;
+    
+    const rect = wrapper.getBoundingClientRect();
+    const colors = ['#00f3ff', '#ff0055', '#ffffff', '#bc13fe', '#ffaa00'];
+    
+    let progress = 0; 
+    let startTime = Date.now();
+    const duration = 1500; // La disintegrazione dura 1.5 secondi
+
+    // Motore di animazione a 60fps
+    function animate() {
+        let elapsed = Date.now() - startTime;
+        progress = Math.min(elapsed / duration, 1);
+        
+        // Magia CSS: Taglia la scacchiera dal basso verso l'alto!
+        wrapper.style.clipPath = `inset(0 0 ${progress * 100}% 0)`;
+        
+        if (progress < 1) {
+            // Calcola la linea esatta dove sta avvenendo il taglio
+            let currentY = rect.bottom - (progress * rect.height);
+            
+            // Genera cubetti che volano via dalla linea di taglio
+            for(let i = 0; i < 4; i++) {
+                let cube = document.createElement('div');
+                cube.className = 'pixel-cube';
+                cube.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                cube.style.top = currentY + 'px';
+                cube.style.background = colors[Math.floor(Math.random() * colors.length)];
+                cube.style.boxShadow = `0 0 10px ${cube.style.background}`;
+                
+                // Volo verso l'alto con un leggero angolo casuale
+                let angle = -Math.PI / 2 + (Math.random() - 0.5); 
+                let distance = Math.random() * 150 + 50;
+                
+                cube.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+                cube.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+                cube.style.setProperty('--rot', `${Math.random() * 360}deg`);
+                
+                document.body.appendChild(cube);
+                setTimeout(() => cube.remove(), 1200);
+            }
+            requestAnimationFrame(animate);
+        } else {
+            wrapper.style.display = 'none'; // Nascondi del tutto alla fine
+        }
+    }
+    animate();
+}
+function updateTimersUI() {
+    let container = document.getElementById('timers-container');
+    if(!timerEnabled) { container.style.display = 'none'; return; }
+    container.style.display = 'flex';
+    let fmt = (ms) => {
+        let totalTenths = Math.floor(ms / 100); let mins = Math.floor(totalTenths / 600);
+        let secs = Math.floor((totalTenths % 600) / 10); let tenths = totalTenths % 10;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${tenths}`;
+    };
+    let wT = document.getElementById('w-timer'), bT = document.getElementById('b-timer');
+    wT.innerText = fmt(timeLeftW); bT.innerText = fmt(timeLeftB);
+    wT.style.opacity = turno === 'W' ? '1' : '0.5'; wT.style.textShadow = turno === 'W' ? '0 0 10px var(--white)' : 'none';
+    bT.style.opacity = turno === 'B' ? '1' : '0.5'; bT.style.textShadow = turno === 'B' ? '0 0 10px var(--black)' : 'none';
+}
+
+function getPositionKey() { return JSON.stringify(grid) + turno + JSON.stringify(castlingRights) + JSON.stringify(classMods); }
+
+function triggerOverdrive() {
+    if(document.body.classList.contains('overdrive')) return;
+    isAnimating = true;
+    
+    let bgm = document.getElementById('bg-music');
+    bgm.preservesPitch = false; bgm.playbackRate = 2.0;
+
+    let alertEl = document.getElementById('overdrive-alert');
+    alertEl.classList.add('show');
+    playMoveSound('check');
+
+    if(gfxLevel !== 'LO') {
+        let wipe = document.createElement('div'); wipe.className = 'laser-wipe'; document.body.appendChild(wipe);
+        setTimeout(() => {
+            document.body.classList.add('overdrive');
+            if(gfxLevel === 'HI') document.getElementById('main-board-wrapper').classList.add('board-overdrive-jump');
+        }, 1300); 
+        setTimeout(() => {
+            alertEl.classList.remove('show'); wipe.remove(); document.getElementById('main-board-wrapper').classList.remove('board-overdrive-jump');
+            isAnimating = false; if(opponentMode === 'AI' && turno === 'B' && !gameOver) setTimeout(playAI, 800);
+        }, 3000);
+    } else {
+        document.body.classList.add('overdrive');
+        setTimeout(() => { alertEl.classList.remove('show'); isAnimating = false; if(opponentMode === 'AI' && turno === 'B' && !gameOver) setTimeout(playAI, 800); }, 2000);
     }
 }
 
@@ -925,16 +1065,16 @@ function draw() {
 }
 
 // ==========================================
-// SISTEMA FRECCE STRATEGICHE (TASTO SINISTRO DRAG)
+// SISTEMA FRECCE STRATEGICHE (TASTO SINISTRO - TRASCINAMENTO)
 // ==========================================
 let arrowStartCell = null;
 
+// 1. Registra la cella di partenza (Quando PREMI il Tasto Sinistro)
 window.addEventListener('mousedown', e => {
     if (e.button !== 0) return; 
     if (!e.target.closest('.board-wrapper')) return;
     
     let boardEl = document.getElementById('board');
-    if (!boardEl) return;
     const rect = boardEl.getBoundingClientRect();
     const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
@@ -946,12 +1086,12 @@ window.addEventListener('mousedown', e => {
     arrowStartCell = {r, c};
 });
 
+// 2. Registra la cella di arrivo e disegna (Quando RILASCI il Tasto Sinistro)
 window.addEventListener('mouseup', e => {
     if (e.button !== 0) return;
     if (!arrowStartCell) return;
     
     let boardEl = document.getElementById('board');
-    if (!boardEl) return;
     const rect = boardEl.getBoundingClientRect();
     const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
@@ -959,36 +1099,76 @@ window.addEventListener('mouseup', e => {
     
     if(r >= 0 && r <= 7 && c >= 0 && c <= 7) {
         if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
-        if (arrowStartCell.r !== r || arrowStartCell.c !== c) { drawArrow(arrowStartCell.r, arrowStartCell.c, r, c); }
+        
+        if (arrowStartCell.r !== r || arrowStartCell.c !== c) {
+            drawArrow(arrowStartCell.r, arrowStartCell.c, r, c);
+        }
     }
     arrowStartCell = null;
 });
 
+// 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
 function drawArrow(r1, c1, r2, c2) {
     let brd = document.getElementById('board');
     brd.style.position = 'relative'; 
+
     let svg = document.getElementById('arrow-svg');
     
     if (!svg) {
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.id = 'arrow-svg'; svg.style.position = 'absolute'; svg.style.top = '0'; svg.style.left = '0'; svg.style.width = '100%'; svg.style.height = '100%'; svg.style.pointerEvents = 'none'; svg.style.zIndex = '500'; svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
+        svg.id = 'arrow-svg';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '500';
+        svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
         
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-        marker.setAttribute('id', 'arrowhead'); marker.setAttribute('markerWidth', '4'); marker.setAttribute('markerHeight', '4'); marker.setAttribute('refX', '2.5'); marker.setAttribute('refY', '2'); marker.setAttribute('orient', 'auto');
+        marker.setAttribute('id', 'arrowhead');
+        marker.setAttribute('markerWidth', '4');
+        marker.setAttribute('markerHeight', '4');
+        marker.setAttribute('refX', '2.5');
+        marker.setAttribute('refY', '2');
+        marker.setAttribute('orient', 'auto');
+        
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', '0 0, 4 2, 0 4'); polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)'); 
-        marker.appendChild(polygon); defs.appendChild(marker); svg.appendChild(defs); brd.appendChild(svg);
+        polygon.setAttribute('points', '0 0, 4 2, 0 4');
+        polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)'); 
+        
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+        brd.appendChild(svg);
     }
 
     const cellSize = 100 / 8; 
-    const x1 = c1 * cellSize + cellSize / 2; const y1 = r1 * cellSize + cellSize / 2; const x2 = c2 * cellSize + cellSize / 2; const y2 = r2 * cellSize + cellSize / 2;
+    const x1 = c1 * cellSize + cellSize / 2;
+    const y1 = r1 * cellSize + cellSize / 2;
+    const x2 = c2 * cellSize + cellSize / 2;
+    const y2 = r2 * cellSize + cellSize / 2;
+
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1 + '%'); line.setAttribute('y1', y1 + '%'); line.setAttribute('x2', x2 + '%'); line.setAttribute('y2', y2 + '%'); line.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)'); line.setAttribute('stroke-width', '1.5%'); line.setAttribute('marker-end', 'url(#arrowhead)'); line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('x1', x1 + '%');
+    line.setAttribute('y1', y1 + '%');
+    line.setAttribute('x2', x2 + '%');
+    line.setAttribute('y2', y2 + '%');
+    line.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)'); 
+    line.setAttribute('stroke-width', '1.5%'); 
+    line.setAttribute('marker-end', 'url(#arrowhead)');
+    line.setAttribute('stroke-linecap', 'round');
+    
     svg.appendChild(line);
 }
 
+// 4. Funzione per pulire le frecce
 function clearArrows() {
     let svg = document.getElementById('arrow-svg');
-    if (svg) { const lines = svg.querySelectorAll('line'); lines.forEach(l => l.remove()); }
+    if (svg) {
+        const lines = svg.querySelectorAll('line');
+        lines.forEach(l => l.remove());
+    }
 }
