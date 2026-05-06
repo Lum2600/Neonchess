@@ -911,4 +911,74 @@ function draw() {
             b.innerHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
         }
     }
+
+
+}
+
+
+// ==========================================
+// SISTEMA FRECCE STRATEGICHE (TASTO DESTRO)
+// ==========================================
+let arrowStartCell = null;
+const boardEl = document.getElementById('board');
+const arrowSvg = document.getElementById('arrow-svg');
+
+// 1. Disattiva il noioso menu a tendina di Windows sulla scacchiera
+boardEl.addEventListener('contextmenu', e => e.preventDefault());
+
+// 2. Registra la cella di partenza (quando PREMI il tasto destro)
+boardEl.addEventListener('mousedown', e => {
+    if (e.button !== 2) return; // Solo tasto destro
+    const rect = boardEl.getBoundingClientRect();
+    const cellSize = rect.width / 8;
+    let c = Math.floor((e.clientX - rect.left) / cellSize);
+    let r = Math.floor((e.clientY - rect.top) / cellSize);
+    
+    // Inverti coordinate se la scacchiera è girata
+    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+    arrowStartCell = {r, c};
+});
+
+// 3. Registra la cella di arrivo e disegna (quando RILASCI il tasto destro)
+boardEl.addEventListener('mouseup', e => {
+    if (e.button !== 2 || !arrowStartCell) return;
+    const rect = boardEl.getBoundingClientRect();
+    const cellSize = rect.width / 8;
+    let c = Math.floor((e.clientX - rect.left) / cellSize);
+    let r = Math.floor((e.clientY - rect.top) / cellSize);
+    
+    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+    
+    // Se non hai rilasciato sulla stessa cella, traccia la freccia!
+    if (arrowStartCell.r !== r || arrowStartCell.c !== c) {
+        drawArrow(arrowStartCell.r, arrowStartCell.c, r, c);
+    }
+    arrowStartCell = null;
+});
+
+// 4. Funzione che disegna fisicamente la linea
+function drawArrow(r1, c1, r2, c2) {
+    const cellSize = 100 / 8; // Coordinate in percentuale
+    const x1 = c1 * cellSize + cellSize / 2;
+    const y1 = r1 * cellSize + cellSize / 2;
+    const x2 = c2 * cellSize + cellSize / 2;
+    const y2 = r2 * cellSize + cellSize / 2;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1 + '%');
+    line.setAttribute('y1', y1 + '%');
+    line.setAttribute('x2', x2 + '%');
+    line.setAttribute('y2', y2 + '%');
+    line.setAttribute('stroke', 'rgba(255, 170, 0, 0.8)'); // Colore Arancio Neon
+    line.setAttribute('stroke-width', '1.5%'); 
+    line.setAttribute('marker-end', 'url(#arrowhead)');
+    line.setAttribute('stroke-linecap', 'round');
+    
+    arrowSvg.appendChild(line);
+}
+
+// 5. Funzione per pulire tutto
+function clearArrows() {
+    const lines = arrowSvg.querySelectorAll('line');
+    lines.forEach(l => l.remove());
 }
