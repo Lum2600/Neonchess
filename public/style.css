@@ -638,3 +638,42 @@ body[data-team="B"] #arrow-svg {
     60% { transform: translate(0) scale(1); filter: invert(0); }
     100% { transform: translate(0) scale(1); text-shadow: 0 0 20px currentColor; }
 }
+
+
+/* --- 1. RIMOZIONE SFARFALLIO E GLITCH --- */
+.crt-overlay { animation: none !important; opacity: 0.15 !important; }
+body.overdrive .crt-overlay { animation: none !important; opacity: 0.15 !important; }
+.start-title { animation: none !important; text-shadow: 0 0 5px var(--t2), 0 0 15px var(--t2) !important; }
+
+/* Disattiva l'entrata a scatti della schermata di Game Over e metti una dissolvenza morbida */
+body:not([data-gfx="LO"]) .game-over-screen.show {
+    animation: fadeInScale 0.6s ease-out forwards !important;
+}
+
+/* --- 2. NUOVA ANIMAZIONE: ROTTURA DEL SISTEMA --- */
+/* Terremoto della scacchiera */
+.board-vibrate {
+    animation: board-quake 0.1s infinite alternate !important;
+    box-shadow: 0 0 50px rgba(255, 0, 0, 0.5) !important;
+    border-color: #ff0000 !important;
+}
+
+@keyframes board-quake {
+    0% { transform: translate(2px, 1px) rotate(0deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    40% { transform: translate(1px, -1px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+/* Caduta nel vuoto delle pedine */
+.piece-falling {
+    animation: piece-drop 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
+}
+
+@keyframes piece-drop {
+    0% { transform: translateY(0) rotate(var(--rot)) scale(1); opacity: 1; }
+    20% { transform: translateY(-30px) rotate(calc(var(--rot) + 15deg)) scale(1.2); filter: brightness(2); } /* Saltello prima di cadere */
+    100% { transform: translateY(120vh) rotate(calc(var(--rot) + 720deg)) scale(0.5); opacity: 0; } /* Giù nello schermo! */
+}
