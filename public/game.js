@@ -388,12 +388,68 @@ function startClock() {
 }
 
 function triggerEnd(winnerColor, title, desc) {
-    gameOver = true; clearInterval(timerInterval);
-    if(gfxLevel !== 'LO') { document.getElementById('main-board-wrapper').classList.add('zoom-finish'); createParticles(); }
+    gameOver = true; 
+    clearInterval(timerInterval);
+
+    // 1. CALCOLO VITTORIA O SCONFITTA
+    let endTitle = "PATTA";
+    let titleColor = "var(--t2)"; // Azzurro di base
+    
+    if (winnerColor) {
+        if (winnerColor === myTeam) {
+            endTitle = "VITTORIA";
+            titleColor = "var(--t1)"; // Verde Neon (o Rosa in Overdrive)
+        } else {
+            endTitle = "SCONFITTA";
+            titleColor = "var(--t4)"; // Rosso Neon
+        }
+    } else if (title === 'DISCONNESSO') {
+        endTitle = "ABBANDONO";
+    }
+
+    // 2. EFFETTO AUDIO: Il disco si ferma (Slow-motion crash)
+    let bgm = document.getElementById('bg-music');
+    if (bgm) {
+        bgm.preservesPitch = false; // Permette all'audio di distorcersi rallentando
+        let slowdown = setInterval(() => {
+            if (bgm.playbackRate > 0.15) {
+                bgm.playbackRate -= 0.1; // Rallenta gradualmente ogni 100ms
+            } else {
+                bgm.pause();
+                clearInterval(slowdown);
+            }
+        }, 100); 
+    }
+
+    if(gfxLevel !== 'LO') { 
+        // 3. Applica l'animazione visiva di Glitch/Crash
+        document.getElementById('main-board-wrapper').classList.add('crash-finish'); 
+        createParticles(); 
+        
+        // 4. EFFETTO LASER INVERTITO: Se eravamo in Overdrive, lo spazziamo via!
+        if (document.body.classList.contains('overdrive')) {
+            let wipe = document.createElement('div'); 
+            wipe.className = 'laser-wipe'; 
+            document.body.appendChild(wipe);
+            
+            // Esattamente a metà animazione (1.3s), quando il laser copre tutto lo schermo,
+            // togliamo la classe overdrive. Il raggio lascerà dietro di sé i colori normali!
+            setTimeout(() => {
+                document.body.classList.remove('overdrive');
+                document.getElementById('main-board-wrapper').classList.remove('board-overdrive-jump');
+            }, 1300);
+            
+            setTimeout(() => wipe.remove(), 3000);
+        }
+    }
+
+    // 5. Mostra la schermata finale con i nuovi colori
     setTimeout(() => {
         document.getElementById('game-over-screen').classList.add('show');
-        let t = document.getElementById('go-title'); t.innerText = title;
-        if(winnerColor) t.style.color = winnerColor === 'W' ? 'var(--white)' : 'var(--black)'; else t.style.color = 'var(--t2)';
+        let t = document.getElementById('go-title'); 
+        t.innerText = endTitle;
+        t.style.color = titleColor;
+        t.style.textShadow = `0 0 20px ${titleColor}`; // Bagliore extra sul titolo
         document.getElementById('go-desc').innerText = desc;
     }, gfxLevel !== 'LO' ? 2500 : 500); 
 }
