@@ -2136,3 +2136,9 @@ body.overdrive .guide-btn {
         z-index: 100000; /* Lo fa apparire sopra l'overlay opzioni */
     }
 }
+
+/* --- FIX VISIBILITÀ SCACCHIERA DURANTE LA SFUMATURA --- */
+.piece {
+    /* Aggiunge un contorno letterale al pezzo per staccarlo dallo sfondo in ogni situazione di luce */
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
+}
