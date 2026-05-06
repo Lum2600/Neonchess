@@ -2,97 +2,162 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Chess: God Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON CHESS: GOD MODE (MULTIPLAYER)</title>
+    
     <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Colleghiamo il CSS esterno -->
     <link rel="stylesheet" href="style.css">
-    <!-- Socket.io -->
+    
+    <!-- Libreria Socket.IO fornita dal server -->
     <script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
 
-    <!-- SCHERMATA INIZIALE -->
+<body data-gfx="HI">
+    <!-- OVERLAY CRT -->
+    <div class="crt-overlay"></div>
+    
+    <!-- SCRITTE ANIMATE -->
+    <div id="overdrive-alert" class="overdrive-alert">OVERDRIVE</div>
+    <div id="mod-alert" class="mod-alert">MOD UNLOCKED</div>
+
+    <!-- MUSICA -->
+    <audio id="bg-music" loop><source src="music.mp3" type="audio/mpeg"></audio>
+
+    <!-- MAIN MENU -->
     <div id="start-screen" class="start-screen">
-        <h1 class="glitch-title" style="font-size: 3rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--neon-blue);">NEON CHESS</h1>
-        <h2 style="color: var(--neon-pink); letter-spacing: 5px; margin-bottom: 40px; font-family: 'Orbitron'; text-shadow: 0 0 10px var(--neon-pink);">GOD MODE</h2>
-
-        <div class="menu-container">
-            <!-- Impostazioni Partita -->
-            <div style="flex: 1; min-width: 250px;">
-                <h3 style="color: #fff; border-bottom: 1px solid var(--t2); padding-bottom: 10px;">OPPONENT:</h3>
-                <div class="toggle-group" style="margin-bottom: 20px;">
-                    <button id="btn-opp-human" class="toggle-btn active" onclick="setOpponent('HUMAN')">HUMAN</button>
-                    <button id="btn-opp-ai" class="toggle-btn" onclick="setOpponent('AI')">AI (B)</button>
-                </div>
-
-                <h3 style="color: #fff; border-bottom: 1px solid var(--t2); padding-bottom: 10px;">TEAM:</h3>
-                <div class="toggle-group" style="margin-bottom: 20px;">
-                    <button id="btn-team-w" class="toggle-btn active" onclick="setTeam('W')">WHITE</button>
-                    <button id="btn-team-b" class="toggle-btn" onclick="setTeam('B')">BLACK</button>
-                </div>
-
-                <h3 style="color: #fff; border-bottom: 1px solid var(--t2); padding-bottom: 10px;">GRAPHICS:</h3>
-                <div class="toggle-group" style="margin-bottom: 20px;">
-                    <button id="btn-gfx-hi" class="toggle-btn active" onclick="setGraphics('HI')">HI</button>
-                    <button id="btn-gfx-med" class="toggle-btn" onclick="setGraphics('MED')">MED</button>
-                    <button id="btn-gfx-lo" class="toggle-btn" onclick="setGraphics('LO')">LO</button>
-                </div>
-                
-                <h3 style="color: #fff; border-bottom: 1px solid var(--t2); padding-bottom: 10px;">TIMER:</h3>
-                <div class="toggle-group" style="margin-bottom: 20px;">
-                    <button id="btn-timer-on" class="toggle-btn active" onclick="setTimer(true)">ON</button>
-                    <button id="btn-timer-off" class="toggle-btn" onclick="setTimer(false)">OFF</button>
-                </div>
-
-                <div class="volume-control">
-                    <span style="color:#fff; font-family:'Orbitron';">MUSIC VOL:</span>
-                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
-                        <span>🔈</span><input type="range" id="music-vol" min="0" max="1" step="0.05" value="0.3"><span>🔊</span>
-                    </div>
-                </div>
-                <div class="volume-control" style="margin-top:10px;">
-                    <span style="color:#fff; font-family:'Orbitron';">SFX VOL:</span>
-                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
-                        <span>🔈</span><input type="range" id="sfx-vol" min="0" max="1" step="0.05" value="0.6"><span>🔊</span>
-                    </div>
+        <h1 class="start-title">NEON CHESS</h1>
+        <div class="options-box">
+            <div class="opt-row"><span>OPPONENT:</span><div><button class="opt-btn active" id="btn-opp-hum" onclick="setOpponent('HUMAN')">HUMAN</button><button class="opt-btn" id="btn-opp-ai" onclick="setOpponent('AI')">AI (B)</button></div></div>
+            <div class="opt-row" id="team-selector-row"><span>TEAM:</span><div><button class="opt-btn active" id="btn-team-w" onclick="setTeam('W')">WHITE</button><button class="opt-btn" id="btn-team-b" onclick="setTeam('B')">BLACK</button></div></div>
+            
+            <div class="opt-row">
+                <span>GRAPHICS:</span>
+                <div style="display:flex; gap: 5px;">
+                    <button class="opt-btn active" id="btn-gfx-hi" onclick="setGraphics('HI')">HI</button>
+                    <button class="opt-btn" id="btn-gfx-med" onclick="setGraphics('MED')">MED</button>
+                    <button class="opt-btn" id="btn-gfx-lo" onclick="setGraphics('LO')">LO</button>
                 </div>
             </div>
 
-            <!-- Pulsanti di Avvio e Multiplayer -->
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; min-width: 250px;">
-                <button class="play-btn" onclick="startGame(true, false)" style="width: 100%;">PLAY GOD MODE</button>
-                <button class="play-btn" onclick="openMultiplayerMenu()" style="width: 100%; background: transparent; border: 2px solid var(--neon-pink); color: var(--neon-pink);">MULTIPLAYER</button>
-                <button class="play-classic-btn" onclick="startGame(false, false)" style="width: 100%;">PLAY CLASSIC</button>
-                
-                <div style="display: flex; gap: 10px; width: 100%;">
-                    <button class="cyberpunk-btn" style="flex: 1;" onclick="openTutorial()">COME SI GIOCA?</button>
-                    <button id="dev-mode-btn" class="cyberpunk-btn" style="flex: 1;" onclick="promptDev()">🛠 DEV MODE</button>
-                </div>
+            <div class="opt-row"><span>TIMER:</span><div><button class="opt-btn" id="btn-timer-on" onclick="setTimer(true)">ON</button><button class="opt-btn active" id="btn-timer-off" onclick="setTimer(false)">OFF</button></div></div>
+            <div class="opt-row" id="time-select-row" style="display:none; justify-content: space-between; gap: 5px; margin-top: -10px;"><button class="opt-btn time-btn active" onclick="setTimeVal(5, this)">5M</button><button class="opt-btn time-btn" onclick="setTimeVal(10, this)">10M</button><button class="opt-btn time-btn" onclick="setTimeVal(30, this)">30M</button><button class="opt-btn time-btn" onclick="setTimeVal(60, this)">60M</button></div>
+            <div class="opt-row" style="flex-direction: column; align-items: flex-start; gap: 5px;"><span>MUSIC VOL:</span><div class="slider-container" style="width: 100%;"><span>🔈</span><input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.4" style="flex:1;" oninput="updateVolume(this.value)"><span>🔊</span></div></div>
+            <div class="opt-row" style="flex-direction: column; align-items: flex-start; gap: 5px;"><span>SFX VOL:</span><div class="slider-container" style="width: 100%;"><span>🔈</span><input type="range" id="sfx-slider" min="0" max="1" step="0.1" value="0.5" style="flex:1;" oninput="updateSfxVolume(this.value)"><span>🔊</span></div></div>
+            
+            <div class="opt-row" id="resign-row" style="display:none; justify-content: center; margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                <button class="opt-btn" style="border-color: var(--t4); color: var(--t4); font-weight: bold; width: 100%; padding: 10px; font-size: 1rem;" onclick="location.reload()">⚠️ RESA / RICOMINCIA</button>
             </div>
         </div>
+        
+        <div style="display:flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+            <button class="play-btn" id="main-play-btn" onclick="startGame(false, false)">PLAY GOD MODE</button>
+            <button class="play-btn" style="background:var(--t2); box-shadow:0 0 20px var(--t2); color:black;" onclick="openMultiplayerMenu()">MULTIPLAYER</button>
+            <button class="play-classic-btn" id="classic-play-btn" onclick="startGame(true, false)">PLAY CLASSIC</button>
+        </div>
+        
+        <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+            <button class="guide-btn" onclick="openTutorial()">COME SI GIOCA?</button>
+            <button class="guide-btn" style="border-color:var(--t3); color:var(--t3);" onclick="promptDev()">🛠 DEV MODE</button>
+        </div>
+    </div>
 
-        <!-- MENU MULTIPLAYER (Nascosto di default) -->
-        <div id="mp-menu" style="display:none; flex-direction:column; align-items:center; width:100%; max-width:400px; background:rgba(0,0,0,0.8); padding:20px; border:1px solid var(--neon-blue); border-radius:10px; margin-top:20px; text-align:center;">
-            <h2 style="color:var(--neon-blue); font-family:'Orbitron'; margin-bottom:15px;">MULTIPLAYER ONLINE</h2>
+    <!-- OVERLAY MULTIPLAYER -->
+    <div id="multiplayer-overlay" class="tutorial-overlay" style="z-index: 600;">
+        <div class="tutorial-content" style="max-width: 400px; text-align: center;">
+            <h2 style="color:var(--t2); border-bottom-color:var(--t2);">MULTIPLAYER ONLINE</h2>
             
-            <input type="text" id="player-username" placeholder="IL TUO USERNAME" maxlength="12" style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:rgba(0,0,0,0.5); color:var(--t1); border:1px solid var(--t1); border-radius:6px; margin-bottom:20px;">
+            <div id="mp-menu">
+                <input type="text" id="player-username" placeholder="IL TUO USERNAME" maxlength="12" style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:rgba(0,0,0,0.5); color:var(--t1); border:1px solid var(--t1); border-radius:6px; margin-bottom:20px;">
+                
+                <p>Crea una stanza e invita un amico, oppure inserisci un codice per entrare.</p>
+                <button class="play-btn" style="width:100%; margin-bottom: 20px;" onclick="createRoom()">CREA STANZA (BIANCO)</button>
+                
+                <div style="border-top: 1px solid var(--glass-border); margin: 20px 0;"></div>
+                
+                <input type="text" id="join-code" placeholder="CODICE STANZA" maxlength="4" style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:var(--panel); color:white; border:1px solid var(--t2); border-radius:6px; margin-bottom:10px;">
+                <button class="play-classic-btn" style="width:100%;" onclick="joinRoom()">ENTRA (NERO)</button>
+            </div>
             
-            <p style="color:#aaa; font-family:'Inter'; font-size:0.9rem; margin-bottom:15px;">Crea una stanza e invita un amico, oppure inserisci un codice per entrare.</p>
-            <button class="play-btn" style="width:100%; margin-bottom: 20px;" onclick="createRoom()">CREA STANZA (BIANCO)</button>
+            <div id="mp-waiting" style="display:none;">
+                <h3 style="color:var(--white);">CODICE STANZA: <span id="display-room-code" style="color:var(--t1); font-size:2rem; display:block; margin-top:10px;"></span></h3>
+                <p>Invia questo codice al tuo avversario. In attesa del collegamento...</p>
+                <div class="loader"></div>
+            </div>
+
+            <button class="close-tut-btn" style="background:var(--t4); margin-top:20px;" onclick="closeMultiplayerMenu()">ANNULLA</button>
+        </div>
+    </div>
+
+    <!-- OVERLAY PROMOZIONE -->
+    <div id="promotion-overlay" class="tutorial-overlay" style="z-index: 600;">
+        <div class="tutorial-content" style="max-width: 400px; text-align: center;">
+            <h2 style="color:var(--t2); border-bottom-color:var(--t2);">PROMOZIONE</h2>
+            <p>Scegli in quale pezzo promuovere il tuo pedone:</p>
+            <div id="promo-buttons" style="display:flex; justify-content: center; gap: 15px; margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- DEV MODE OVERLAY -->
+    <div id="dev-overlay" class="tutorial-overlay" style="z-index: 400;">
+        <div class="tutorial-content" style="max-width: 700px; text-align: center;">
+            <h2 style="color:var(--t3); border-bottom-color:var(--t3);">🛠 DEV MODE: GESTIONE MODS</h2>
+            <p>Seleziona i potenziamenti per testarne l'effetto in gioco.</p>
+            <div style="display:flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; text-align: left;">
+                <div style="flex:1; min-width: 250px;">
+                    <h3 style="color:var(--white); border-bottom: 1px solid var(--glass-border); padding-bottom: 5px;">WHITE TEAM</h3>
+                    <div id="dev-w-mods"></div>
+                </div>
+                <div style="flex:1; min-width: 250px;">
+                    <h3 style="color:var(--black); border-bottom: 1px solid var(--glass-border); padding-bottom: 5px;">BLACK TEAM</h3>
+                    <div id="dev-b-mods"></div>
+                </div>
+            </div>
             
-            <div style="border-top: 1px solid var(--glass-border); width: 100%; margin: 20px 0;"></div>
+            <div style="display:flex; justify-content: center; gap: 15px; margin-top: 30px;">
+                <button class="close-tut-btn" style="background:var(--t4); margin: 0;" onclick="forceOverdrive()">TRIGGER OVERDRIVE</button>
+                <button class="close-tut-btn" style="background:var(--t3); margin: 0;" onclick="closeDev()">APPLICA MODIFICHE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY TUTORIAL -->
+    <div id="tutorial-overlay" class="tutorial-overlay">
+        <div class="tutorial-content">
+            <h2>COME GIOCARE A NEON CHESS</h2>
+            <p>Obiettivo: Scacco Matto. Twist: Modificatori distruttivi permanenti.</p>
             
-            <input type="text" id="join-code" placeholder="CODICE STANZA" maxlength="4" style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:var(--panel); color:white; border:1px solid var(--t2); border-radius:6px; margin-bottom:10px;">
-            <button class="play-classic-btn" style="width:100%; margin-bottom:10px;" onclick="joinRoom()">ENTRA (NERO)</button>
-            
-            <button class="cyberpunk-btn" style="width:50%;" onclick="closeMultiplayerMenu()">ANNULLA</button>
+            <h3>🎚️ SISTEMA TIER E OVERDRIVE</h3>
+            <p>I poteri vengono estratti <b>contemporaneamente per entrambi i team</b> al raggiungimento di uccisioni globali (es: 1 bianco morto + 1 nero morto = 2 kill):</p>
+            <ul>
+                <li><b>2 Kills (Tier 1):</b> Poteri <span style="color:var(--t1)">Common</span> o <span style="color:var(--t2)">Rare</span>.</li>
+                <li><b>5 Kills (Tier 2):</b> Secondo potere Common/Rare.</li>
+                <li><b>8 Kills (Epic Tier):</b> Si sbloccano i poteri <span style="color:var(--t3)">Epic</span> e <span style="color:var(--legend)">Legend</span>.</li>
+                <li><b>15 Kills (OVERDRIVE):</b> L'ultimo potere innesca il collasso del sistema. La musica accelera salendo di un'ottava, i colori diventano negativi.</li>
+            </ul>
+            <p><b>Strategia:</b> Il sistema preferisce dare poteri a pedine ancora in vita. Se tutte le tue pedine hanno già un potere, ne verrà sovrascritto uno vecchio rendendo inattiva la card precedente.</p>
+
+            <h3>👑 REGOLE RE & REGINA</h3>
+            <p>Nessun potere può uccidere il Re direttamente. Deve essere sconfitto con mosse legali. <br><b>Attenzione:</b> Solo le Regine originali possiedono l'Immortalità se estraggono il potere. I pedoni promossi non acquisiscono NESSUN potere.</p>
+
+            <h3>📚 CODEX MODIFICATORI</h3>
+            <div class="codex-list">
+                <p><b>PEDONE:</b> King Soul (Muove come Re), Front Bite (Mangia frontale), Necromancy (Resuscita pedone alleato alla kill), Mass Infection (A fine turno infetta i nemici adiacenti in pedoni).</p>
+                <p><b>CAVALLO:</b> L-Slide (Si ferma lungo la L), Mount (Copia le mosse dell'ultimo pezzo morto), Explosive (Polverizza la sua area di atterraggio tranne i Re), Ghost Rider (Teletrasporto libero su caselle vuote).</p>
+                <p><b>ALFIERE:</b> Side Step (Guadagna step orizzontale), Vault (Scavalca pezzi alleati e può dare scacco), Wall Bounce (Rimbalza sui bordi della scacchiera per colpire dietro gli angoli), Chain Reaction (A fine mossa, disintegra i due nemici laterali frontali e l'intera diagonale di fronte a lui).</p>
+                <p><b>TORRE:</b> Homecoming (Torna istantaneamente ad una sua base originale libera), Voodoo Death (Maledizione: se uccisa distrugge istantaneamente il suo killer), Gravity Well (Blocca il movimento dei nemici sulla sua linea, tranne il Re), Factory (Genera una nuova torre alleata quando si muove).</p>
+                <p><b>REGINA:</b> Knight Soul (Aggiunge mosse cavallo), Brainwash (Converte la regina nemica e la teletrasporta al sicuro), Immortal (Se uccisa rinasce in base all'infinito), Annihilation (Non si ferma: passa attraverso e uccide tutti i nemici sulla strada).</p>
+                <p><b>RE:</b> Row Warp (Teletrasporto libero lungo la sua riga), Emperor (Si muove come la Regina), The Betrayal (Si teletrasporta sopra un nemico uccidendolo), Great Resurrection (Resuscita istantaneamente tutto il tuo esercito morto nella tua metà campo).</p>
+            </div>
+
+            <button class="close-tut-btn" onclick="closeTutorial()">HO CAPITO</button>
         </div>
     </div>
 
     <!-- UI DI GIOCO -->
-    <div id="game-ui" class="game-container" style="display: none;">
+    <div id="game-ui" class="game-container">
         <div class="header-bar">
             <div class="header">NEON CHESS: GOD MODE</div>
             <button class="settings-btn" onclick="openSettings()">⚙️</button>
@@ -146,8 +211,11 @@
 
     <!-- Colleghiamo il JS esterno alla fine del body -->
     <script src="game.js"></script>
+    
 
     <!-- VERSIONE DEL GIOCO -->
-    <div class="version-tag">v0.2</div>
+    <div class="version-tag">v0.1</div>
+</body>
+</html>
 </body>
 </html>
