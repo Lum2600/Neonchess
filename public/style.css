@@ -1759,9 +1759,10 @@ body[data-team="B"] .coords-x span {
 }
 
 /* --- SFONDO IMPOSTAZIONI PIU' SCURO --- */
+/* --- SFONDO IMPOSTAZIONI PIU' SCURO --- */
 #start-screen {
-    background: rgba(0, 0, 0, 0.96) !important;
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.5) !important; /* Opacità abbassata! */
+    backdrop-filter: blur(5px); /* Sfocatura leggermente ridotta per far risaltare l'immagine */
 }
 
 /* --- ROTAZIONE FRECCE PER IL NERO --- */
