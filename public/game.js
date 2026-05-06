@@ -185,7 +185,13 @@ function setTimer(enabled) { timerEnabled = enabled; document.getElementById('bt
 function setTimeVal(mins, btnElement) { timeLimitMinutes = mins; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); tryStartMusic(); }
 function openTutorial() { document.getElementById('tutorial-overlay').classList.add('show'); }
 function closeTutorial() { document.getElementById('tutorial-overlay').classList.remove('show'); }
-function openSettings() { document.getElementById('start-screen').style.display = 'flex'; }
+
+// Nascondi tasto Dev se sei online!
+function openSettings() { 
+    document.getElementById('start-screen').style.display = 'flex'; 
+    let devBtn = document.getElementById('dev-mode-btn');
+    if(devBtn) devBtn.style.display = isMultiplayer ? 'none' : 'inline-block';
+}
 
 function promptDev() {
     let pwd = prompt("Inserisci la password per la DEV MODE:");
@@ -299,7 +305,6 @@ function startGame(classic = false, fromMultiplayer = false) {
         document.getElementById('classic-play-btn').style.display = 'none';
         document.getElementById('resign-row').style.display = 'flex';
         
-        // Solo in Umano vs Umano LOCALE ruota i pezzi neri
         // FORZATURA ROTAZIONE: Se gioco online e sono il Nero, gira la scacchiera!
         if (isMultiplayer && myTeam === 'B') {
             document.body.classList.add('play-as-black');
@@ -705,14 +710,13 @@ function animateMovement(fr, fc, tr, tc, pColor, callback) {
     let dX = (endRect.left + endRect.width/2) - (startRect.left + startRect.width/2);
     let dY = (endRect.top + endRect.height/2) - (startRect.top + startRect.height/2);
 
-    // FIX DI ROTAZIONE: Se la scacchiera è ruotata per il giocatore online, dobbiamo invertire le direzioni!
+    // FIX DI ROTAZIONE: Se la scacchiera è ruotata per il giocatore online, invertire le direzioni dell'animazione
     if (document.body.classList.contains('play-as-black')) { dX = -dX; dY = -dY; }
 
     let glowColor = pColor === 'W' ? 'var(--t2)' : 'var(--t4)';
     piece.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
     if(gfxLevel !== 'LO') piece.style.transition += ', filter 0.35s ease';
     
-    // Manteniamo la rotazione delle pedine fissa altrimenti durante il volo tornano dritte
     let rot = '';
     if (document.body.classList.contains('play-as-black')) rot = ' rotate(180deg)';
     else if (opponentMode === 'HUMAN' && !isMultiplayer && pColor === 'B') rot = ' rotate(180deg)';
@@ -726,6 +730,8 @@ function animateMovement(fr, fc, tr, tc, pColor, callback) {
 }
 
 function clickCell(r, c) {
+    clearArrows(); // Cancella le frecce appena tocchi col tasto sinistro
+    
     if (gameOver || isAnimating || (opponentMode === 'AI' && turno === 'B') || isRemoteMoveExecuting) return;
     
     // Blocco mossa se non è il tuo turno online!
@@ -910,5 +916,125 @@ function draw() {
             }
             b.innerHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
         }
+    }
+}
+
+// ==========================================
+// SISTEMA FRECCE STRATEGICHE (TASTO DESTRO - NUCLEARE)
+// ==========================================
+let arrowStartCell = null;
+
+// 1. ZITTISCE IL MENU A TENDINA SU TUTTA LA FINESTRA (Impossibile che si apra)
+window.oncontextmenu = function(e) {
+    e.preventDefault();
+    return false;
+};
+
+// 2. Registra la cella di partenza (Click Tasto Destro)
+window.onmousedown = function(e) {
+    if (e.button !== 2) return; // Solo tasto destro
+    
+    let board = document.getElementById('board');
+    if (!board) return;
+
+    let rect = board.getBoundingClientRect();
+    // Se clicchi fuori dalla scacchiera, non fare nulla
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
+    let cellSize = rect.width / 8;
+    let c = Math.floor((e.clientX - rect.left) / cellSize);
+    let r = Math.floor((e.clientY - rect.top) / cellSize);
+
+    // Inverti coordinate se sei il Nero online
+    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+    arrowStartCell = {r, c};
+};
+
+// 3. Registra la cella di arrivo e disegna (Rilascio Tasto Destro)
+window.onmouseup = function(e) {
+    if (e.button !== 2 || !arrowStartCell) return;
+    
+    let board = document.getElementById('board');
+    if (!board) return;
+
+    let rect = board.getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+        arrowStartCell = null;
+        return;
+    }
+
+    let cellSize = rect.width / 8;
+    let c = Math.floor((e.clientX - rect.left) / cellSize);
+    let r = Math.floor((e.clientY - rect.top) / cellSize);
+
+    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+
+    // Disegna solo se ti sei spostato
+    if (arrowStartCell.r !== r || arrowStartCell.c !== c) {
+        drawArrow(arrowStartCell.r, arrowStartCell.c, r, c);
+    }
+    arrowStartCell = null;
+};
+
+// 4. Funzione che disegna fisicamente la linea
+function drawArrow(r1, c1, r2, c2) {
+    let wrapper = document.getElementById('main-board-wrapper');
+    let svg = document.getElementById('arrow-svg');
+    
+    if (!svg) {
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.id = 'arrow-svg';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '1000'; // Altissimo per essere visibile
+        
+        let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', 'arrowhead');
+        marker.setAttribute('markerWidth', '5');
+        marker.setAttribute('markerHeight', '5');
+        marker.setAttribute('refX', '3');
+        marker.setAttribute('refY', '2.5');
+        marker.setAttribute('orient', 'auto');
+        
+        let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', '0 0, 5 2.5, 0 5');
+        polygon.setAttribute('fill', 'rgba(255, 170, 0, 0.9)'); // Arancione scuro
+        
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+        wrapper.appendChild(svg);
+    }
+
+    const cellSize = 100 / 8; 
+    const x1 = c1 * cellSize + cellSize / 2;
+    const y1 = r1 * cellSize + cellSize / 2;
+    const x2 = c2 * cellSize + cellSize / 2;
+    const y2 = r2 * cellSize + cellSize / 2;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1 + '%');
+    line.setAttribute('y1', y1 + '%');
+    line.setAttribute('x2', x2 + '%');
+    line.setAttribute('y2', y2 + '%');
+    line.setAttribute('stroke', 'rgba(255, 170, 0, 0.9)'); 
+    line.setAttribute('stroke-width', '1.5%'); 
+    line.setAttribute('marker-end', 'url(#arrowhead)');
+    line.setAttribute('stroke-linecap', 'round');
+    
+    svg.appendChild(line);
+}
+
+// 5. Funzione per pulire le frecce (si attiva quando clicchi una pedina)
+function clearArrows() {
+    let svg = document.getElementById('arrow-svg');
+    if (svg) {
+        const lines = svg.querySelectorAll('line');
+        lines.forEach(l => l.remove());
     }
 }
