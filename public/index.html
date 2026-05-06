@@ -18,6 +18,16 @@
 </head>
 
 <body data-gfx="HI">
+    <div id="music-player" class="music-player">
+    <div class="player-info">
+        <div id="song-title" class="song-title">In attesa...</div>
+        <div id="song-duration" class="song-duration">00:00 / 00:00</div>
+    </div>
+    <div class="player-controls">
+        <button id="play-pause-btn" onclick="togglePlayPause()">⏸</button>
+        <button onclick="playNextSong()">⏭</button>
+    </div>
+</div>
     <!-- OVERLAY CRT -->
     <div class="crt-overlay"></div>
 

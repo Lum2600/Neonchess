@@ -677,3 +677,74 @@ body:not([data-gfx="LO"]) .game-over-screen.show {
     20% { transform: translateY(-30px) rotate(calc(var(--rot) + 15deg)) scale(1.2); filter: brightness(2); } /* Saltello prima di cadere */
     100% { transform: translateY(120vh) rotate(calc(var(--rot) + 720deg)) scale(0.5); opacity: 0; } /* Giù nello schermo! */
 }
+
+/* --- MINI PLAYER MUSICALE --- */
+.music-player {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(10, 15, 26, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--t2);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10000;
+    width: 200px;
+    box-shadow: 0 0 20px rgba(0, 136, 255, 0.3);
+    pointer-events: auto;
+}
+
+.player-info {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--white);
+    text-align: center;
+}
+
+.song-title {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 5px var(--t2);
+    margin-bottom: 2px;
+}
+
+.song-duration {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+}
+
+.player-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.player-controls button {
+    background: none;
+    border: none;
+    color: var(--t2);
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.1s, color 0.2s;
+    line-height: 1;
+}
+
+.player-controls button:hover {
+    transform: scale(1.2);
+    color: var(--white);
+}
+
+/* Nascondi il player se siamo in mobile per non coprire i comandi */
+@media (max-width: 900px) {
+    .music-player {
+        bottom: auto;
+        top: 80px;
+        left: 10px;
+        width: 160px;
+    }
+}

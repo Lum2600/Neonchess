@@ -83,7 +83,6 @@ let sfxVolume = 0.5;
 let gfxLevel = 'HI'; 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// 1. NUOVA PLAYLIST
 const playlist = [
     "musica/Aria Math.mp3",
     "musica/C418 - Blind Spots (Minecraft Volume Beta).mp3",
@@ -92,12 +91,10 @@ const playlist = [
 ];
 let currentSongIndex = -1;
 
-// 2. FUNZIONE PER CAMBIARE/RIPRODURRE LA CANZONE
 function playNextSong() {
     let music = document.getElementById('bg-music');
     let nextIndex;
     
-    // Estrae un indice casuale finché non ne trova uno DIVERSO dal precedente
     do {
         nextIndex = Math.floor(Math.random() * playlist.length);
     } while (nextIndex === currentSongIndex);
@@ -106,29 +103,55 @@ function playNextSong() {
     music.src = playlist[currentSongIndex];
     music.volume = document.getElementById('vol-slider').value;
     
-    // Assicuriamoci che mantenga la velocità x2 se siamo in Overdrive
-    if (nextThresholdIndex >= thresholds.length || document.body.classList.contains('overdrive')) {
-        music.playbackRate = 2.0;
-        music.preservesPitch = false;
-    } else {
-        music.playbackRate = 1.0;
-        music.preservesPitch = true;
-    }
+    music.playbackRate = 1.0;
+    music.preservesPitch = true;
 
-    music.play().catch(e => console.log("Attesa interazione..."));
+    // Aggiorna Titolo nel Player
+    let fileName = playlist[currentSongIndex].split('/').pop().replace('.mp3', '');
+    let titleEl = document.getElementById('song-title');
+    if (titleEl) titleEl.innerText = fileName;
+
+    music.play().then(() => {
+        let btn = document.getElementById('play-pause-btn');
+        if (btn) btn.innerText = "⏸";
+    }).catch(e => console.log("Attesa interazione..."));
 }
 
-// 3. AGGIORNAMENTO AVVIO MUSICA
+function togglePlayPause() {
+    let music = document.getElementById('bg-music');
+    let btn = document.getElementById('play-pause-btn');
+    if (!music || !btn) return;
+    if (music.paused) {
+        music.play();
+        btn.innerText = "⏸";
+    } else {
+        music.pause();
+        btn.innerText = "▶";
+    }
+}
+
+// Aggiorna durata ogni secondo
+setInterval(() => {
+    let music = document.getElementById('bg-music');
+    let durationEl = document.getElementById('song-duration');
+    if (!music || !music.duration || !durationEl) return;
+    
+    let fmt = (s) => {
+        let m = Math.floor(s / 60);
+        let sec = Math.floor(s % 60);
+        return `${m}:${sec.toString().padStart(2, '0')}`;
+    };
+    
+    durationEl.innerText = `${fmt(music.currentTime)} / ${fmt(music.duration)}`;
+}, 1000);
+
 function tryStartMusic() {
     if(audioCtx.state === 'suspended') audioCtx.resume();
     if (musicStarted) return;
     
     let music = document.getElementById('bg-music');
-    
-    // Ascoltatore che fa partire una nuova canzone (diversa) quando la traccia finisce
     music.addEventListener('ended', playNextSong);
-
-    playNextSong(); // Fai partire la primissima traccia
+    playNextSong();
     musicStarted = true;
 }
 
@@ -585,8 +608,7 @@ function showGameOver(title, color, desc) {
         if (document.body.classList.contains('overdrive')) return;
         isAnimating = true;
 
-        let bgm = document.getElementById('bg-music');
-        bgm.preservesPitch = false; bgm.playbackRate = 2.0;
+        
 
         let alertEl = document.getElementById('overdrive-alert');
         alertEl.classList.add('show');
