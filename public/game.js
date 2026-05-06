@@ -293,6 +293,7 @@ function closeTutorial() { document.getElementById('tutorial-overlay').classList
 
 function openSettings() {
     document.getElementById('start-screen').style.display = 'flex';
+    document.body.classList.add('settings-open'); // <-- NUOVA
     let devBtn = document.getElementById('dev-mode-btn');
     if (devBtn) devBtn.style.display = isMultiplayer ? 'none' : 'inline-block';
 }
@@ -399,6 +400,8 @@ function startGame(classic = false, fromMultiplayer = false) {
 
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-ui').classList.add('show');
+    document.body.classList.remove('settings-open'); // <-- NUOVA
+    document.body.classList.add('game-started'); // <-- NUOVA
     tryStartMusic();
 
     if (!gameHasStarted) {

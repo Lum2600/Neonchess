@@ -18,19 +18,25 @@
 </head>
 
 <body data-gfx="HI">
-   <div id="music-player" class="music-player">
-    <div class="player-info" id="music-player-handle">
-        <div id="song-title" class="song-title">In attesa...</div>
-        <div id="song-duration" class="song-duration">00:00 / 00:00</div>
+    <div id="music-player" class="music-player">
+        <div class="player-info" id="music-player-handle">
+            <div id="song-title" class="song-title">In attesa...</div>
+            <div id="song-duration" class="song-duration">00:00 / 00:00</div>
+        </div>
+        
+        <input type="range" id="song-progress" class="song-progress" value="0" step="0.1">
+        
+        <div class="player-controls">
+            <button id="play-pause-btn" onclick="togglePlayPause()">⏸</button>
+            <button onclick="playNextSong()">⏭</button>
+        </div>
+
+        <div class="player-volume">
+            <span style="font-size: 0.8rem; opacity: 0.8;">🔈</span>
+            <input type="range" id="vol-slider" class="song-progress" min="0" max="1" step="0.1" value="0.4" oninput="updateVolume(this.value)" style="width: 100%;">
+            <span style="font-size: 0.8rem; opacity: 0.8;">🔊</span>
+        </div>
     </div>
-    
-    <input type="range" id="song-progress" class="song-progress" value="0" step="0.1">
-    
-    <div class="player-controls">
-        <button id="play-pause-btn" onclick="togglePlayPause()">⏸</button>
-        <button onclick="playNextSong()">⏭</button>
-    </div>
-</div>
 
     <!-- OVERLAY CRT -->
     <div class="crt-overlay"></div>
@@ -74,12 +80,7 @@
                     class="opt-btn time-btn" onclick="setTimeVal(10, this)">10M</button><button class="opt-btn time-btn"
                     onclick="setTimeVal(30, this)">30M</button><button class="opt-btn time-btn"
                     onclick="setTimeVal(60, this)">60M</button></div>
-            <div class="opt-row" style="flex-direction: column; align-items: flex-start; gap: 5px;"><span>MUSIC
-                    VOL:</span>
-                <div class="slider-container" style="width: 100%;"><span>🔈</span><input type="range" id="vol-slider"
-                        min="0" max="1" step="0.1" value="0.4" style="flex:1;"
-                        oninput="updateVolume(this.value)"><span>🔊</span></div>
-            </div>
+            
             <div class="opt-row" style="flex-direction: column; align-items: flex-start; gap: 5px;"><span>SFX
                     VOL:</span>
                 <div class="slider-container" style="width: 100%;"><span>🔈</span><input type="range" id="sfx-slider"
@@ -202,7 +203,8 @@
             <h3>👑 REGOLE RE & REGINA</h3>
             <p>Nessun potere può uccidere il Re direttamente. Deve essere sconfitto con mosse legali.
                 <br><b>Attenzione:</b> Solo le Regine originali possiedono l'Immortalità se estraggono il potere. I
-                pedoni promossi non acquisiscono NESSUN potere.</p>
+                pedoni promossi non acquisiscono NESSUN potere.
+            </p>
 
             <h3>📚 CODEX MODIFICATORI</h3>
             <div class="codex-list">
@@ -301,7 +303,7 @@
     <script src="game.js"></script>
 
     <!-- VERSIONE DEL GIOCO -->
-    <div class="version-tag">v0.2</div>
+    <div class="version-tag">v0.3</div>
 </body>
 
 </html>
