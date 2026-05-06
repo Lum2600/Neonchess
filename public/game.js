@@ -171,7 +171,6 @@ function playDropSound(tier) {
 // --- MOTORE DI GIOCO ---
 let myTeam = 'W', gameHasStarted = false, opponentMode = 'HUMAN', timerEnabled = false, timeLimitMinutes = 5;
 
-// === MOTORE NUMERI CASUALI SINCRONIZZATO ===
 let gameSeed = Math.floor(Math.random() * 1000000); 
 function getGameRandom() {
     gameSeed = (gameSeed * 9301 + 49297) % 233280;
@@ -263,6 +262,9 @@ function startGame(classic = false, fromMultiplayer = false) {
         
         if (isMultiplayer && myTeam === 'B') { document.body.classList.add('play-as-black'); } else { document.body.classList.remove('play-as-black'); }
         
+        // FIX: Ripristiniamo l'orientamento corretto per le pedine in locale
+        if (!isMultiplayer && opponentMode === 'HUMAN') { document.body.classList.add('human-vs-human'); } else { document.body.classList.remove('human-vs-human'); }
+        
         if (isClassicMode) {
             document.body.classList.add('classic-mode'); document.querySelector('.header').innerText = "NEON CHESS: CLASSIC";
             document.getElementById('kills-counter').innerText = "CLASSIC MODE ACTIVE"; document.getElementById('kills-counter').className = 'kills-counter impatience-1'; document.getElementById('kills-counter').style.borderColor = 'var(--t1)'; document.getElementById('kills-counter').style.color = 'var(--t1)'; document.getElementById('kills-counter').style.textShadow = '0 0 10px var(--t1)';
@@ -350,7 +352,7 @@ function triggerEnd(winnerColor, title, desc) {
 function createPixelDisintegration(boardWrapper) {
     if(gfxLevel === 'LO') return; 
     const rect = boardWrapper.getBoundingClientRect(); 
-    const colors = ['#ffffff'];
+    const colors = ['#ffffff']; 
     for(let i = 0; i < 150; i++) {
         let cube = document.createElement('div'); cube.className = 'pixel-cube';
         cube.style.left = (rect.left + Math.random() * rect.width) + 'px'; cube.style.top = (rect.top + Math.random() * rect.height) + 'px';
@@ -449,15 +451,36 @@ function isUnderAttack(tR, tC, aColor, testGrid = grid) { for(let r=0; r<8; r++)
 
 let isCheckingLogic=false; function isInCheck(color, testGrid = grid) { if(isCheckingLogic) return false; let kPos = findKing(color, testGrid); if (!kPos) return false; isCheckingLogic=true; let attack=isUnderAttack(kPos.r, kPos.c, color==='W'?'B':'W', testGrid); isCheckingLogic=false; return attack; }
 
+// FIX: BLINDATO IL CALCOLO PER EVITARE LOOP INFINITI CHE ROMPONO IL GIOCO
 function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
     let p = testGrid[fr][fc]; if (!p) return; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl); let enemyColor = pColor === 'W' ? 'B' : 'W'; let target = testGrid[tr][tc];
-    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); let cr = fr+dr, cc = fc+dc; while (cr!==tr || cc!==tc) { if (testGrid[cr][cc] && testGrid[cr][cc].toLowerCase() !== 'k') testGrid[cr][cc] = ''; cr += dr; cc += dc; } }
+    if (cl === 'q' && mod?.n === 'Annihilation') { 
+        let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); 
+        if ((dr !== 0 || dc !== 0) && (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) {
+            let cr = fr+dr, cc = fc+dc; let limit = 0;
+            while (cr>=0 && cr<8 && cc>=0 && cc<8 && (cr!==tr || cc!==tc) && limit < 10) { 
+                if (testGrid[cr][cc] && testGrid[cr][cc].toLowerCase() !== 'k') testGrid[cr][cc] = ''; 
+                cr += dr; cc += dc; limit++;
+            } 
+        }
+    }
     if (special && special.isEnPassant) testGrid[fr][tc] = ''; if (special && special.isCastle) { if (special.isCastle === 'K') { testGrid[fr][tc-1] = testGrid[fr][tc+1]; testGrid[fr][tc+1] = ''; } if (special.isCastle === 'Q') { testGrid[fr][tc+1] = testGrid[fr][tc-2]; testGrid[fr][tc-2] = ''; } }
     testGrid[tr][tc] = p; testGrid[fr][fc] = ''; let isAttackerDead = false;
     if (target && target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true;
     if (isAttackerDead) { testGrid[tr][tc] = ''; } else {
         if (cl === 'n' && mod?.n === 'Explosive') { for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) { if(i===0 && j===0) continue; let nr=tr+i, nc=tc+j; if(nr>=0 && nr<8 && nc>=0 && nc<8 && testGrid[nr][nc] && (testGrid[nr][nc]===testGrid[nr][nc].toUpperCase()?'W':'B')!==pColor && testGrid[nr][nc].toLowerCase() !== 'k') { testGrid[nr][nc] = ''; } } }
-        if (cl === 'b' && mod?.n === 'Chain Reaction') { let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); let s1r = tr + dr, s1c = tc; let t1 = testGrid[s1r]?.[s1c]; if(t1 && t1.toLowerCase() !== 'k' && (t1===t1.toUpperCase()?'W':'B')!==pColor) testGrid[s1r][s1c] = ''; let s2r = tr, s2c = tc + dc; let t2 = testGrid[s2r]?.[s2c]; if(t2 && t2.toLowerCase() !== 'k' && (t2===t2.toUpperCase()?'W':'B')!==pColor) testGrid[s2r][s2c] = ''; let kr = tr + dr, kc = tc + dc; while(kr>=0 && kr<8 && kc>=0 && kc<8) { let tK = testGrid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK===tK.toUpperCase()?'W':'B')!==pColor) testGrid[kr][kc] = ''; kr += dr; kc += dc; } }
+        if (cl === 'b' && mod?.n === 'Chain Reaction') { 
+            let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); 
+            if (dr !== 0 || dc !== 0) {
+                let s1r = tr + dr, s1c = tc; if(s1r>=0 && s1r<8 && s1c>=0 && s1c<8) { let t1 = testGrid[s1r]?.[s1c]; if(t1 && t1.toLowerCase() !== 'k' && (t1===t1.toUpperCase()?'W':'B')!==pColor) testGrid[s1r][s1c] = ''; } 
+                let s2r = tr, s2c = tc + dc; if(s2r>=0 && s2r<8 && s2c>=0 && s2c<8) { let t2 = testGrid[s2r]?.[s2c]; if(t2 && t2.toLowerCase() !== 'k' && (t2===t2.toUpperCase()?'W':'B')!==pColor) testGrid[s2r][s2c] = ''; } 
+                let kr = tr + dr, kc = tc + dc; let limit = 0;
+                while(kr>=0 && kr<8 && kc>=0 && kc<8 && limit < 10) { 
+                    let tK = testGrid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK===tK.toUpperCase()?'W':'B')!==pColor) testGrid[kr][kc] = ''; 
+                    kr += dr; kc += dc; limit++;
+                } 
+            }
+        }
     }
 }
 
@@ -514,9 +537,23 @@ function getPieceValue(p) { if(!p) return 0; const vals = {'p': 1, 'n': 3, 'b': 
 function evaluateMove(fr, fc, tr, tc, special) {
     let pColor = 'B'; let enemyColor = 'W'; let p = grid[fr][fc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl); let score = Math.random() * 0.5; let target = grid[tr][tc];
     if (target) score += getPieceValue(target) * 10; if (special && special.isEnPassant) score += 10; if (special && special.isCastle) score += 20; 
-    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); let cr = fr+dr, cc = fc+dc; while (cr!==tr || cc!==tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') score += getPieceValue(grid[cr][cc]) * 10; cr += dr; cc += dc; } }
+    if (cl === 'q' && mod?.n === 'Annihilation') { 
+        let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); 
+        if ((dr !== 0 || dc !== 0) && (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) {
+            let cr = fr+dr, cc = fc+dc; let limit = 0;
+            while (cr>=0 && cr<8 && cc>=0 && cc<8 && (cr!==tr || cc!==tc) && limit<10) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') score += getPieceValue(grid[cr][cc]) * 10; cr += dr; cc += dc; limit++; } 
+        }
+    }
     if (cl === 'n' && mod?.n === 'Explosive') { for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) { if(i===0 && j===0) continue; let nr=tr+i, nc=tc+j; if(nr>=0 && nr<8 && nc>=0 && nc<8 && grid[nr][nc] && (grid[nr][nc]===grid[nr][nc].toUpperCase()?'W':'B')!==pColor && grid[nr][nc].toLowerCase() !== 'k') score += getPieceValue(grid[nr][nc]) * 10; } }
-    if (cl === 'b' && mod?.n === 'Chain Reaction') { let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); let s1r = tr + dr, s1c = tc; if(s1r>=0 && s1r<8 && s1c>=0 && s1c<8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1===t1.toUpperCase()?'W':'B')!==pColor) score += getPieceValue(t1) * 10; } let s2r = tr, s2c = tc + dc; if(s2r>=0 && s2r<8 && s2c>=0 && s2c<8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2===t2.toUpperCase()?'W':'B')!==pColor) score += getPieceValue(t2) * 10; } let kr = tr + dr, kc = tc + dc; while(kr>=0 && kr<8 && kc>=0 && kc<8) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK===tK.toUpperCase()?'W':'B')!==pColor) score += getPieceValue(tK) * 10; kr += dr; kc += dc; } }
+    if (cl === 'b' && mod?.n === 'Chain Reaction') { 
+        let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); 
+        if(dr !== 0 || dc !== 0) {
+            let s1r = tr + dr, s1c = tc; if(s1r>=0 && s1r<8 && s1c>=0 && s1c<8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1===t1.toUpperCase()?'W':'B')!==pColor) score += getPieceValue(t1) * 10; } 
+            let s2r = tr, s2c = tc + dc; if(s2r>=0 && s2r<8 && s2c>=0 && s2c<8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2===t2.toUpperCase()?'W':'B')!==pColor) score += getPieceValue(t2) * 10; } 
+            let kr = tr + dr, kc = tc + dc; let limit = 0;
+            while(kr>=0 && kr<8 && kc>=0 && kc<8 && limit < 10) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK===tK.toUpperCase()?'W':'B')!==pColor) score += getPieceValue(tK) * 10; kr += dr; kc += dc; limit++; } 
+        }
+    }
     let isAttackedEnd = isUnderAttack(tr, tc, enemyColor, grid); let isDefendedEnd = isUnderAttack(tr, tc, pColor, grid);
     if (isAttackedEnd) { if (isDefendedEnd) score -= getPieceValue(p) * 2; else score -= getPieceValue(p) * 10; }
     if (isUnderAttack(fr, fc, enemyColor, grid)) score += getPieceValue(p) * 8; 
@@ -553,8 +590,10 @@ function animateMovement(fr, fc, tr, tc, pColor, callback) {
     if (document.body.classList.contains('play-as-black')) { dX = -dX; dY = -dY; }
     let glowColor = pColor === 'W' ? 'var(--t2)' : 'var(--t4)'; piece.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
     if(gfxLevel !== 'LO') piece.style.transition += ', filter 0.35s ease';
-    let rot = ''; if (document.body.classList.contains('play-as-black')) rot = ' rotate(180deg)'; else if (opponentMode === 'HUMAN' && !isMultiplayer && pColor === 'B') rot = ' rotate(180deg)';
-    piece.style.transform = `translate(${dX}px, ${dY}px) scale(1.3)${rot}`;
+    
+    // Rimuoviamo le rotazioni fasulle durante l'animazione per evitare sfarfallii
+    piece.style.transform = `translate(${dX}px, ${dY}px) scale(1.3)`;
+    
     if(gfxLevel !== 'LO') piece.style.filter = `drop-shadow(0 0 15px ${glowColor}) brightness(1.5)`;
     piece.style.zIndex = "100"; setTimeout(() => { isAnimating = false; callback(); }, 350);
 }
@@ -572,13 +611,26 @@ function clickCell(r, c) {
     } else if (col === turno) { selected = { r, c }; hints = getLegalMoves(r, c); draw(); }
 }
 
+// FIX: BLINDATO IL CALCOLO PER EVITARE LOOP INFINITI IN ESECUZIONE
 function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null, remoteSeed = null) {
     let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W'; let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl); let pendingAnims = []; let isAttackerDead = false;
     let isCapture = target || (special && special.isEnPassant); if(isCapture) playMoveSound('capture'); else playMoveSound('move');
     currentMoveSequence += (currentMoveSequence ? "-" : "") + fr + "" + fc + "" + tr + "" + tc;
     let wasPromoted = isPromoted(fr, fc); if (wasPromoted) promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
 
-    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); let cr = fr+dr, cc = fc+dc; while (cr!==tr || cc!==tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({type: 'capture', r: cr, c: cc, color: enemyColor}); grid[cr][cc] = ''; if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; } cr += dr; cc += dc; } }
+    if (cl === 'q' && mod?.n === 'Annihilation') { 
+        let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); 
+        if ((dr !== 0 || dc !== 0) && (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) {
+            let cr = fr+dr, cc = fc+dc; let limit = 0;
+            while (cr>=0 && cr<8 && cc>=0 && cc<8 && (cr!==tr || cc!==tc) && limit < 10) { 
+                if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { 
+                    let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({type: 'capture', r: cr, c: cc, color: enemyColor}); grid[cr][cc] = ''; 
+                    if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; 
+                } 
+                cr += dr; cc += dc; limit++;
+            } 
+        }
+    }
     if (target) { deadPieces[enemyColor].push(target); pendingAnims.push({type: 'capture', r: tr, c: tc, color: enemyColor}); if (target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; }
     if (isAttackerDead) { deadPieces[pColor].push(p); pendingAnims.push({type: 'capture', r: tr, c: tc, color: pColor}); let pIdx = originalQueens.indexOf(fr+","+fc); if(pIdx !== -1) originalQueens.splice(pIdx, 1); }
 
@@ -602,9 +654,13 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         if (!isAttackerDead) {
             if (cl === 'n' && mod?.n === 'Explosive') { for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) { if(i===0 && j===0) continue; let nr=tr+i, nc=tc+j; if(nr>=0 && nr<8 && nc>=0 && nc<8 && grid[nr][nc] && (grid[nr][nc]===grid[nr][nc].toUpperCase()?'W':'B')!==pColor && grid[nr][nc].toLowerCase() !== 'k') { deadPieces[enemyColor].push(grid[nr][nc]); pendingAnims.push({type: 'capture', r: nr, c: nc, color: enemyColor}); grid[nr][nc] = ''; } } }
             if (cl === 'b' && mod?.n === 'Chain Reaction') {
-                let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); let s1r = tr + dr, s1c = tc; if (s1r>=0 && s1r<8 && s1c>=0 && s1c<8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1===t1.toUpperCase()?'W':'B')!==pColor) { deadPieces[enemyColor].push(t1); pendingAnims.push({type: 'capture', r: s1r, c: s1c, color: enemyColor}); grid[s1r][s1c] = ''; } }
-                let s2r = tr, s2c = tc + dc; if (s2r>=0 && s2r<8 && s2c>=0 && s2c<8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2===t2.toUpperCase()?'W':'B')!==pColor) { deadPieces[enemyColor].push(t2); pendingAnims.push({type: 'capture', r: s2r, c: s2c, color: enemyColor}); grid[s2r][s2c] = ''; } }
-                let kr = tr + dr, kc = tc + dc; while(kr>=0 && kr<8 && kc>=0 && kc<8) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK===tK.toUpperCase()?'W':'B')!==pColor) { deadPieces[enemyColor].push(tK); pendingAnims.push({type: 'capture', r: kr, c: kc, color: enemyColor}); grid[kr][kc] = ''; } kr += dr; kc += dc; }
+                let dr = Math.sign(tr-fr), dc = Math.sign(tc-fc); 
+                if (dr !== 0 || dc !== 0) {
+                    let s1r = tr + dr, s1c = tc; if (s1r>=0 && s1r<8 && s1c>=0 && s1c<8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1===t1.toUpperCase()?'W':'B')!==pColor) { deadPieces[enemyColor].push(t1); pendingAnims.push({type: 'capture', r: s1r, c: s1c, color: enemyColor}); grid[s1r][s1c] = ''; } }
+                    let s2r = tr, s2c = tc + dc; if (s2r>=0 && s2r<8 && s2c>=0 && s2c<8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2===t2.toUpperCase()?'W':'B')!==pColor) { deadPieces[enemyColor].push(t2); pendingAnims.push({type: 'capture', r: s2r, c: s2c, color: enemyColor}); grid[s2r][s2c] = ''; } }
+                    let kr = tr + dr, kc = tc + dc; let limit = 0;
+                    while(kr>=0 && kr<8 && kc>=0 && kc<8 && limit < 10) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK===tK.toUpperCase()?'W':'B')!==pColor) { deadPieces[enemyColor].push(tK); pendingAnims.push({type: 'capture', r: kr, c: kc, color: enemyColor}); grid[kr][kc] = ''; } kr += dr; kc += dc; limit++; }
+                }
             }
             if (cl === 'r' && mod?.n === 'Factory') { if(fr>=0 && fr<8 && fc>=0 && fc<8 && !grid[fr][fc]) { grid[fr][fc] = pColor === 'W' ? 'R' : 'r'; recentSpawns.push({r: fr, c: fc}); } }
         }
@@ -666,7 +722,7 @@ function updateScores() {
     document.getElementById('b-captures').innerHTML = (bAdv ? `<span style="font-size:0.8rem; margin-right:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--black); opacity:0.8;">${bAdv}</span>` : '') + deadPieces['W'].map(p => `<span class="piece W" style="margin-left:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('');
 }
 
-// FIX: COSTRUZIONE HTML SICURA PER EVITARE CRASH DEL BROWSER
+// FIX: LA SCACCHIERA VIENE DISEGNATA CORRETTAMENTE IN BLOCCO
 function draw() {
     let b = document.getElementById('board'); 
     let boardHTML = '';
@@ -697,8 +753,6 @@ function draw() {
             boardHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
         }
     }
-    
-    // Inseriamo tutto il blocco in una volta sola per evitare bug di caricamento!
     b.innerHTML = boardHTML;
 }
 
@@ -712,6 +766,7 @@ window.addEventListener('mousedown', e => {
     if (!e.target.closest('.board-wrapper')) return;
     
     let boardEl = document.getElementById('board');
+    if (!boardEl) return;
     const rect = boardEl.getBoundingClientRect();
     const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
@@ -728,6 +783,7 @@ window.addEventListener('mouseup', e => {
     if (!arrowStartCell) return;
     
     let boardEl = document.getElementById('board');
+    if (!boardEl) return;
     const rect = boardEl.getBoundingClientRect();
     const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
