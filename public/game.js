@@ -391,7 +391,6 @@ function triggerEnd(winnerColor, title, desc) {
     gameOver = true; 
     clearInterval(timerInterval);
 
-    // 1. CALCOLO VITTORIA O SCONFITTA DINAMICO
     let endTitle = "PATTA";
     let titleColor = "var(--t2)"; 
     
@@ -407,11 +406,15 @@ function triggerEnd(winnerColor, title, desc) {
         endTitle = "ABBANDONO";
     }
 
+    // FIX: Tira fuori la schermata di Game Over dalla scacchiera per evitare che scompaia!
+    let goScreen = document.getElementById('game-over-screen');
+    document.body.appendChild(goScreen); 
+
     if(gfxLevel !== 'LO') { 
         let wrapper = document.getElementById('main-board-wrapper');
         
         if (document.body.classList.contains('overdrive')) {
-            // --- SCENARIO 1: FINE IN OVERDRIVE (Slowmo Crash + Laser Inverso) ---
+            // --- SCENARIO 1: FINE IN OVERDRIVE (Slowmo Crash) ---
             wrapper.classList.add('crash-finish'); 
             createParticles(); 
             
@@ -419,12 +422,8 @@ function triggerEnd(winnerColor, title, desc) {
             if (bgm) {
                 bgm.preservesPitch = false; 
                 let slowdown = setInterval(() => {
-                    if (bgm.playbackRate > 0.15) {
-                        bgm.playbackRate -= 0.1; 
-                    } else {
-                        bgm.pause();
-                        clearInterval(slowdown);
-                    }
+                    if (bgm.playbackRate > 0.15) bgm.playbackRate -= 0.1; 
+                    else { bgm.pause(); clearInterval(slowdown); }
                 }, 100); 
             }
 
@@ -438,9 +437,10 @@ function triggerEnd(winnerColor, title, desc) {
             }, 1300);
             
             setTimeout(() => wipe.remove(), 3000);
+            setTimeout(() => showGameOver(endTitle, titleColor, desc), 2500);
             
         } else {
-            // --- SCENARIO 2: FINE NORMALE (Zoom + Smaterializzazione a cubetti) ---
+            // --- SCENARIO 2: FINE NORMALE (Zoom + Disintegrazione Thanos) ---
             wrapper.classList.add('zoom-finish');
             createParticles();
             
@@ -452,59 +452,82 @@ function triggerEnd(winnerColor, title, desc) {
                 }, 100);
             }
             
-            // Dopo 1 secondo di zoom... Esplosione in cubetti!
+            // Dopo 1 secondo, disintegra lentamente dal basso verso l'alto
             setTimeout(() => {
-                wrapper.classList.add('disintegrate-board');
+                playMoveSound('capture'); 
                 createPixelDisintegration(wrapper);
-                playMoveSound('capture'); // Suono "crack" quando si disintegra
             }, 1000);
+            
+            // La schermata appare DOPO che la scacchiera si è smaterializzata (a 2.6s)
+            setTimeout(() => showGameOver(endTitle, titleColor, desc), 2600);
         }
     } else {
         let bgm = document.getElementById('bg-music');
         if (bgm) bgm.pause();
+        setTimeout(() => showGameOver(endTitle, titleColor, desc), 500);
     }
-
-    // Mostra la schermata finale 
-    setTimeout(() => {
-        document.getElementById('game-over-screen').classList.add('show');
-        let t = document.getElementById('go-title'); 
-        t.innerText = endTitle;
-        t.style.color = titleColor;
-        t.style.textShadow = `0 0 20px ${titleColor}`; 
-        document.getElementById('go-desc').innerText = desc;
-    }, gfxLevel !== 'LO' ? 2500 : 500); 
 }
 
-// NUOVA FUNZIONE: Genera i cubetti al neon per la smaterializzazione
-function createPixelDisintegration(boardWrapper) {
+// Funzione di utilità per mostrare la schermata finale
+function showGameOver(title, color, desc) {
+    let goScreen = document.getElementById('game-over-screen');
+    goScreen.classList.add('show');
+    let t = document.getElementById('go-title'); 
+    t.innerText = title;
+    t.style.color = color;
+    t.style.textShadow = `0 0 20px ${color}`; 
+    document.getElementById('go-desc').innerText = desc;
+}
+
+// NUOVA FUNZIONE: Disintegrazione cinematografica dal basso verso l'alto
+function createPixelDisintegration(wrapper) {
     if(gfxLevel === 'LO') return;
-    const rect = boardWrapper.getBoundingClientRect();
-    const colors = ['#00f3ff', '#ff0055', '#ffffff', '#bc13fe'];
     
-    for(let i = 0; i < 150; i++) {
-        let cube = document.createElement('div');
-        cube.className = 'pixel-cube';
+    const rect = wrapper.getBoundingClientRect();
+    const colors = ['#00f3ff', '#ff0055', '#ffffff', '#bc13fe', '#ffaa00'];
+    
+    let progress = 0; 
+    let startTime = Date.now();
+    const duration = 1500; // La disintegrazione dura 1.5 secondi
+
+    // Motore di animazione a 60fps
+    function animate() {
+        let elapsed = Date.now() - startTime;
+        progress = Math.min(elapsed / duration, 1);
         
-        // Spawn casuale su tutta la scacchiera
-        cube.style.left = (rect.left + Math.random() * rect.width) + 'px';
-        cube.style.top = (rect.top + Math.random() * rect.height) + 'px';
+        // Magia CSS: Taglia la scacchiera dal basso verso l'alto!
+        wrapper.style.clipPath = `inset(0 0 ${progress * 100}% 0)`;
         
-        cube.style.background = colors[Math.floor(Math.random() * colors.length)];
-        cube.style.boxShadow = `0 0 10px ${cube.style.background}`;
-        
-        // Esplosione a 360 gradi
-        let angle = Math.random() * Math.PI * 2;
-        let distance = Math.random() * 300 + 50;
-        let dx = Math.cos(angle) * distance;
-        let dy = Math.sin(angle) * distance;
-        
-        cube.style.setProperty('--dx', `${dx}px`);
-        cube.style.setProperty('--dy', `${dy}px`);
-        cube.style.setProperty('--rot', `${Math.random() * 720}deg`);
-        
-        document.body.appendChild(cube);
-        setTimeout(() => cube.remove(), 1500);
+        if (progress < 1) {
+            // Calcola la linea esatta dove sta avvenendo il taglio
+            let currentY = rect.bottom - (progress * rect.height);
+            
+            // Genera cubetti che volano via dalla linea di taglio
+            for(let i = 0; i < 4; i++) {
+                let cube = document.createElement('div');
+                cube.className = 'pixel-cube';
+                cube.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                cube.style.top = currentY + 'px';
+                cube.style.background = colors[Math.floor(Math.random() * colors.length)];
+                cube.style.boxShadow = `0 0 10px ${cube.style.background}`;
+                
+                // Volo verso l'alto con un leggero angolo casuale
+                let angle = -Math.PI / 2 + (Math.random() - 0.5); 
+                let distance = Math.random() * 150 + 50;
+                
+                cube.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+                cube.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+                cube.style.setProperty('--rot', `${Math.random() * 360}deg`);
+                
+                document.body.appendChild(cube);
+                setTimeout(() => cube.remove(), 1200);
+            }
+            requestAnimationFrame(animate);
+        } else {
+            wrapper.style.display = 'none'; // Nascondi del tutto alla fine
+        }
     }
+    animate();
 }
 function updateTimersUI() {
     let container = document.getElementById('timers-container');
