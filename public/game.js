@@ -921,20 +921,17 @@ function draw() {
 // ==========================================
 let arrowStartCell = null;
 const boardEl = document.getElementById('board');
-const arrowSvg = document.getElementById('arrow-svg');
 
 // 1. Disattiva il noioso menu a tendina di Windows sulla scacchiera
 boardEl.addEventListener('contextmenu', e => e.preventDefault());
 
 // 2. Registra la cella di partenza (quando PREMI il tasto destro)
 boardEl.addEventListener('mousedown', e => {
-    if (e.button !== 2) return; // Solo tasto destro
+    if (e.button !== 2) return; 
     const rect = boardEl.getBoundingClientRect();
     const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
     let r = Math.floor((e.clientY - rect.top) / cellSize);
-    
-    // Inverti coordinate se la scacchiera è girata
     if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
     arrowStartCell = {r, c};
 });
@@ -946,7 +943,6 @@ boardEl.addEventListener('mouseup', e => {
     const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize);
     let r = Math.floor((e.clientY - rect.top) / cellSize);
-    
     if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
     
     // Se non hai rilasciato sulla stessa cella, traccia la freccia!
@@ -956,9 +952,40 @@ boardEl.addEventListener('mouseup', e => {
     arrowStartCell = null;
 });
 
-// 4. Funzione che disegna fisicamente la linea
+// 4. Funzione che disegna fisicamente la linea (Crea l'SVG da sola!)
 function drawArrow(r1, c1, r2, c2) {
-    const cellSize = 100 / 8; // Coordinate in percentuale
+    let svg = document.getElementById('arrow-svg');
+    if (!svg) {
+        // Se non esiste, lo crea al volo esattamente sopra la scacchiera
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.id = 'arrow-svg';
+        svg.style.position = 'absolute';
+        svg.style.top = '0';
+        svg.style.left = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '500';
+        
+        let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', 'arrowhead');
+        marker.setAttribute('markerWidth', '4');
+        marker.setAttribute('markerHeight', '4');
+        marker.setAttribute('refX', '2.5');
+        marker.setAttribute('refY', '2');
+        marker.setAttribute('orient', 'auto');
+        let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', '0 0, 4 2, 0 4');
+        polygon.setAttribute('fill', 'rgba(255, 170, 0, 0.8)');
+        
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+        boardEl.appendChild(svg);
+    }
+
+    const cellSize = 100 / 8; 
     const x1 = c1 * cellSize + cellSize / 2;
     const y1 = r1 * cellSize + cellSize / 2;
     const x2 = c2 * cellSize + cellSize / 2;
@@ -969,16 +996,19 @@ function drawArrow(r1, c1, r2, c2) {
     line.setAttribute('y1', y1 + '%');
     line.setAttribute('x2', x2 + '%');
     line.setAttribute('y2', y2 + '%');
-    line.setAttribute('stroke', 'rgba(255, 170, 0, 0.8)'); // Colore Arancio Neon
+    line.setAttribute('stroke', 'rgba(255, 170, 0, 0.8)'); 
     line.setAttribute('stroke-width', '1.5%'); 
     line.setAttribute('marker-end', 'url(#arrowhead)');
     line.setAttribute('stroke-linecap', 'round');
     
-    arrowSvg.appendChild(line);
+    svg.appendChild(line);
 }
 
 // 5. Funzione per pulire tutto
 function clearArrows() {
-    const lines = arrowSvg.querySelectorAll('line');
-    lines.forEach(l => l.remove());
+    let svg = document.getElementById('arrow-svg');
+    if (svg) {
+        const lines = svg.querySelectorAll('line');
+        lines.forEach(l => l.remove());
+    }
 }
