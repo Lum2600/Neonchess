@@ -71,29 +71,50 @@ if(socket) {
     });
 }
 
-// --- GESTIONE AUDIO E OPZIONI ---
+// --- GESTIONE AUDIO ANTICRASH ---
 let musicStarted = false;
 let sfxVolume = 0.5;
 let gfxLevel = 'HI'; 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx;
+
+try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+} catch(e) {
+    console.warn("AudioContext bloccato dal browser, procedo in modalità silenziosa.");
+}
 
 function tryStartMusic() {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(audioCtx && audioCtx.state === 'suspended') {
+        try { audioCtx.resume(); } catch(e){}
+    }
     if (musicStarted) return;
     let music = document.getElementById('bg-music');
-    music.volume = document.getElementById('vol-slider').value;
-    music.play().then(() => { musicStarted = true; }).catch(e => console.log("Attesa interazione..."));
+    if (music) {
+        music.volume = document.getElementById('vol-slider').value;
+        music.play().then(() => { musicStarted = true; }).catch(e => console.log("Attesa interazione utente per audio..."));
+    }
 }
 
 document.body.addEventListener('click', tryStartMusic, { once: true });
 
-function updateVolume(val) { document.getElementById('bg-music').volume = val; document.getElementById('vol-slider').value = val; tryStartMusic(); }
-function updateSfxVolume(val) { sfxVolume = parseFloat(val); document.getElementById('sfx-slider').value = val; if(audioCtx.state === 'suspended') audioCtx.resume(); }
+function updateVolume(val) { 
+    let music = document.getElementById('bg-music');
+    if(music) music.volume = val; 
+    document.getElementById('vol-slider').value = val; 
+    tryStartMusic(); 
+}
+
+function updateSfxVolume(val) { 
+    sfxVolume = parseFloat(val); 
+    document.getElementById('sfx-slider').value = val; 
+    if(audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch(e){} } 
+}
 
 function playMoveSound(type = 'move') {
-    if(sfxVolume <= 0) return;
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(!audioCtx || sfxVolume <= 0) return;
+    if(audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch(e){} }
     const now = audioCtx.currentTime;
+    
     if(type === 'check') {
         const playBeep = (timeOffset) => {
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
@@ -120,9 +141,11 @@ function playMoveSound(type = 'move') {
 }
 
 function playDropSound(tier) {
-    if(sfxVolume <= 0) return; if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(!audioCtx || sfxVolume <= 0) return; 
+    if(audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch(e){} }
     const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
     osc.connect(gainNode); gainNode.connect(audioCtx.destination); const now = audioCtx.currentTime;
+    
     if (tier === 'common') {
         osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
         gainNode.gain.setValueAtTime(0.3 * sfxVolume, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
@@ -166,6 +189,7 @@ function setTeam(t) {
     myTeam = t; document.getElementById('btn-team-w').classList.toggle('active', t==='W'); document.getElementById('btn-team-b').classList.toggle('active', t==='B'); 
     document.body.setAttribute('data-team', t); tryStartMusic(); 
 }
+
 function setGraphics(lvl) {
     gfxLevel = lvl; document.getElementById('btn-gfx-hi').classList.toggle('active', lvl === 'HI'); document.getElementById('btn-gfx-med').classList.toggle('active', lvl === 'MED'); document.getElementById('btn-gfx-lo').classList.toggle('active', lvl === 'LO'); document.body.setAttribute('data-gfx', lvl); tryStartMusic();
 }
@@ -275,7 +299,9 @@ function init() {
 
     document.body.classList.remove('mod-level-1', 'mod-level-2', 'mod-level-3', 'overdrive', 'human-vs-human'); document.getElementById('w-mods-list').innerHTML = ''; document.getElementById('b-mods-list').innerHTML = '';
     
-    let bgm = document.getElementById('bg-music'); bgm.playbackRate = 1.0; bgm.preservesPitch = true;
+    let bgm = document.getElementById('bg-music');
+    if (bgm) { try { bgm.playbackRate = 1.0; bgm.preservesPitch = true; } catch(e) {} }
+    
     timeLeftW = timeLimitMinutes * 60 * 1000; timeLeftB = timeLimitMinutes * 60 * 1000; lastTime = Date.now();
     clearInterval(timerInterval); if(timerEnabled) startClock();
     updateScores(); updateTimersUI(); updateKillsCounter(); draw();
@@ -324,7 +350,7 @@ function triggerEnd(winnerColor, title, desc) {
 function createPixelDisintegration(boardWrapper) {
     if(gfxLevel === 'LO') return; 
     const rect = boardWrapper.getBoundingClientRect(); 
-    const colors = ['#ffffff']; // SOLO BIANCO COME RICHIESTO
+    const colors = ['#ffffff'];
     for(let i = 0; i < 150; i++) {
         let cube = document.createElement('div'); cube.className = 'pixel-cube';
         cube.style.left = (rect.left + Math.random() * rect.width) + 'px'; cube.style.top = (rect.top + Math.random() * rect.height) + 'px';
@@ -348,7 +374,8 @@ function getPositionKey() { return JSON.stringify(grid) + turno + JSON.stringify
 
 function triggerOverdrive() {
     if(document.body.classList.contains('overdrive')) return; isAnimating = true;
-    let bgm = document.getElementById('bg-music'); bgm.preservesPitch = false; bgm.playbackRate = 2.0;
+    let bgm = document.getElementById('bg-music'); 
+    if (bgm) { bgm.preservesPitch = false; bgm.playbackRate = 2.0; }
     let alertEl = document.getElementById('overdrive-alert'); alertEl.classList.add('show'); playMoveSound('check');
 
     if(gfxLevel !== 'LO') {
@@ -614,6 +641,71 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
 
     if (needsPromotion) { if (isRemote) finishMove(remotePromoPiece); else if (opponentMode === 'AI' && pColor === 'B' && !isMultiplayer) finishMove('q'); else showPromotionUI(pColor, finishMove); } else { finishMove(null); }
 }
+
+function checkGameState() {
+    let enemyColor = turno; let enemyHasMoves = false; let piecesLeft = 0;
+    for(let r=0; r<8; r++) { for(let c=0; c<8; c++) { if(grid[r][c]) { piecesLeft++; if ((grid[r][c]===grid[r][c].toUpperCase()?'W':'B')===enemyColor) { if(!enemyHasMoves && getLegalMoves(r, c).length > 0) enemyHasMoves = true; } } } }
+    let isCheck = isInCheck(enemyColor); if (isCheck && enemyHasMoves) playMoveSound('check');
+    if(!enemyHasMoves) {
+        if (isCheck) triggerEnd(enemyColor === 'W' ? 'B' : 'W', 'MATE', `Il Team ${enemyColor === 'W' ? 'Black' : 'White'} trionfa!`); else triggerEnd(null, 'STALEMATE', 'Nessuna mossa legale. La partita è patta.'); return;
+    } 
+    let key = getPositionKey();
+    if (halfMoveClock >= 100 || piecesLeft === 2 || positionHistory[key] >= 3) { let reason = piecesLeft === 2 ? 'Materiale insufficiente' : (positionHistory[key] >= 3 ? 'Tripla ripetizione' : 'Regola delle 50 mosse'); triggerEnd(null, 'PATTA', `${reason}. La partita è in parità.`); }
+    updateTurnDisplay(); updateTimersUI();
+}
+
+function updateCastlingRights(p, r, c) { let col = p===p.toUpperCase()?'W':'B'; if (p.toLowerCase()==='k') castlingRights[col].k = false; if (p.toLowerCase()==='r') { if(c===0) castlingRights[col].r1=false; if(c===7) castlingRights[col].r8=false; } }
+
+function updateTurnDisplay() { let td = document.getElementById('turn-display'); td.innerText = turno === 'W' ? "TURN: WHITE" : "TURN: BLACK"; td.style.color = turno === 'W' ? "var(--white)" : "var(--black)"; td.style.textShadow = `0 0 10px ${turno === 'W' ? "var(--white)" : "var(--black)"}`; }
+
+function updateScores() {
+    let wScore = 0; let bScore = 0; const vals = {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0};
+    for(let r=0; r<8; r++) { for(let c=0; c<8; c++) { let p = grid[r][c]; if(p) { let val = vals[p.toLowerCase()] || 0; if(p === p.toUpperCase()) wScore += val; else bScore += val; } } }
+    let wAdv = wScore > bScore ? `+${wScore - bScore}` : ''; let bAdv = bScore > wScore ? `+${bScore - wScore}` : '';
+    document.getElementById('w-captures').innerHTML = deadPieces['B'].map(p => `<span class="piece B" style="margin-right:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('') + (wAdv ? `<span style="font-size:0.8rem; margin-left:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--white); opacity:0.8;">${wAdv}</span>` : '');
+    document.getElementById('b-captures').innerHTML = (bAdv ? `<span style="font-size:0.8rem; margin-right:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--black); opacity:0.8;">${bAdv}</span>` : '') + deadPieces['W'].map(p => `<span class="piece W" style="margin-left:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('');
+}
+
+// FIX: COSTRUZIONE HTML SICURA PER EVITARE CRASH DEL BROWSER
+function draw() {
+    let b = document.getElementById('board'); 
+    let boardHTML = '';
+    let chK = findKing(turno); 
+    let inCheck = isInCheck(turno);
+
+    if (isMultiplayer && myTeam === 'B') { document.body.classList.add('play-as-black'); }
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            let cl = `cell ${(r + c) % 2 == 0 ? 'l' : 'd'}`;
+            if (selected && selected.r == r && selected.c == c) cl += ' sel'; 
+            if (lastMove && lastMove.to.r == r && lastMove.to.c == c) cl += ' last-move'; 
+            if (hints.find(h => h.r == r && h.c == c)) cl += grid[r][c] ? ' h-c' : ' h-m'; 
+            if (inCheck && chK && chK.r === r && chK.c === c) cl += ' check';
+
+            let pHTML = '';
+            if (grid[r][c]) {
+                let color = grid[r][c] == grid[r][c].toUpperCase() ? 'W' : 'B'; let pc = grid[r][c].toLowerCase(); 
+                let mod = getMod(r, c, color, pc); let aClass = mod ? `aura-${mod.t}` : '';
+                let animClass = ''; if (recentModdedClasses.some(x => x.color === color && x.cl === pc && !isPromoted(r, c))) animClass = 'mod-receive-anim';
+                let isPromo = isPromoted(r, c); let isClone = recentSpawns.some(s => s.r === r && s.c === c) && !isPromo;
+                let spawnClass = (gfxLevel !== 'LO' && (isClone || isPromo)) ? 'spawn-anim' : '';
+                let cloneTag = isPromo ? '<span class="clone-tag" style="color:var(--t2); border-color:var(--t2);">[P]</span>' : (isClone ? '<span class="clone-tag">[C]</span>' : '');
+
+                pHTML = `<div class="piece ${color} ${aClass} ${spawnClass} ${animClass}">${glyphs[grid[r][c]]}${cloneTag}</div>`;
+            }
+            boardHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
+        }
+    }
+    
+    // Inseriamo tutto il blocco in una volta sola per evitare bug di caricamento!
+    b.innerHTML = boardHTML;
+}
+
+// ==========================================
+// SISTEMA FRECCE STRATEGICHE
+// ==========================================
+let arrowStartCell = null;
 
 window.addEventListener('mousedown', e => {
     if (e.button !== 0) return; 
