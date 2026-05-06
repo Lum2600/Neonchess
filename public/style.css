@@ -748,3 +748,33 @@ body:not([data-gfx="LO"]) .game-over-screen.show {
         width: 160px;
     }
 }
+
+/* --- STILE BARRA DI PROGRESSIONE --- */
+.song-progress {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    accent-color: var(--t2); /* Colore neon azzurro */
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    margin: 5px 0;
+    outline: none;
+}
+
+.music-player {
+    /* ... mantieni il resto ... */
+    position: fixed;
+    bottom: 20px; /* Posizione iniziale */
+    left: 20px;
+    user-select: none; /* Impedisce di selezionare il testo mentre trascini */
+    touch-action: none; /* Ottimizza il trascinamento su alcuni browser */
+}
+
+.player-info {
+    cursor: grab; /* Indica che si può afferrare */
+    padding-bottom: 5px;
+}
+
+.player-info:active {
+    cursor: grabbing;
+}

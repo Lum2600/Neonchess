@@ -78,81 +78,93 @@ if (socket) {
 }
 
 // --- GESTIONE AUDIO E OPZIONI ---
+// --- GESTIONE AUDIO, PLAYER E DRAG & DROP ---
 let musicStarted = false;
-let sfxVolume = 0.5;
-let gfxLevel = 'HI'; 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+let currentSongIndex = -1;
 const playlist = [
     "musica/Aria Math.mp3",
     "musica/C418 - Blind Spots (Minecraft Volume Beta).mp3",
     "musica/Mice on Venus.mp3",
     "musica/Moog City.mp3"
 ];
-let currentSongIndex = -1;
 
 function playNextSong() {
     let music = document.getElementById('bg-music');
     let nextIndex;
-    
-    do {
-        nextIndex = Math.floor(Math.random() * playlist.length);
-    } while (nextIndex === currentSongIndex);
+    do { nextIndex = Math.floor(Math.random() * playlist.length); } while (nextIndex === currentSongIndex);
     
     currentSongIndex = nextIndex;
     music.src = playlist[currentSongIndex];
     music.volume = document.getElementById('vol-slider').value;
     
-    music.playbackRate = 1.0;
-    music.preservesPitch = true;
-
-    // Aggiorna Titolo nel Player
     let fileName = playlist[currentSongIndex].split('/').pop().replace('.mp3', '');
-    let titleEl = document.getElementById('song-title');
-    if (titleEl) titleEl.innerText = fileName;
+    document.getElementById('song-title').innerText = fileName;
 
     music.play().then(() => {
-        let btn = document.getElementById('play-pause-btn');
-        if (btn) btn.innerText = "⏸";
+        document.getElementById('play-pause-btn').innerText = "⏸";
     }).catch(e => console.log("Attesa interazione..."));
 }
 
-function togglePlayPause() {
+// 1. LOGICA BARRA DI PROGRESSIONE (Seeking)
+const progressBar = document.getElementById('song-progress');
+progressBar.addEventListener('input', () => {
     let music = document.getElementById('bg-music');
-    let btn = document.getElementById('play-pause-btn');
-    if (!music || !btn) return;
-    if (music.paused) {
-        music.play();
-        btn.innerText = "⏸";
-    } else {
-        music.pause();
-        btn.innerText = "▶";
+    if (music.duration) {
+        music.currentTime = (progressBar.value / 100) * music.duration;
     }
-}
+});
 
-// Aggiorna durata ogni secondo
+// Aggiornamento automatico barra e tempo
 setInterval(() => {
     let music = document.getElementById('bg-music');
     let durationEl = document.getElementById('song-duration');
-    if (!music || !music.duration || !durationEl) return;
+    if (!music || !music.duration) return;
     
+    // Aggiorna Barra
+    progressBar.value = (music.currentTime / music.duration) * 100;
+    
+    // Aggiorna Testo Durata
     let fmt = (s) => {
         let m = Math.floor(s / 60);
         let sec = Math.floor(s % 60);
         return `${m}:${sec.toString().padStart(2, '0')}`;
     };
-    
     durationEl.innerText = `${fmt(music.currentTime)} / ${fmt(music.duration)}`;
-}, 1000);
+}, 500);
 
-function tryStartMusic() {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    if (musicStarted) return;
-    
+// 2. SISTEMA DRAG & DROP (Trascinamento)
+const player = document.getElementById('music-player');
+const handle = document.getElementById('music-player-handle');
+let isDragging = false;
+let startX, startY, initialX, initialY;
+
+handle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    initialX = player.offsetLeft;
+    initialY = player.offsetTop;
+    player.style.bottom = 'auto'; // Rimuove il vincolo CSS originale
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    player.style.left = (initialX + dx) + 'px';
+    player.style.top = (initialY + dy) + 'px';
+});
+
+window.addEventListener('mouseup', () => {
+    isDragging = false;
+});
+
+// Funzione toggle esistente
+function togglePlayPause() {
     let music = document.getElementById('bg-music');
-    music.addEventListener('ended', playNextSong);
-    playNextSong();
-    musicStarted = true;
+    let btn = document.getElementById('play-pause-btn');
+    if (music.paused) { music.play(); btn.innerText = "⏸"; } 
+    else { music.pause(); btn.innerText = "▶"; }
 }
 
 document.body.addEventListener('click', tryStartMusic, { once: true });
