@@ -391,69 +391,121 @@ function triggerEnd(winnerColor, title, desc) {
     gameOver = true; 
     clearInterval(timerInterval);
 
-    // 1. CALCOLO VITTORIA O SCONFITTA
+    // 1. CALCOLO VITTORIA O SCONFITTA DINAMICO
     let endTitle = "PATTA";
-    let titleColor = "var(--t2)"; // Azzurro di base
+    let titleColor = "var(--t2)"; 
     
     if (winnerColor) {
         if (winnerColor === myTeam) {
             endTitle = "VITTORIA";
-            titleColor = "var(--t1)"; // Verde Neon (o Rosa in Overdrive)
+            titleColor = "var(--t1)"; 
         } else {
             endTitle = "SCONFITTA";
-            titleColor = "var(--t4)"; // Rosso Neon
+            titleColor = "var(--t4)"; 
         }
     } else if (title === 'DISCONNESSO') {
         endTitle = "ABBANDONO";
     }
 
-    // 2. EFFETTO AUDIO: Il disco si ferma (Slow-motion crash)
-    let bgm = document.getElementById('bg-music');
-    if (bgm) {
-        bgm.preservesPitch = false; // Permette all'audio di distorcersi rallentando
-        let slowdown = setInterval(() => {
-            if (bgm.playbackRate > 0.15) {
-                bgm.playbackRate -= 0.1; // Rallenta gradualmente ogni 100ms
-            } else {
-                bgm.pause();
-                clearInterval(slowdown);
-            }
-        }, 100); 
-    }
-
     if(gfxLevel !== 'LO') { 
-        // 3. Applica l'animazione visiva di Glitch/Crash
-        document.getElementById('main-board-wrapper').classList.add('crash-finish'); 
-        createParticles(); 
+        let wrapper = document.getElementById('main-board-wrapper');
         
-        // 4. EFFETTO LASER INVERTITO: Se eravamo in Overdrive, lo spazziamo via!
         if (document.body.classList.contains('overdrive')) {
+            // --- SCENARIO 1: FINE IN OVERDRIVE (Slowmo Crash + Laser Inverso) ---
+            wrapper.classList.add('crash-finish'); 
+            createParticles(); 
+            
+            let bgm = document.getElementById('bg-music');
+            if (bgm) {
+                bgm.preservesPitch = false; 
+                let slowdown = setInterval(() => {
+                    if (bgm.playbackRate > 0.15) {
+                        bgm.playbackRate -= 0.1; 
+                    } else {
+                        bgm.pause();
+                        clearInterval(slowdown);
+                    }
+                }, 100); 
+            }
+
             let wipe = document.createElement('div'); 
             wipe.className = 'laser-wipe'; 
             document.body.appendChild(wipe);
             
-            // Esattamente a metà animazione (1.3s), quando il laser copre tutto lo schermo,
-            // togliamo la classe overdrive. Il raggio lascerà dietro di sé i colori normali!
             setTimeout(() => {
                 document.body.classList.remove('overdrive');
-                document.getElementById('main-board-wrapper').classList.remove('board-overdrive-jump');
+                wrapper.classList.remove('board-overdrive-jump');
             }, 1300);
             
             setTimeout(() => wipe.remove(), 3000);
+            
+        } else {
+            // --- SCENARIO 2: FINE NORMALE (Zoom + Smaterializzazione a cubetti) ---
+            wrapper.classList.add('zoom-finish');
+            createParticles();
+            
+            let bgm = document.getElementById('bg-music');
+            if (bgm) {
+                let fade = setInterval(() => {
+                    if (bgm.volume > 0.1) bgm.volume -= 0.1;
+                    else { bgm.pause(); clearInterval(fade); }
+                }, 100);
+            }
+            
+            // Dopo 1 secondo di zoom... Esplosione in cubetti!
+            setTimeout(() => {
+                wrapper.classList.add('disintegrate-board');
+                createPixelDisintegration(wrapper);
+                playMoveSound('capture'); // Suono "crack" quando si disintegra
+            }, 1000);
         }
+    } else {
+        let bgm = document.getElementById('bg-music');
+        if (bgm) bgm.pause();
     }
 
-    // 5. Mostra la schermata finale con i nuovi colori
+    // Mostra la schermata finale 
     setTimeout(() => {
         document.getElementById('game-over-screen').classList.add('show');
         let t = document.getElementById('go-title'); 
         t.innerText = endTitle;
         t.style.color = titleColor;
-        t.style.textShadow = `0 0 20px ${titleColor}`; // Bagliore extra sul titolo
+        t.style.textShadow = `0 0 20px ${titleColor}`; 
         document.getElementById('go-desc').innerText = desc;
     }, gfxLevel !== 'LO' ? 2500 : 500); 
 }
 
+// NUOVA FUNZIONE: Genera i cubetti al neon per la smaterializzazione
+function createPixelDisintegration(boardWrapper) {
+    if(gfxLevel === 'LO') return;
+    const rect = boardWrapper.getBoundingClientRect();
+    const colors = ['#00f3ff', '#ff0055', '#ffffff', '#bc13fe'];
+    
+    for(let i = 0; i < 150; i++) {
+        let cube = document.createElement('div');
+        cube.className = 'pixel-cube';
+        
+        // Spawn casuale su tutta la scacchiera
+        cube.style.left = (rect.left + Math.random() * rect.width) + 'px';
+        cube.style.top = (rect.top + Math.random() * rect.height) + 'px';
+        
+        cube.style.background = colors[Math.floor(Math.random() * colors.length)];
+        cube.style.boxShadow = `0 0 10px ${cube.style.background}`;
+        
+        // Esplosione a 360 gradi
+        let angle = Math.random() * Math.PI * 2;
+        let distance = Math.random() * 300 + 50;
+        let dx = Math.cos(angle) * distance;
+        let dy = Math.sin(angle) * distance;
+        
+        cube.style.setProperty('--dx', `${dx}px`);
+        cube.style.setProperty('--dy', `${dy}px`);
+        cube.style.setProperty('--rot', `${Math.random() * 720}deg`);
+        
+        document.body.appendChild(cube);
+        setTimeout(() => cube.remove(), 1500);
+    }
+}
 function updateTimersUI() {
     let container = document.getElementById('timers-container');
     if(!timerEnabled) { container.style.display = 'none'; return; }
