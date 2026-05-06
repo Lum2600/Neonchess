@@ -345,7 +345,8 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
 }
 
 body:not([data-gfx="LO"]) .game-over-screen {
-    background: rgba(10, 15, 26, 0.85); backdrop-filter: blur(5px);
+    background: rgba(10, 15, 26, 0.98); /* Fatto molto più scuro per nascondere eventuali bug sotto */
+    backdrop-filter: blur(10px);
     border: 2px solid var(--t4); box-shadow: inset 0 0 50px rgba(255, 0, 60, 0.2);
     background-image: linear-gradient(rgba(0, 255, 195, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 195, 0.05) 1px, transparent 1px);
     background-size: 20px 20px;
@@ -620,4 +621,20 @@ body[data-team="B"] #arrow-svg {
 @keyframes cube-fly-up {
     0% { opacity: 1; transform: scale(1) translate(0, 0) rotate(0deg); }
     100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+}
+
+/* --- NUOVO EFFETTO GLITCH SUL TESTO VITTORIA/SCONFITTA --- */
+.glitch-anim {
+    animation: text-glitch-intense 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes text-glitch-intense {
+    0% { transform: translate(0) scale(1); text-shadow: none; opacity: 0;}
+    10% { transform: translate(-20px, 5px) skewX(-30deg); text-shadow: 10px 0 var(--t4), -10px 0 var(--t2); opacity: 1; color: var(--white); }
+    20% { transform: translate(20px, -5px) skewX(30deg); text-shadow: -10px 0 var(--t4), 10px 0 var(--t2); color: currentColor; }
+    30% { transform: translate(-10px, 5px) skewX(-10deg); text-shadow: 5px 0 var(--t4), -5px 0 var(--t2); }
+    40% { transform: translate(10px, -5px) skewX(10deg); text-shadow: -5px 0 var(--t4), 5px 0 var(--t2); }
+    50% { transform: translate(0) scale(1.1); filter: invert(1); }
+    60% { transform: translate(0) scale(1); filter: invert(0); }
+    100% { transform: translate(0) scale(1); text-shadow: 0 0 20px currentColor; }
 }

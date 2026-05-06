@@ -469,7 +469,12 @@ function triggerEnd(winnerColor, title, desc) {
 }
 
 // Funzione di utilità per mostrare la schermata finale
+// Funzione di utilità per mostrare la schermata finale
 function showGameOver(title, color, desc) {
+    // Nascondiamo l'interfaccia di gioco sottostante per eliminare i "simboli" in trasparenza
+    let gameUi = document.getElementById('game-ui');
+    if (gameUi) gameUi.style.display = 'none';
+
     let goScreen = document.getElementById('game-over-screen');
     goScreen.classList.add('show');
     let t = document.getElementById('go-title'); 
@@ -477,6 +482,11 @@ function showGameOver(title, color, desc) {
     t.style.color = color;
     t.style.textShadow = `0 0 20px ${color}`; 
     document.getElementById('go-desc').innerText = desc;
+
+    // Trigger per l'animazione glitch sul testo
+    t.classList.remove('glitch-anim');
+    void t.offsetWidth; // reset dell'animazione
+    t.classList.add('glitch-anim');
 }
 
 // NUOVA FUNZIONE: Disintegrazione cinematografica dal basso verso l'alto
@@ -484,7 +494,7 @@ function createPixelDisintegration(wrapper) {
     if(gfxLevel === 'LO') return;
     
     const rect = wrapper.getBoundingClientRect();
-    const colors = ['#00f3ff', '#ff0055', '#ffffff', '#bc13fe', '#ffaa00'];
+    const colors = ['#ffffff']; // Solo cubetti bianchi
     
     let progress = 0; 
     let startTime = Date.now();
