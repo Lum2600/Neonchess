@@ -44,14 +44,18 @@ if (socket) {
         opponentMode = 'HUMAN';
         document.getElementById('btn-opp-hum').classList.add('active');
         document.getElementById('btn-opp-ai').classList.remove('active');
-        if (team === 'B') document.body.classList.add('play-as-black');
-        else document.body.classList.remove('play-as-black');
     });
 
     socket.on('gameStart', (names) => {
         isMultiplayer = true;
         document.getElementById('name-w').innerText = names.p1Name;
         document.getElementById('name-b').innerText = names.p2Name;
+        
+        // FIX DESYNC: Creiamo un seme (seed) randomico ma IDENTICO per entrambi usando il Codice Stanza!
+        let hash = 0; let str = roomCode;
+        for (let i = 0; i < str.length; i++) { hash = (hash << 5) - hash + str.charCodeAt(i); hash |= 0; }
+        gameSeed = Math.abs(hash) + 12345;
+
         startGame(false, true);
         closeMultiplayerMenu();
         showModAlert("VS " + (myTeam === 'W' ? names.p2Name : names.p1Name), "mod-c1");
@@ -273,6 +277,14 @@ function playDropSound(tier) {
 // ==========================================
 function getGameRandom() { gameSeed = (gameSeed * 9301 + 49297) % 233280; return gameSeed / 233280; }
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(getGameRandom() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
 function setOpponent(mode) {
     opponentMode = mode; 
     document.getElementById('btn-opp-hum').classList.toggle('active', mode === 'HUMAN'); 
@@ -309,25 +321,21 @@ function openSettings() {
     clearArrows();
     document.getElementById('start-screen').style.display = 'flex';
     document.body.classList.add('settings-open');
-    
     let devBtn = document.getElementById('dev-mode-btn');
-    // FIX: Ora il bottone appare sempre, anche in multiplayer!
-    if (devBtn) devBtn.style.display = 'inline-block'; 
+    if (devBtn) devBtn.style.display = 'inline-block';
 }
 
 function promptDev() {
     let pwd = prompt("Inserisci la password per la DEV MODE:");
-    if (pwd === "1234") openDev();
+    if (pwd === "Murry2") openDev();
     else if (pwd !== null) alert("Password errata!");
 }
 
-// Sostituisci openDev e aggiungi setDevTier
 function openDev() {
     document.getElementById('dev-overlay').classList.add('show');
     buildDevPanel('W', 'dev-w-mods');
     buildDevPanel('B', 'dev-b-mods');
     
-    // Aggiunge i bottoni per forzare i Tier grafici se non esistono già
     let devOverlay = document.getElementById('dev-overlay');
     if (!document.getElementById('dev-tier-controls')) {
         let devControls = document.createElement('div');
@@ -351,33 +359,22 @@ function openDev() {
             <button class="opt-btn" style="color:var(--t4); border-color:var(--t4);" onclick="setDevTier(4)">OD (T4)</button>
         `;
         
-        // Appendi i pulsanti dentro il box delle opzioni (se esiste) o nell'overlay principale
         let container = devOverlay.querySelector('.options-box') || devOverlay;
         container.appendChild(devControls);
     }
 }
 
-// Funzione matematica per applicare i cambiamenti visivi istantaneamente
 function setDevTier(level) {
-    // 1. Rimuove tutte le vecchie classi grafiche
     document.body.classList.remove('mod-level-1', 'mod-level-2', 'mod-level-3', 'overdrive');
-    
-    // 2. Inganna il motore di gioco facendogli credere di essere arrivato a quel livello
     nextThresholdIndex = level;
-    
-    // 3. Riapplica le classi giuste a cascata
     if (level >= 1) document.body.classList.add('mod-level-1');
     if (level >= 2) document.body.classList.add('mod-level-2');
     if (level >= 3) document.body.classList.add('mod-level-3');
     if (level >= 4) document.body.classList.add('overdrive');
     
-    // 4. Forza il ricalcolo matematico dei gradienti e dell'oscurità (Sfondo)
     let progress = level / 4; 
     document.documentElement.style.setProperty('--od-mix', `${progress * 100}%`);
-    
-    // 5. Aggiorna i testi del contatore e chiude il menu Dev per farti ammirare il risultato
-    updateKillsCounter();
-    closeDev();
+    updateKillsCounter(); closeDev();
 }
 
 function closeDev() {
@@ -452,9 +449,7 @@ function showPromotionUI(color, callback) {
 // ==========================================
 // 5. MOTORE DI GIOCO (START & INIZIALIZZAZIONE)
 // ==========================================
-// Sostituisci la funzione startGame con questa:
 function startGame(classic = false, fromMultiplayer = false) {
-    // FIX RESUME MULTIPLAYER: Blocca l'avvio locale SOLO se la partita non è ancora iniziata
     if (isMultiplayer && !fromMultiplayer && !gameHasStarted) return;
 
     document.getElementById('start-screen').style.display = 'none';
@@ -470,9 +465,6 @@ function startGame(classic = false, fromMultiplayer = false) {
         document.getElementById('main-play-btn').innerText = "RESUME";
         let cbtn = document.getElementById('classic-play-btn'); if(cbtn) cbtn.style.display = 'none';
         document.getElementById('resign-row').style.display = 'flex';
-
-        if (isMultiplayer && myTeam === 'B') { document.body.classList.add('play-as-black'); }
-        else { document.body.classList.remove('play-as-black'); }
 
         if (isClassicMode) {
             document.body.classList.add('classic-mode');
@@ -541,8 +533,6 @@ function draw() {
     if (!b) return;
     b.innerHTML = '';
     let chK = findKing(turno); let inCheck = isInCheck(turno);
-
-    if (isMultiplayer && myTeam === 'B') document.body.classList.add('play-as-black');
 
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -660,51 +650,37 @@ function getLegalMoves(r, c) {
     }
     return legalMoves;
 }
-// Sostituisci interamente la funzione animateMovement
+
 function animateMovement(fr, fc, tr, tc, pColor, callback, bouncePoint = null) {
     let board = document.getElementById('board');
-    let startCell = board.children[fr * 8 + fc]; 
-    let endCell = board.children[tr * 8 + tc];
+    let startCell = board.children[fr * 8 + fc]; let endCell = board.children[tr * 8 + tc];
     if (!startCell || !endCell) { callback(); return; }
-    let piece = startCell.querySelector('.piece'); 
-    if (!piece) { callback(); return; }
+    let piece = startCell.querySelector('.piece'); if (!piece) { callback(); return; }
 
     isAnimating = true;
-    let startRect = piece.getBoundingClientRect(); 
-    let endRect = endCell.getBoundingClientRect();
+    let startRect = piece.getBoundingClientRect(); let endRect = endCell.getBoundingClientRect();
     let dX = (endRect.left + endRect.width / 2) - (startRect.left + startRect.width / 2);
     let dY = (endRect.top + endRect.height / 2) - (startRect.top + startRect.height / 2);
-
-    // Se la scacchiera è ruotata di 180 gradi (Multiplayer per il Nero), invertiamo le direzioni di traslazione
-    if (document.body.getAttribute('data-team') === 'B') { dX = -dX; dY = -dY; }
 
     let glowColor = pColor === 'W' ? 'var(--t2)' : 'var(--t4)';
     if (gfxLevel !== 'LO') piece.style.filter = `drop-shadow(0 0 15px ${glowColor}) brightness(1.5)`;
     piece.style.zIndex = "100";
 
-    // FIX 1 & 2: CONGELA LA PEDINA AL PUNTO DI PARTENZA CON LA ROTAZIONE CORRETTA DAL CSS
     piece.style.transition = 'none';
     piece.style.transform = `translate(0px, 0px) scale(1) rotate(var(--rot))`;
-    
-    // FORZA IL REFLOW: Il browser fissa le coordinate di partenza e non può più saltare l'animazione!
     void piece.offsetWidth;
 
-    // --- LOGICA ANIMAZIONE ALFIERE A RIMBALZO ---
     if (bouncePoint) {
         let bounceCell = board.children[bouncePoint.r * 8 + bouncePoint.c];
         if (bounceCell) {
             let bounceRect = bounceCell.getBoundingClientRect();
             let bX = (bounceRect.left + bounceRect.width / 2) - (startRect.left + startRect.width / 2);
             let bY = (bounceRect.top + bounceRect.height / 2) - (startRect.top + startRect.height / 2);
-            
-            if (document.body.getAttribute('data-team') === 'B') { bX = -bX; bY = -bY; }
 
-            // Sblocca la transizione e lanciala verso il muro!
             piece.style.transition = 'transform 0.2s linear';
             piece.style.transform = `translate(${bX}px, ${bY}px) scale(1.3) rotate(var(--rot))`;
 
             setTimeout(() => {
-                // Impatto! Effetto gelatina dal CSS
                 let wrapper = document.getElementById('main-board-wrapper');
                 if (wrapper) {
                     wrapper.classList.remove('board-elastic-anim');
@@ -712,26 +688,20 @@ function animateMovement(fr, fc, tr, tc, pColor, callback, bouncePoint = null) {
                     wrapper.classList.add('board-elastic-anim');
                     setTimeout(() => wrapper.classList.remove('board-elastic-anim'), 500);
                 }
-
-                // Rimbalzo dal muro al bersaglio
                 piece.style.transition = 'transform 0.2s linear';
                 piece.style.transform = `translate(${dX}px, ${dY}px) scale(1.3) rotate(var(--rot))`;
-
                 setTimeout(() => { isAnimating = false; callback(); }, 200);
             }, 200);
             return; 
         }
     }
 
-    // Animazione di volo normale (dritta)
     piece.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
     if (gfxLevel !== 'LO') piece.style.transition += ', filter 0.35s ease';
-    
-    // Sblocca l'animazione e muovi la pedina mantenendo la rotazione naturale
     piece.style.transform = `translate(${dX}px, ${dY}px) scale(1.3) rotate(var(--rot))`;
-    
     setTimeout(() => { isAnimating = false; callback(); }, 350);
 }
+
 function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null, remoteSeed = null) {
     let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
     let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
@@ -1128,16 +1098,6 @@ function giveModTo(targetColor) {
     triggerInstantMods(targetColor, mod);
 }
 
-// 1. Aggiungi questa funzione matematica appena SOPRA a triggerInstantMods:
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(getGameRandom() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-// 2. Sostituisci interamente la tua funzione triggerInstantMods con questa:
 function triggerInstantMods(color, mod) {
     if (mod.n === 'Brainwash') {
         let enemyQ = color === 'W' ? 'q' : 'Q'; let myQ = color === 'W' ? 'Q' : 'q'; let qPos = null;
@@ -1158,7 +1118,6 @@ function triggerInstantMods(color, mod) {
         let myHalf = [], enemyHalf = [];
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (!grid[r][c]) { if (color === 'W' && r >= 4) myHalf.push({ r, c }); else if (color === 'B' && r <= 3) myHalf.push({ r, c }); else enemyHalf.push({ r, c }); }
         
-        // FIX MULTIPLAYER: Usa il mischiatore deterministico assoluto! Niente più .sort() impazziti.
         myHalf = shuffleArray(myHalf); 
         enemyHalf = shuffleArray(enemyHalf);
         
@@ -1264,7 +1223,6 @@ window.addEventListener('mousedown', e => {
     let c = Math.floor((e.clientX - rect.left) / cellSize); let r = Math.floor((e.clientY - rect.top) / cellSize);
     if (r < 0 || r > 7 || c < 0 || c > 7) return;
 
-    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
     arrowStartCell = { r, c };
 });
 
@@ -1277,7 +1235,6 @@ window.addEventListener('mouseup', e => {
     let c = Math.floor((e.clientX - rect.left) / cellSize); let r = Math.floor((e.clientY - rect.top) / cellSize);
 
     if (r >= 0 && r <= 7 && c >= 0 && c <= 7) {
-        if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
         if (arrowStartCell.r !== r || arrowStartCell.c !== c) { drawArrow(arrowStartCell.r, arrowStartCell.c, r, c); }
     }
     arrowStartCell = null;

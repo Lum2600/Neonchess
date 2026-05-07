@@ -1624,24 +1624,7 @@ body[data-gfx="LO"] .mod-receive-anim {
     text-shadow: 0 0 8px var(--black);
 }
 
-/* --- FORZATURA ROTAZIONE IN BASE AL TEAM --- */
-body[data-team="B"] .board {
-    transform: rotate(180deg) !important;
-}
 
-body[data-team="B"] .board .piece {
-    --rot: 180deg;
-}
-
-body[data-team="B"] .coords-y,
-body[data-team="B"] .coords-x {
-    transform: rotate(180deg) !important;
-}
-
-body[data-team="B"] .coords-y span,
-body[data-team="B"] .coords-x span {
-    transform: rotate(180deg) !important;
-}
 
 /* --- DISPOSIZIONE E GRANDEZZA PANNELLI E SCACCHIERA (Solo su schermi grandi PC) --- */
 @media (min-width: 901px) {

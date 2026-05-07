@@ -16,17 +16,17 @@ io.on('connection', (socket) => {
     // Quando un utente clicca "Crea Partita" (Player 1 - Bianco)
     socket.on('createRoom', (username) => {
         const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-        
+
         // Salviamo anche l'username
-        rooms[roomCode] = { 
+        rooms[roomCode] = {
             players: [socket.id],
-            usernames: { [socket.id]: username || "Player 1" } 
+            usernames: { [socket.id]: username || "Player 1" }
         };
-        
+
         socket.join(roomCode);
         socket.emit('roomCreated', roomCode);
         socket.emit('assignTeam', 'W');
-        
+
         console.log(`Stanza creata: ${roomCode} dal player ${username}`);
     });
 
@@ -38,10 +38,10 @@ io.on('connection', (socket) => {
         if (rooms[roomCode] && rooms[roomCode].players.length === 1) {
             rooms[roomCode].players.push(socket.id);
             rooms[roomCode].usernames[socket.id] = username;
-            
+
             socket.join(roomCode);
             socket.emit('assignTeam', 'B');
-            
+
             // Recuperiamo i due nomi
             const p1Id = rooms[roomCode].players[0];
             const p2Id = socket.id;
@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
                 p1Name: p1Name,
                 p2Name: p2Name
             });
-            
+
             console.log(`Player ${username} entrato nella stanza ${roomCode}`);
         } else {
             socket.emit('errorMsg', 'Stanza piena o codice errato!');
