@@ -2142,3 +2142,21 @@ body.overdrive .guide-btn {
     /* Aggiunge un contorno letterale al pezzo per staccarlo dallo sfondo in ogni situazione di luce */
     -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
 }
+
+/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
+@media (max-width: 900px) {
+    .music-player {
+        /* Di base il player scompare sempre su mobile */
+        display: none !important; 
+        bottom: auto;
+        top: 80px;
+        left: 10px;
+        width: 180px;
+    }
+    
+    /* Il player riappare magicamente SOLO a partita in corso E se apri le impostazioni */
+    body.game-started.settings-open .music-player {
+        display: flex !important;
+        z-index: 100000;
+    }
+}

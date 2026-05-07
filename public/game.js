@@ -1240,61 +1240,80 @@ window.addEventListener('mouseup', e => {
 });
 
 // 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
-function drawArrow(r1, c1, r2, c2) {
-    let brd = document.getElementById('board');
-    brd.style.position = 'relative';
+// 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
+    function drawArrow(r1, c1, r2, c2) {
+        let brd = document.getElementById('board');
+        brd.style.position = 'relative';
 
-    let svg = document.getElementById('arrow-svg');
+        let svg = document.getElementById('arrow-svg');
 
-    if (!svg) {
-        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.id = 'arrow-svg';
-        svg.style.position = 'absolute';
-        svg.style.top = '0';
-        svg.style.left = '0';
-        svg.style.width = '100%';
-        svg.style.height = '100%';
-        svg.style.pointerEvents = 'none';
-        svg.style.zIndex = '500';
-        svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
+        if (!svg) {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'arrow-svg';
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.pointerEvents = 'none';
+            svg.style.zIndex = '500';
+            svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
 
-        let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-        marker.setAttribute('id', 'arrowhead');
-        marker.setAttribute('markerWidth', '4');
-        marker.setAttribute('markerHeight', '4');
-        marker.setAttribute('refX', '2.5');
-        marker.setAttribute('refY', '2');
-        marker.setAttribute('orient', 'auto');
+            let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '4');
+            marker.setAttribute('markerHeight', '4');
+            marker.setAttribute('refX', '2.5');
+            marker.setAttribute('refY', '2');
+            marker.setAttribute('orient', 'auto');
 
-        let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', '0 0, 4 2, 0 4');
-        polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)');
+            let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 4 2, 0 4');
+            polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)');
 
-        marker.appendChild(polygon);
-        defs.appendChild(marker);
-        svg.appendChild(defs);
-        brd.appendChild(svg);
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+            brd.appendChild(svg);
+        }
+
+        const cellSize = 100 / 8;
+        const x1 = c1 * cellSize + cellSize / 2;
+        const y1 = r1 * cellSize + cellSize / 2;
+        const x2 = c2 * cellSize + cellSize / 2;
+        const y2 = r2 * cellSize + cellSize / 2;
+
+        // Calcola se la mossa ha la forma a "L" (mosse del cavallo)
+        let isKnightMove = (Math.abs(r2 - r1) === 2 && Math.abs(c2 - c1) === 1) ||
+                           (Math.abs(r2 - r1) === 1 && Math.abs(c2 - c1) === 2);
+
+        let graphic;
+
+        if (isKnightMove) {
+            // Determina il punto dell'angolo della L
+            let cx = Math.abs(r2 - r1) === 2 ? x1 : x2;
+            let cy = Math.abs(r2 - r1) === 2 ? y2 : y1;
+
+            graphic = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            graphic.setAttribute('d', `M ${x1}% ${y1}% L ${cx}% ${cy}% L ${x2}% ${y2}%`);
+            graphic.setAttribute('fill', 'none'); // Evita che l'angolo si colori di nero
+            graphic.setAttribute('stroke-linejoin', 'round'); // Arrotonda il gomito della L
+        } else {
+            graphic = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            graphic.setAttribute('x1', x1 + '%');
+            graphic.setAttribute('y1', y1 + '%');
+            graphic.setAttribute('x2', x2 + '%');
+            graphic.setAttribute('y2', y2 + '%');
+        }
+
+        graphic.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)');
+        graphic.setAttribute('stroke-width', '1.5%');
+        graphic.setAttribute('marker-end', 'url(#arrowhead)');
+        graphic.setAttribute('stroke-linecap', 'round');
+
+        svg.appendChild(graphic);
     }
-
-    const cellSize = 100 / 8;
-    const x1 = c1 * cellSize + cellSize / 2;
-    const y1 = r1 * cellSize + cellSize / 2;
-    const x2 = c2 * cellSize + cellSize / 2;
-    const y2 = r2 * cellSize + cellSize / 2;
-
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1 + '%');
-    line.setAttribute('y1', y1 + '%');
-    line.setAttribute('x2', x2 + '%');
-    line.setAttribute('y2', y2 + '%');
-    line.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)');
-    line.setAttribute('stroke-width', '1.5%');
-    line.setAttribute('marker-end', 'url(#arrowhead)');
-    line.setAttribute('stroke-linecap', 'round');
-
-    svg.appendChild(line);
-}
 
 // 4. Funzione per pulire le frecce
 function clearArrows() {
