@@ -11,10 +11,11 @@
     --black: color-mix(in srgb, #0044ff var(--od-mix), #f43f5e); 
     
     /* --- COLORI NEON (Sfumano verso la loro versione Overdrive) --- */
-    --t1: color-mix(in srgb, #c600eb var(--od-mix), #39ff14); 
-    --t2: color-mix(in srgb, #ff7700 var(--od-mix), #0088ff); 
-    --t3: color-mix(in srgb, #43ec01 var(--od-mix), #bc13fe); 
-    --legend: color-mix(in srgb, #0055ff var(--od-mix), #ffaa00); 
+   --t1: color-mix(in srgb, #c600eb var(--od-mix), #39ff14); 
+    --t2: color-mix(in srgb, #ff7700 var(--od-mix), #00ddff); /* Quello di prima */
+    
+    /* FIX TIER 3: Fucsia/Magenta ultra-luminoso per contrasto massimo */
+    --t3: color-mix(in srgb, #43ec01 var(--od-mix), #f055ff);
     --t4: color-mix(in srgb, #00ffc3 var(--od-mix), #ff003c); 
     
     /* --- DETTAGLI E BORDI --- */
@@ -1101,7 +1102,8 @@ body[data-gfx="LO"] .game-over-screen.show {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(18px, 6vw, 36px);
+    /* Ingrandite pesantemente le pedine! (erano 18-36, ora sono 24-46) */
+    font-size: clamp(24px, 7.5vw, 46px); 
     cursor: pointer;
     position: relative;
     user-select: none;
@@ -1120,15 +1122,14 @@ body[data-gfx="LO"] .game-over-screen.show {
     content: '';
     width: 25%;
     height: 25%;
-    background: var(--t1);
+    background: #ffffff;
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--t1);
-    opacity: 0.8;
+    box-shadow: 0 0 12px var(--t1);
+    opacity: 0.95;
 }
-
 .cell.h-c {
-    box-shadow: inset 0 0 15px var(--t4);
-    border: 2px solid var(--t4);
+    box-shadow: inset 0 0 25px var(--t4), inset 0 0 10px rgba(255, 255, 255, 0.4);
+    border: 3px solid var(--t4);
 }
 
 .cell.sel {
