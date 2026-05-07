@@ -807,6 +807,7 @@ function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
     }
 }
 
+// FUNZIONE 1: Sostituisci getLegalMoves()
 function getLegalMoves(r, c) {
     let pColor = grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W'; let p = grid[r][c];
     if (p.toLowerCase() !== 'k') { for (let i = 0; i < 8; i++) { if (grid[r][i] && grid[r][i].toLowerCase() === 'r' && (grid[r][i] === grid[r][i].toUpperCase() ? 'W' : 'B') === enemyColor && getMod(r, i, enemyColor, 'r')?.n === 'Gravity Well') return []; if (grid[i][c] && grid[i][c].toLowerCase() === 'r' && (grid[i][c] === grid[i][c].toUpperCase() ? 'W' : 'B') === enemyColor && getMod(i, c, enemyColor, 'r')?.n === 'Gravity Well') return []; } }
@@ -817,16 +818,28 @@ function getLegalMoves(r, c) {
         let backup = grid.map(row => [...row]); simulateMoveDestruction(backup, r, c, m.r, m.c, pColor, m);
         if (!isInCheck(pColor, backup)) legalMoves.push(m);
     }
+    
+    // FIX ARROCCO: Regole ferree applicate!
     if (p.toLowerCase() === 'k' && !isInCheck(pColor)) {
         let row = pColor === 'W' ? 7 : 0;
-        if (castlingRights[pColor].k && r === row) {
-            if (castlingRights[pColor].r8 && !grid[row][c + 1] && !grid[row][c + 2] && !isUnderAttack(row, c + 1, enemyColor) && !isUnderAttack(row, c + 2, enemyColor)) legalMoves.push({ r: row, c: c + 2, isCastle: 'K' });
-            if (castlingRights[pColor].r1 && !grid[row][c - 1] && !grid[row][c - 2] && !grid[row][c - 3] && !isUnderAttack(row, c - 1, enemyColor) && !isUnderAttack(row, c - 2, enemyColor)) legalMoves.push({ r: row, c: c - 2, isCastle: 'Q' });
+        let expectedRook = pColor === 'W' ? 'R' : 'r'; // La torre DEVE essere del tuo colore
+        
+        // Verifica che il Re sia effettivamente nella casella di partenza (Colonna E, indice 4) e non si sia mai mosso
+        if (castlingRights[pColor].k && r === row && c === 4) { 
+            
+            // Arrocco Lato Re: Verifica torre esatta, spazi vuoti, e l'assenza di scacco sul percorso
+            if (castlingRights[pColor].r8 && grid[row][7] === expectedRook && !grid[row][5] && !grid[row][6] && !isUnderAttack(row, 5, enemyColor) && !isUnderAttack(row, 6, enemyColor)) {
+                legalMoves.push({ r: row, c: 6, isCastle: 'K' });
+            }
+            
+            // Arrocco Lato Regina: Verifica torre esatta, spazi vuoti, e l'assenza di scacco sul percorso
+            if (castlingRights[pColor].r1 && grid[row][0] === expectedRook && !grid[row][1] && !grid[row][2] && !grid[row][3] && !isUnderAttack(row, 2, enemyColor) && !isUnderAttack(row, 3, enemyColor)) {
+                legalMoves.push({ r: row, c: 2, isCastle: 'Q' });
+            }
         }
     }
     return legalMoves;
 }
-
 function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false) {
     let p = testGrid[r][c]; if (!p) return []; let cl = p.toLowerCase(); let mods = ignoreMods || isPromoted(r, c) ? null : classMods[color][cl]; let m = []; let dir = color == 'W' ? -1 : 1;
 
@@ -1009,134 +1022,143 @@ function createParticles() {
 }
 
 // FIX MULTIPLAYER: executeMove adesso accetta il parametro remoteSeed
+// FUNZIONE 3: Sostituisci executeMove()
 function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null, remoteSeed = null) {
-        let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
-        let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
-        let pendingAnims = []; let isAttackerDead = false;
+    let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
+    let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
+    let pendingAnims = []; let isAttackerDead = false;
 
-        let isCapture = target || (special && special.isEnPassant);
-        if (isCapture) playMoveSound('capture'); else playMoveSound('move');
+    let isCapture = target || (special && special.isEnPassant);
+    if (isCapture) playMoveSound('capture'); else playMoveSound('move');
 
-        currentMoveSequence += (currentMoveSequence ? "-" : "") + fr + "" + fc + "" + tr + "" + tc;
+    currentMoveSequence += (currentMoveSequence ? "-" : "") + fr + "" + fc + "" + tr + "" + tc;
 
-        let wasPromoted = isPromoted(fr, fc);
-        if (wasPromoted) promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
+    let wasPromoted = isPromoted(fr, fc);
+    if (wasPromoted) promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
+    
+    let wasCloned = clonedPieces.some(pos => pos.r === fr && pos.c === fc);
+    if (wasCloned) clonedPieces = clonedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
+
+    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; while (cr !== tr || cc !== tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor }); grid[cr][cc] = ''; if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; } cr += dr; cc += dc; } }
+    if (target) { deadPieces[enemyColor].push(target); pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor }); if (target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; }
+
+    if (isAttackerDead) { deadPieces[pColor].push(p); pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor }); let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens.splice(pIdx, 1); }
+
+    if (special && special.isEnPassant) { grid[fr][tc] = ''; deadPieces[enemyColor].push(pColor === 'W' ? 'p' : 'P'); pendingAnims.push({ type: 'capture', r: fr, c: tc, color: enemyColor }); }
+    if (special && special.isCastle) { if (special.isCastle === 'K') { grid[fr][tc - 1] = grid[fr][tc + 1]; grid[fr][tc + 1] = ''; } if (special.isCastle === 'Q') { grid[fr][tc + 1] = grid[fr][tc - 2]; grid[fr][tc - 2] = ''; } }
+
+    grid[tr][tc] = isAttackerDead ? '' : p; grid[fr][fc] = '';
+
+    let needsPromotion = false;
+
+    if (!isAttackerDead) {
+        if (target && target.toLowerCase() === 'q' && getMod(tr, tc, enemyColor, 'q')?.n === 'Immortal' && originalQueens.includes(tr + "," + tc)) { let br = enemyColor === 'W' ? 7 : 0; if (!grid[br][3]) { grid[br][3] = target; let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens[idx] = br + ",3"; } else { let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens.splice(idx, 1); } }
+        let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens[pIdx] = tr + "," + tc;
+        if (cl === 'p') { if ((pColor === 'W' && tr === 0) || (pColor === 'B' && tr === 7)) needsPromotion = true; }
+    }
+
+    let finishMove = (promoPiece) => {
+        let startingSeed = gameSeed; 
+
+        if (isRemote && remoteSeed !== null) {
+            gameSeed = remoteSeed; 
+        }
+
+        if (needsPromotion && promoPiece) { grid[tr][tc] = pColor === 'W' ? promoPiece.toUpperCase() : promoPiece.toLowerCase(); recentSpawns.push({ r: tr, c: tc }); promotedPieces.push({ r: tr, c: tc }); cl = promoPiece.toLowerCase(); mod = getMod(tr, tc, pColor, cl); }
+        else if (wasPromoted && !isAttackerDead) promotedPieces.push({ r: tr, c: tc });
         
-        let wasCloned = clonedPieces.some(pos => pos.r === fr && pos.c === fc);
-        if (wasCloned) clonedPieces = clonedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
-
-        if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; while (cr !== tr || cc !== tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor }); grid[cr][cc] = ''; if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; } cr += dr; cc += dc; } }
-        if (target) { deadPieces[enemyColor].push(target); pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor }); if (target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; }
-
-        if (isAttackerDead) { deadPieces[pColor].push(p); pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor }); let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens.splice(pIdx, 1); }
-
-        if (special && special.isEnPassant) { grid[fr][tc] = ''; deadPieces[enemyColor].push(pColor === 'W' ? 'p' : 'P'); pendingAnims.push({ type: 'capture', r: fr, c: tc, color: enemyColor }); }
-        if (special && special.isCastle) { if (special.isCastle === 'K') { grid[fr][tc - 1] = grid[fr][tc + 1]; grid[fr][tc + 1] = ''; } if (special.isCastle === 'Q') { grid[fr][tc + 1] = grid[fr][tc - 2]; grid[fr][tc - 2] = ''; } }
-
-        grid[tr][tc] = isAttackerDead ? '' : p; grid[fr][fc] = '';
-
-        let needsPromotion = false;
+        if (wasCloned && !isAttackerDead) clonedPieces.push({ r: tr, c: tc });
 
         if (!isAttackerDead) {
-            if (target && target.toLowerCase() === 'q' && getMod(tr, tc, enemyColor, 'q')?.n === 'Immortal' && originalQueens.includes(tr + "," + tc)) { let br = enemyColor === 'W' ? 7 : 0; if (!grid[br][3]) { grid[br][3] = target; let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens[idx] = br + ",3"; } else { let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens.splice(idx, 1); } }
-            let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens[pIdx] = tr + "," + tc;
-            if (cl === 'p') { if ((pColor === 'W' && tr === 0) || (pColor === 'B' && tr === 7)) needsPromotion = true; }
-        }
-
-        let finishMove = (promoPiece) => {
-            let startingSeed = gameSeed; 
-
-            if (isRemote && remoteSeed !== null) {
-                gameSeed = remoteSeed; 
+            if (cl === 'n' && mod?.n === 'Explosive') { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { if (i === 0 && j === 0) continue; let nr = tr + i, nc = tc + j; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') { deadPieces[enemyColor].push(grid[nr][nc]); pendingAnims.push({ type: 'capture', r: nr, c: nc, color: enemyColor }); grid[nr][nc] = ''; } } }
+            if (cl === 'b' && mod?.n === 'Chain Reaction') {
+                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let s1r = tr + dr, s1c = tc; if (s1r >= 0 && s1r < 8 && s1c >= 0 && s1c < 8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1 === t1.toUpperCase() ? 'W' : 'B') !== pColor) { deadPieces[enemyColor].push(t1); pendingAnims.push({ type: 'capture', r: s1r, c: s1c, color: enemyColor }); grid[s1r][s1c] = ''; } }
+                let s2r = tr, s2c = tc + dc; if (s2r >= 0 && s2r < 8 && s2c >= 0 && s2c < 8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2 === t2.toUpperCase() ? 'W' : 'B') !== pColor) { deadPieces[enemyColor].push(t2); pendingAnims.push({ type: 'capture', r: s2r, c: s2c, color: enemyColor }); grid[s2r][s2c] = ''; } }
+                let kr = tr + dr, kc = tc + dc; while (kr >= 0 && kr < 8 && kc >= 0 && kc < 8) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK === tK.toUpperCase() ? 'W' : 'B') !== pColor) { deadPieces[enemyColor].push(tK); pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor }); grid[kr][kc] = ''; } kr += dr; kc += dc; }
             }
-
-            if (needsPromotion && promoPiece) { grid[tr][tc] = pColor === 'W' ? promoPiece.toUpperCase() : promoPiece.toLowerCase(); recentSpawns.push({ r: tr, c: tc }); promotedPieces.push({ r: tr, c: tc }); cl = promoPiece.toLowerCase(); mod = getMod(tr, tc, pColor, cl); }
-            else if (wasPromoted && !isAttackerDead) promotedPieces.push({ r: tr, c: tc });
             
-            if (wasCloned && !isAttackerDead) clonedPieces.push({ r: tr, c: tc });
-
-            if (!isAttackerDead) {
-                if (cl === 'n' && mod?.n === 'Explosive') { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { if (i === 0 && j === 0) continue; let nr = tr + i, nc = tc + j; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') { deadPieces[enemyColor].push(grid[nr][nc]); pendingAnims.push({ type: 'capture', r: nr, c: nc, color: enemyColor }); grid[nr][nc] = ''; } } }
-                if (cl === 'b' && mod?.n === 'Chain Reaction') {
-                    let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let s1r = tr + dr, s1c = tc; if (s1r >= 0 && s1r < 8 && s1c >= 0 && s1c < 8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1 === t1.toUpperCase() ? 'W' : 'B') !== pColor) { deadPieces[enemyColor].push(t1); pendingAnims.push({ type: 'capture', r: s1r, c: s1c, color: enemyColor }); grid[s1r][s1c] = ''; } }
-                    let s2r = tr, s2c = tc + dc; if (s2r >= 0 && s2r < 8 && s2c >= 0 && s2c < 8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2 === t2.toUpperCase() ? 'W' : 'B') !== pColor) { deadPieces[enemyColor].push(t2); pendingAnims.push({ type: 'capture', r: s2r, c: s2c, color: enemyColor }); grid[s2r][s2c] = ''; } }
-                    let kr = tr + dr, kc = tc + dc; while (kr >= 0 && kr < 8 && kc >= 0 && kc < 8) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK === tK.toUpperCase() ? 'W' : 'B') !== pColor) { deadPieces[enemyColor].push(tK); pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor }); grid[kr][kc] = ''; } kr += dr; kc += dc; }
-                }
-                if (cl === 'r' && mod?.n === 'Factory') { if (fr >= 0 && fr < 8 && fc >= 0 && fc < 8 && !grid[fr][fc]) { grid[fr][fc] = pColor === 'W' ? 'R' : 'r'; recentSpawns.push({ r: fr, c: fc }); clonedPieces.push({ r: fr, c: fc }); } }
-            }
-
-            if (cl === 'p' && mod?.n === 'Necromancy' && target && deadPieces[pColor].length > 0) { let empties = []; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j }); if (empties.length > 0) { let spot = empties[Math.floor(getGameRandom() * empties.length)]; grid[spot.r][spot.c] = pColor === 'W' ? 'P' : 'p'; deadPieces[pColor].shift(); recentSpawns.push({ r: spot.r, c: spot.c }); clonedPieces.push({ r: spot.r, c: spot.c }); } }
-            
-            if (classMods[pColor]['p']?.n === 'Mass Infection') { 
-                for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { 
-                    if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) { 
-                        [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => { 
-                            let nr = i + d[0], nc = j + d[1]; 
-                            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc]) { 
-                                let t = grid[nr][nc]; 
-                                if ((t === t.toUpperCase() ? 'W' : 'B') !== pColor && t.toLowerCase() !== 'k' && t.toLowerCase() !== 'p') { 
-                                    let isLastRank = (enemyColor === 'W' && nr === 0) || (enemyColor === 'B' && nr === 7);
-                                    if (isLastRank) {
-                                        grid[nr][nc] = enemyColor === 'W' ? 'Q' : 'q'; // Promo automatica
-                                        promotedPieces.push({ r: nr, c: nc });
-                                    } else {
-                                        grid[nr][nc] = enemyColor === 'W' ? 'P' : 'p'; 
-                                        clonedPieces.push({ r: nr, c: nc });
-                                    }
-                                    recentSpawns.push({ r: nr, c: nc }); 
-                                } 
-                            } 
-                        }); 
-                    } 
+            // FIX FACTORY: Solo se la torre NON era un clone preesistente!
+            if (cl === 'r' && mod?.n === 'Factory' && !wasCloned) { 
+                if (fr >= 0 && fr < 8 && fc >= 0 && fc < 8 && !grid[fr][fc]) { 
+                    grid[fr][fc] = pColor === 'W' ? 'R' : 'r'; 
+                    recentSpawns.push({ r: fr, c: fc }); 
+                    clonedPieces.push({ r: fr, c: fc }); 
                 } 
             }
-
-            updateCastlingRights(p, fr, fc); lastMove = { piece: p, from: { r: fr, c: fc }, to: { r: tr, c: tc } };
-            promotedPieces = promotedPieces.filter(pos => grid[pos.r][pos.c] !== '');
-            clonedPieces = clonedPieces.filter(pos => grid[pos.r][pos.c] !== '');
-            updateScores(); pendingAnims.forEach(a => { if (a.type === 'capture') createCaptureExplosion(a.r, a.c, a.color); });
-
-            let gaveDrop = false; let overdriveTriggered = false;
-
-           if (!isClassicMode) {
-            let currentTotalDead = deadPieces['W'].length + deadPieces['B'].length; let unlockedTierText = ""; let unlockedColor = "";
-            while (nextThresholdIndex < thresholds.length && currentTotalDead >= thresholds[nextThresholdIndex]) {
-                giveModTo('W'); giveModTo('B');
-                if (nextThresholdIndex === 0) { unlockedTierText = "TIER 1 UNLOCKED"; unlockedColor = "mod-c1"; document.body.classList.add('mod-level-1'); }
-                else if (nextThresholdIndex === 1) { unlockedTierText = "TIER 2 UNLOCKED"; unlockedColor = "mod-c2"; document.body.classList.add('mod-level-2'); }
-                else if (nextThresholdIndex === 2) { unlockedTierText = "EPIC TIER UNLOCKED"; unlockedColor = "mod-c3"; document.body.classList.add('mod-level-3'); }
-                nextThresholdIndex++; gaveDrop = true;
-                
-                playNextSong(); 
-                
-                if (nextThresholdIndex >= thresholds.length) { triggerOverdrive(); overdriveTriggered = true; unlockedTierText = "";  }
-            }
-            if (unlockedTierText !== "") showModAlert(unlockedTierText, unlockedColor);
         }
 
-            updateKillsCounter(); draw();
-            if (target || cl === 'p') halfMoveClock = 0; else halfMoveClock++;
-            turno = (turno === 'W') ? 'B' : 'W';
-            let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
-            checkGameState();
+        if (cl === 'p' && mod?.n === 'Necromancy' && target && deadPieces[pColor].length > 0) { let empties = []; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j }); if (empties.length > 0) { let spot = empties[Math.floor(getGameRandom() * empties.length)]; grid[spot.r][spot.c] = pColor === 'W' ? 'P' : 'p'; deadPieces[pColor].shift(); recentSpawns.push({ r: spot.r, c: spot.c }); clonedPieces.push({ r: spot.r, c: spot.c }); } }
+        
+        if (classMods[pColor]['p']?.n === 'Mass Infection') { 
+            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { 
+                if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) { 
+                    [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => { 
+                        let nr = i + d[0], nc = j + d[1]; 
+                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc]) { 
+                            let t = grid[nr][nc]; 
+                            if ((t === t.toUpperCase() ? 'W' : 'B') !== pColor && t.toLowerCase() !== 'k' && t.toLowerCase() !== 'p') { 
+                                let isLastRank = (enemyColor === 'W' && nr === 0) || (enemyColor === 'B' && nr === 7);
+                                if (isLastRank) {
+                                    grid[nr][nc] = enemyColor === 'W' ? 'Q' : 'q'; 
+                                    promotedPieces.push({ r: nr, c: nc });
+                                } else {
+                                    grid[nr][nc] = enemyColor === 'W' ? 'P' : 'p'; 
+                                    clonedPieces.push({ r: nr, c: nc });
+                                }
+                                recentSpawns.push({ r: nr, c: nc }); 
+                            } 
+                        } 
+                    }); 
+                } 
+            } 
+        }
 
-            if (isMultiplayer && !isRemote) {
-                socket.emit('sendMove', {
-                    roomCode: roomCode,
-                    moveData: { fr, fc, tr, tc, special, promoPiece, color: pColor, seedSync: startingSeed }
-                });
-            }
-            if (isRemote) isRemoteMoveExecuting = false;
+        updateCastlingRights(p, fr, fc); lastMove = { piece: p, from: { r: fr, c: fc }, to: { r: tr, c: tc } };
+        promotedPieces = promotedPieces.filter(pos => grid[pos.r][pos.c] !== '');
+        clonedPieces = clonedPieces.filter(pos => grid[pos.r][pos.c] !== '');
+        updateScores(); pendingAnims.forEach(a => { if (a.type === 'capture') createCaptureExplosion(a.r, a.c, a.color); });
 
-            if (opponentMode === 'AI' && turno === 'B' && !gameOver && !isMultiplayer) { if (!overdriveTriggered) { let delay = gaveDrop ? 3000 : 800; setTimeout(playAI, delay); } }
-        };
+        let gaveDrop = false; let overdriveTriggered = false;
 
-        if (needsPromotion) {
-            if (isRemote) finishMove(remotePromoPiece);
-            else if (opponentMode === 'AI' && pColor === 'B' && !isMultiplayer) finishMove('q');
-            else showPromotionUI(pColor, finishMove);
-        } else { finishMove(null); }
+        if (!isClassicMode) {
+        let currentTotalDead = deadPieces['W'].length + deadPieces['B'].length; let unlockedTierText = ""; let unlockedColor = "";
+        while (nextThresholdIndex < thresholds.length && currentTotalDead >= thresholds[nextThresholdIndex]) {
+            giveModTo('W'); giveModTo('B');
+            if (nextThresholdIndex === 0) { unlockedTierText = "TIER 1 UNLOCKED"; unlockedColor = "mod-c1"; document.body.classList.add('mod-level-1'); }
+            else if (nextThresholdIndex === 1) { unlockedTierText = "TIER 2 UNLOCKED"; unlockedColor = "mod-c2"; document.body.classList.add('mod-level-2'); }
+            else if (nextThresholdIndex === 2) { unlockedTierText = "EPIC TIER UNLOCKED"; unlockedColor = "mod-c3"; document.body.classList.add('mod-level-3'); }
+            nextThresholdIndex++; gaveDrop = true;
+            
+            playNextSong(); 
+            
+            if (nextThresholdIndex >= thresholds.length) { triggerOverdrive(); overdriveTriggered = true; unlockedTierText = "";  }
+        }
+        if (unlockedTierText !== "") showModAlert(unlockedTierText, unlockedColor);
     }
+
+        updateKillsCounter(); draw();
+        if (target || cl === 'p') halfMoveClock = 0; else halfMoveClock++;
+        turno = (turno === 'W') ? 'B' : 'W';
+        let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
+        checkGameState();
+
+        if (isMultiplayer && !isRemote) {
+            socket.emit('sendMove', {
+                roomCode: roomCode,
+                moveData: { fr, fc, tr, tc, special, promoPiece, color: pColor, seedSync: startingSeed }
+            });
+        }
+        if (isRemote) isRemoteMoveExecuting = false;
+
+        if (opponentMode === 'AI' && turno === 'B' && !gameOver && !isMultiplayer) { if (!overdriveTriggered) { let delay = gaveDrop ? 3000 : 800; setTimeout(playAI, delay); } }
+    };
+
+    if (needsPromotion) {
+        if (isRemote) finishMove(remotePromoPiece);
+        else if (opponentMode === 'AI' && pColor === 'B' && !isMultiplayer) finishMove('q');
+        else showPromotionUI(pColor, finishMove);
+    } else { finishMove(null); }
+}
 function checkGameState() {
     let enemyColor = turno; let enemyHasMoves = false; let piecesLeft = 0;
     for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { if (grid[r][c]) { piecesLeft++; if ((grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B') === enemyColor) { if (!enemyHasMoves && getLegalMoves(r, c).length > 0) enemyHasMoves = true; } } } }
@@ -1194,7 +1216,38 @@ function draw() {
             }
             b.innerHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
         }
+    // FUNZIONE 2: Sostituisci draw()
+function draw() {
+    let b = document.getElementById('board'); b.innerHTML = '';
+    let chK = findKing(turno); let inCheck = isInCheck(turno);
+
+    if (isMultiplayer && myTeam === 'B') {
+        document.body.classList.add('play-as-black');
     }
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            let cl = `cell ${(r + c) % 2 == 0 ? 'l' : 'd'}`;
+            if (selected && selected.r == r && selected.c == c) cl += ' sel'; if (lastMove && lastMove.to.r == r && lastMove.to.c == c) cl += ' last-move'; if (hints.find(h => h.r == r && h.c == c)) cl += grid[r][c] ? ' h-c' : ' h-m'; if (inCheck && chK && chK.r === r && chK.c === c) cl += ' check';
+
+            let pHTML = '';
+            if (grid[r][c]) {
+                let color = grid[r][c] == grid[r][c].toUpperCase() ? 'W' : 'B'; let pc = grid[r][c].toLowerCase();
+                let mod = getMod(r, c, color, pc); let aClass = mod ? `aura-${mod.t}` : '';
+                let animClass = ''; if (recentModdedClasses.some(x => x.color === color && x.cl === pc && !isPromoted(r, c))) animClass = 'mod-receive-anim';
+                
+                // FIX TARGHETTE: Ora legge in modo assoluto chi è un clone per applicare la targhetta permanente
+                let isPromo = isPromoted(r, c); 
+                let isClone = clonedPieces.some(s => s.r === r && s.c === c); 
+                let spawnClass = (gfxLevel !== 'LO' && (recentSpawns.some(s => s.r === r && s.c === c) || isPromo)) ? 'spawn-anim' : '';
+                let cloneTag = isPromo ? '<span class="clone-tag" style="color:var(--t2); border-color:var(--t2);">[P]</span>' : (isClone ? '<span class="clone-tag">[C]</span>' : '');
+
+                pHTML = `<div class="piece ${color} ${aClass} ${spawnClass} ${animClass}">${glyphs[grid[r][c]]}${cloneTag}</div>`;
+            }
+            b.innerHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
+        }
+    }
+}}
 }
 
 
