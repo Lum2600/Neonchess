@@ -188,95 +188,22 @@ body[data-gfx="MED"] .board-overdrive-jump {
 }
 
 /* --- EFFETTO TV CRT NORMALE E OVERDRIVE --- */
-/* --- EFFETTO TV CRT NORMALE E OVERDRIVE --- */
 .crt-overlay {
     position: fixed;
     inset: 0;
     z-index: 9999;
     pointer-events: none;
-    /* Rimosso il gradiente 90deg che generava la striscia arcobaleno */
     background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
     background-size: 100% 3px;
     box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
-    animation: crt-flicker 0.15s infinite;
-}
-
-@keyframes crt-flicker {
-    0% {
-        opacity: 0.98;
-    }
-
-    10% {
-        opacity: 0.95;
-    }
-
-    20% {
-        opacity: 0.99;
-    }
-
-    30% {
-        opacity: 0.96;
-    }
-
-    40% {
-        opacity: 0.98;
-    }
-
-    50% {
-        opacity: 1.00;
-    }
-
-    60% {
-        opacity: 0.97;
-    }
-
-    70% {
-        opacity: 0.99;
-    }
-
-    80% {
-        opacity: 0.96;
-    }
-
-    90% {
-        opacity: 0.98;
-    }
-
-    100% {
-        opacity: 1.00;
-    }
+    animation: none !important;
+    opacity: 0.15 !important;
 }
 
 body.overdrive .crt-overlay {
     display: block;
-    animation: crt-overdrive-flicker 0.1s infinite;
-}
-
-@keyframes crt-overdrive-flicker {
-    0% {
-        opacity: 0.85;
-        transform: translateY(0px);
-    }
-
-    25% {
-        opacity: 1;
-        transform: translateY(1.5px);
-    }
-
-    50% {
-        opacity: 0.9;
-        transform: translateY(-1px);
-    }
-
-    75% {
-        opacity: 0.95;
-        transform: translateY(0.5px);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(-1.5px);
-    }
+    animation: none !important;
+    opacity: 0.15 !important;
 }
 
 /* --- ONDA LASER OVERDRIVE --- */
@@ -471,33 +398,13 @@ body.overdrive .crt-overlay {
     }
 }
 
-@keyframes neon-flicker {
-
-    0%,
-    18%,
-    22%,
-    25%,
-    53%,
-    57%,
-    100% {
-        text-shadow: 0 0 5px var(--t2), 0 0 15px var(--t2);
-        opacity: 1;
-    }
-
-    20%,
-    24%,
-    55% {
-        text-shadow: none;
-        opacity: 0.8;
-    }
-}
-
 .start-title {
     font-family: 'Orbitron';
     font-size: clamp(2.5rem, 8vw, 5rem);
     color: var(--t2);
     margin: 0;
-    animation: neon-flicker 2.5s infinite alternate;
+    animation: none !important;
+    text-shadow: 0 0 5px var(--t2), 0 0 15px var(--t2) !important;
     text-align: center;
 }
 
@@ -633,7 +540,7 @@ input[type="range"] {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.98);
-    z-index: 300;
+    z-index: 30000 !important;
     display: none;
     flex-direction: column;
     align-items: center;
@@ -837,20 +744,7 @@ input[type="range"] {
     border: 1px solid var(--black);
 }
 
-/* Board Wrapper base */
-.board-wrapper {
-    display: flex;
-    position: relative;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    border-radius: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
-    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
-}
+
 
 body[data-gfx="HI"] .board-wrapper:not(.zoom-finish):not(.board-overdrive-jump) {
     animation: boardGlow 4s ease-in-out infinite alternate;
@@ -932,7 +826,27 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
     opacity: 0.85;
     mix-blend-mode: color-dodge;
 }
-
+/* --- 1. WRAPPER (Griglia geometrica inflessibile) --- */
+.board-wrapper {
+    display: grid !important;
+    
+    /* Colonna 1: 15px (Numeri) | Colonna 2: Il resto dello spazio (Scacchiera) */
+    grid-template-columns: 15px 1fr; 
+    
+    /* Riga 1: Automatica in base alla scacchiera | Riga 2: 20px (Lettere) */
+    grid-template-rows: auto 20px; 
+    
+    position: relative;
+    padding: 12px !important;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
+}
 @keyframes overdrive-flames {
     0% {
         opacity: 0.6;
@@ -1017,21 +931,19 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
 
 /* --- CYBERPUNK GAME OVER SCREEN --- */
 .game-over-screen {
-    position: absolute;
-    inset: 0;
+    position: fixed !important;
+    inset: 0 !important;
     display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 200;
-    border-radius: 10px;
+    z-index: 9000 !important;
+    border-radius: 0 !important;
     overflow: hidden;
+    background: rgba(10, 15, 26, 0.92) !important;
 }
 
 body:not([data-gfx="LO"]) .game-over-screen {
-    background: rgba(10, 15, 26, 0.98);
-    /* Fatto molto più scuro per nascondere eventuali bug sotto */
-    backdrop-filter: blur(10px);
     border: 2px solid var(--t4);
     box-shadow: inset 0 0 50px rgba(255, 0, 60, 0.2);
     background-image: linear-gradient(rgba(0, 255, 195, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 195, 0.05) 1px, transparent 1px);
@@ -1040,42 +952,7 @@ body:not([data-gfx="LO"]) .game-over-screen {
 
 body:not([data-gfx="LO"]) .game-over-screen.show {
     display: flex;
-    animation: cyberpunk-glitch-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
-
-@keyframes cyberpunk-glitch-in {
-    0% {
-        opacity: 0;
-        clip-path: polygon(0 20%, 100% 20%, 100% 30%, 0 30%);
-        transform: scale(1.05);
-        filter: hue-rotate(-90deg);
-    }
-
-    20% {
-        opacity: 1;
-        clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
-        transform: translateX(-10px);
-    }
-
-    40% {
-        clip-path: polygon(0 0%, 100% 0%, 100% 10%, 0 10%);
-        transform: translateX(10px);
-    }
-
-    60% {
-        clip-path: polygon(0 40%, 100% 40%, 100% 60%, 0 60%);
-    }
-
-    80% {
-        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-        transform: scale(1);
-        filter: hue-rotate(0deg);
-    }
-
-    100% {
-        opacity: 1;
-        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    }
+    animation: fadeInScale 0.6s ease-out forwards !important;
 }
 
 .game-over-screen h1 {
@@ -1132,36 +1009,76 @@ body[data-gfx="LO"] .game-over-screen.show {
 }
 
 
+/* --- 3. LA SCACCHIERA --- */
+/* --- 3. LA SCACCHIERA --- */
+/* --- 2. NUMERI VERTICALI --- */
 .coords-y {
-    display: flex;
+    grid-column: 1; /* Forza in prima colonna */
+    grid-row: 1;    /* Forza in prima riga */
+    
+    display: flex !important;
     flex-direction: column;
     justify-content: space-around;
-    padding-right: 6px;
+    align-items: center;
+    
     color: var(--t2);
     font-family: 'Orbitron';
     font-size: clamp(0.6rem, 2vw, 0.8rem);
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    /* Compensa il bordo alto/basso della scacchiera (2px) per allineamento perfetto */
+    border-top: 2px solid transparent !important;
+    border-bottom: 2px solid transparent !important;
+    transform: translate(-6px, 0px) !important;
 }
 
-.coords-x {
-    display: flex;
-    justify-content: space-around;
-    padding-top: 6px;
-    color: var(--t2);
-    font-family: 'Orbitron';
-    font-size: clamp(0.6rem, 2vw, 0.8rem);
-    margin-left: 15px;
-    width: calc(100% - 15px);
-    box-sizing: border-box;
-}
-
+/* --- 3. LA SCACCHIERA --- */
 .board {
+    grid-column: 2; /* Forza in seconda colonna */
+    grid-row: 1;    /* Forza in prima riga */
+    
+    width: 100% !important;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
-    width: 100%;
     aspect-ratio: 1 / 1;
-    border: 2px solid var(--t2);
+    border: 2px solid var(--t2) !important;
     background: #000;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+/* --- 4. LETTERE ORIZZONTALI --- */
+.coords-x {
+    grid-column: 2; 
+    grid-row: 2;    
+    
+    display: grid !important;
+    grid-template-columns: repeat(8, 1fr); 
+    
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important; /* Rimosso il padding per farle salire di base */
+    
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: clamp(0.6rem, 2vw, 0.8rem);
+    box-sizing: border-box !important;
+    
+    border-left: 2px solid transparent !important;
+    border-right: 2px solid transparent !important;
+    
+    /* IL TOCCO MAGICO: Trasla l'intero blocco! 
+       Il primo valore (2px) sposta a DESTRA.
+       Il secondo valore (-4px) sposta in ALTO. */
+    /* 4px la spinge ancora più a DESTRA, -7px la alza ancora di PIÙ */
+    transform: translate(25px, -25px) !important;
+}
+
+.coords-x span {
+    text-align: center;
+    display: block;
 }
 
 .cell {
@@ -1241,6 +1158,7 @@ body:not([data-gfx="LO"]) .cell.check {
     display: inline-block;
     position: relative;
     transform: rotate(var(--rot));
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
 }
 
 /* Rotazione pedine nere per modalità Umano vs Umano */
@@ -1691,7 +1609,7 @@ body[data-gfx="LO"] .mod-receive-anim {
     text-shadow: 0 0 8px var(--black);
 }
 
-/* --- FORZATURA ROTAZIONE IN BASE AL TEAM (Indistruttibile) --- */
+/* --- FORZATURA ROTAZIONE IN BASE AL TEAM --- */
 body[data-team="B"] .board {
     transform: rotate(180deg) !important;
 }
@@ -1712,8 +1630,6 @@ body[data-team="B"] .coords-x span {
 
 /* --- DISPOSIZIONE E GRANDEZZA PANNELLI E SCACCHIERA (Solo su schermi grandi PC) --- */
 @media (min-width: 901px) {
-
-    /* Scacchiera più grande */
     .board {
         width: 580px !important;
         height: 580px !important;
@@ -1724,31 +1640,17 @@ body[data-team="B"] .coords-x span {
         max-width: 580px !important;
     }
 
-    /* 1. Blocchiamo la scacchiera ESATTAMENTE in centro */
     .center-column {
         order: 2 !important;
         margin: 0 30px;
     }
 
-    /* 2. Ordine di base (Se sei Bianco: Bianco a sx, Nero a dx) */
-    #w-mods {
-        order: 1 !important;
-    }
+    #w-mods { order: 1 !important; }
+    #b-mods { order: 3 !important; }
 
-    #b-mods {
-        order: 3 !important;
-    }
+    body[data-team="B"] #w-mods { order: 3 !important; }
+    body[data-team="B"] #b-mods { order: 1 !important; }
 
-    /* 3. Ordine invertito (Se sei Nero: Nero a sx, Bianco a dx) */
-    body[data-team="B"] #w-mods {
-        order: 3 !important;
-    }
-
-    body[data-team="B"] #b-mods {
-        order: 1 !important;
-    }
-
-    /* 4. Effetto visivo: Pannello dell'Avversario (più piccolo e in ombra) */
     .side-panel {
         width: 240px !important;
         transform: scale(0.95);
@@ -1756,7 +1658,6 @@ body[data-team="B"] .coords-x span {
         transition: all 0.4s ease;
     }
 
-    /* 5. Effetto visivo: IL TUO PANNELLO (Più largo, luminoso e in primo piano) */
     body[data-team="W"] #w-mods,
     body[data-team="B"] #b-mods {
         width: 340px !important;
@@ -1766,12 +1667,20 @@ body[data-team="B"] .coords-x span {
     }
 }
 
-/* --- SFONDO IMPOSTAZIONI PIU' SCURO --- */
-/* --- SFONDO IMPOSTAZIONI PIU' SCURO --- */
+/* --- SFONDO IMPOSTAZIONI --- */
 #start-screen {
-    background: rgba(0, 0, 0, 0.5) !important; /* Opacità abbassata! */
-    backdrop-filter: blur(5px); /* Sfocatura leggermente ridotta per far risaltare l'immagine */
+    background: rgba(0, 0, 0, 0.5) !important; 
+    backdrop-filter: blur(5px); 
+    position: fixed;
+    inset: 0;
+    z-index: 30000;
 }
+
+/* IL FIX FONDAMENTALE DELLA PARENTESI CHE MANCAVA ERA QUI! */
+body.settings-open #start-screen {
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(12px);
+} 
 
 /* --- ROTAZIONE FRECCE PER IL NERO --- */
 body[data-team="B"] #arrow-svg {
@@ -1791,17 +1700,6 @@ body[data-team="B"] #arrow-svg {
     letter-spacing: 2px;
 }
 
-
-/* --- FIX: GAME OVER SCREEN SCLEGATO DALLA SCACCHIERA --- */
-.game-over-screen {
-    position: fixed !important;
-    /* Sganciato dalla scacchiera, copre tutto lo schermo */
-    inset: 0 !important;
-    z-index: 9000 !important;
-    border-radius: 0 !important;
-    background: rgba(10, 15, 26, 0.92) !important;
-}
-
 /* --- RIPRISTINO ZOOM FINISH (FINE NORMALE) --- */
 .zoom-finish {
     transform: scale(1.1) translateY(2vh);
@@ -1815,7 +1713,6 @@ body[data-team="B"] #arrow-svg {
 .pixel-cube {
     position: fixed;
     width: 8px;
-    /* Cubetti più piccoli ed eleganti */
     height: 8px;
     z-index: 9999;
     pointer-events: none;
@@ -1845,70 +1742,40 @@ body[data-team="B"] #arrow-svg {
         text-shadow: none;
         opacity: 0;
     }
-
     10% {
         transform: translate(-20px, 5px) skewX(-30deg);
         text-shadow: 10px 0 var(--t4), -10px 0 var(--t2);
         opacity: 1;
         color: var(--white);
     }
-
     20% {
         transform: translate(20px, -5px) skewX(30deg);
         text-shadow: -10px 0 var(--t4), 10px 0 var(--t2);
         color: currentColor;
     }
-
     30% {
         transform: translate(-10px, 5px) skewX(-10deg);
         text-shadow: 5px 0 var(--t4), -5px 0 var(--t2);
     }
-
     40% {
         transform: translate(10px, -5px) skewX(10deg);
         text-shadow: -5px 0 var(--t4), 5px 0 var(--t2);
     }
-
     50% {
         transform: translate(0) scale(1.1);
         filter: invert(1);
     }
-
     60% {
         transform: translate(0) scale(1);
         filter: invert(0);
     }
-
     100% {
         transform: translate(0) scale(1);
         text-shadow: 0 0 20px currentColor;
     }
 }
 
-
-/* --- 1. RIMOZIONE SFARFALLIO E GLITCH --- */
-.crt-overlay {
-    animation: none !important;
-    opacity: 0.15 !important;
-}
-
-body.overdrive .crt-overlay {
-    animation: none !important;
-    opacity: 0.15 !important;
-}
-
-.start-title {
-    animation: none !important;
-    text-shadow: 0 0 5px var(--t2), 0 0 15px var(--t2) !important;
-}
-
-/* Disattiva l'entrata a scatti della schermata di Game Over e metti una dissolvenza morbida */
-body:not([data-gfx="LO"]) .game-over-screen.show {
-    animation: fadeInScale 0.6s ease-out forwards !important;
-}
-
-/* --- 2. NUOVA ANIMAZIONE: ROTTURA DEL SISTEMA --- */
-/* Terremoto della scacchiera */
+/* --- ROTTURA DEL SISTEMA --- */
 .board-vibrate {
     animation: board-quake 0.1s infinite alternate !important;
     box-shadow: 0 0 50px rgba(255, 0, 0, 0.5) !important;
@@ -1916,32 +1783,14 @@ body:not([data-gfx="LO"]) .game-over-screen.show {
 }
 
 @keyframes board-quake {
-    0% {
-        transform: translate(2px, 1px) rotate(0deg);
-    }
-
-    20% {
-        transform: translate(-3px, 0px) rotate(1deg);
-    }
-
-    40% {
-        transform: translate(1px, -1px) rotate(-1deg);
-    }
-
-    60% {
-        transform: translate(-3px, 1px) rotate(0deg);
-    }
-
-    80% {
-        transform: translate(-1px, -1px) rotate(1deg);
-    }
-
-    100% {
-        transform: translate(1px, -2px) rotate(-1deg);
-    }
+    0% { transform: translate(2px, 1px) rotate(0deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    40% { transform: translate(1px, -1px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
 }
 
-/* Caduta nel vuoto delle pedine */
 .piece-falling {
     animation: piece-drop 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
 }
@@ -1951,22 +1800,21 @@ body:not([data-gfx="LO"]) .game-over-screen.show {
         transform: translateY(0) rotate(var(--rot)) scale(1);
         opacity: 1;
     }
-
     20% {
         transform: translateY(-30px) rotate(calc(var(--rot) + 15deg)) scale(1.2);
         filter: brightness(2);
     }
-
-    /* Saltello prima di cadere */
     100% {
         transform: translateY(120vh) rotate(calc(var(--rot) + 720deg)) scale(0.5);
         opacity: 0;
     }
-
-    /* Giù nello schermo! */
 }
 
-/* --- MINI PLAYER MUSICALE --- */
+/* ========================================= */
+/* --- GRAFICA E STRUTTURA MUSIC PLAYER ---  */
+/* ========================================= */
+
+/* 1. Stile Base (PC) */
 .music-player {
     position: fixed;
     bottom: 20px;
@@ -1979,222 +1827,38 @@ body:not([data-gfx="LO"]) .game-over-screen.show {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 10000;
+    z-index: 80;
     width: 200px;
     box-shadow: 0 0 20px rgba(0, 136, 255, 0.3);
+    user-select: none;
+    touch-action: none;
     pointer-events: auto;
 }
 
-.player-info {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--white);
-    text-align: center;
-}
+.player-info { cursor: grab; padding-bottom: 5px; text-align: center; font-family: 'Orbitron', sans-serif; color: #ffffff !important;}
+.player-info:active { cursor: grabbing; }
+.song-title { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 5px var(--t2); margin-bottom: 2px; color: #ffffff !important; }
+.song-duration { font-size: 0.65rem; opacity: 0.7; font-variant-numeric: tabular-nums; color: #ffffff !important; }
 
-.song-title {
-    font-size: 0.75rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 0 5px var(--t2);
-    margin-bottom: 2px;
-}
+.player-controls { display: flex; justify-content: center; gap: 20px; }
+.player-controls button { background: none; border: none; color: var(--t2); font-size: 1.4rem; cursor: pointer; transition: transform 0.1s, color 0.2s; line-height: 1; }
+.player-controls button:hover { transform: scale(1.2); color: #ffffff !important; }
 
-.song-duration {
-    font-size: 0.65rem;
-    opacity: 0.7;
-    font-variant-numeric: tabular-nums;
-}
+.song-progress { width: 100%; height: 5px; cursor: pointer; accent-color: var(--t2); background: rgba(255, 255, 255, 0.1); border-radius: 5px; outline: none; margin: 5px 0; }
+.player-volume { display: flex; align-items: center; gap: 8px; margin-top: 5px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px; color: #ffffff;}
 
-.player-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.player-controls button {
-    background: none;
-    border: none;
-    color: var(--t2);
-    font-size: 1.4rem;
-    cursor: pointer;
-    transition: transform 0.1s, color 0.2s;
-    line-height: 1;
-}
-
-.player-controls button:hover {
-    transform: scale(1.2);
-    color: var(--white);
-}
-
-/* Nascondi il player se siamo in mobile per non coprire i comandi */
-@media (max-width: 900px) {
-    .music-player {
-        bottom: auto;
-        top: 80px;
-        left: 10px;
-        width: 160px;
-    }
-}
-
-/* --- STILE BARRA DI PROGRESSIONE --- */
-.song-progress {
-    width: 100%;
-    height: 5px;
-    cursor: pointer;
-    accent-color: var(--t2);
-    /* Colore neon azzurro */
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-    margin: 5px 0;
-    outline: none;
-}
-
-.music-player {
-    /* ... mantieni il resto ... */
-    position: fixed;
-    bottom: 20px;
-    /* Posizione iniziale */
-    left: 20px;
-    user-select: none;
-    /* Impedisce di selezionare il testo mentre trascini */
-    touch-action: none;
-    /* Ottimizza il trascinamento su alcuni browser */
-}
-
-.player-info {
-    cursor: grab;
-    /* Indica che si può afferrare */
-    padding-bottom: 5px;
-}
-
-.player-info:active {
-    cursor: grabbing;
-}
 
 /* --- FIX LEGGIBILITÀ TESTI SU SFONDI SCURI DURANTE L'OVERDRIVE --- */
+body.overdrive #start-screen, body.overdrive .opt-row span { color: #ffffff !important; }
+body.overdrive .start-title { color: #ffffff !important; text-shadow: 0 0 15px #ffffff !important; }
+body.overdrive .opt-btn { color: #ffffff !important; border-color: rgba(255, 255, 255, 0.5) !important; }
+body.overdrive .opt-btn.active { background: #ffffff !important; color: #000000 !important; box-shadow: 0 0 10px #ffffff !important; }
+body.overdrive .play-classic-btn, body.overdrive .guide-btn { color: #ffffff !important; border-color: #ffffff !important; }
 
-/* 1. Forza il testo del Music Player a bianco puro */
-.player-info, .song-title, .song-duration {
-    color: #ffffff !important;
-}
-.player-controls button:hover {
-    color: #ffffff !important;
-}
-
-/* 2. Forza le scritte del Menu Opzioni a bianco puro quando lo apri in Overdrive */
-body.overdrive #start-screen {
-    color: #ffffff !important;
-}
-body.overdrive .opt-row span {
-    color: #ffffff !important;
-}
-body.overdrive .start-title {
-    color: #ffffff !important;
-    text-shadow: 0 0 15px #ffffff !important;
-}
-body.overdrive .opt-btn {
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.5) !important;
-}
-body.overdrive .opt-btn.active {
-    background: #ffffff !important;
-    color: #000000 !important;
-    box-shadow: 0 0 10px #ffffff !important;
-}
-body.overdrive .play-classic-btn,
-body.overdrive .guide-btn {
-    color: #ffffff !important;
-    border-color: #ffffff !important;
-}
-
-/* --- STILE AGGIUNTIVO PER IL VOLUME NEL PLAYER --- */
-.player-volume {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 5px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 8px;
-}
-
-/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
+/* 2. Comportamento su Cellulare (Mobile) - FINAL FIX */
 @media (max-width: 900px) {
     .music-player {
-        /* Di base il player scompare durante la partita su mobile */
-        display: none !important; 
-        bottom: auto;
-        top: 80px;
-        left: 10px;
-        width: 180px;
-    }
-    
-    /* Il player riappare magicamente SOLO se siamo nel menu o nelle impostazioni */
-    body.settings-open .music-player,
-    body:not(.game-started) .music-player {
-        display: flex !important;
-        z-index: 100000; /* Lo fa apparire sopra l'overlay opzioni */
-    }
-}
-
-/* --- FIX VISIBILITÀ SCACCHIERA DURANTE LA SFUMATURA --- */
-.piece {
-    /* Aggiunge un contorno letterale al pezzo per staccarlo dallo sfondo in ogni situazione di luce */
-    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
-}
-
-/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
-@media (max-width: 900px) {
-    .music-player {
-        /* Di base il player scompare sempre su mobile */
-        display: none !important; 
-        bottom: auto;
-        top: 80px;
-        left: 10px;
-        width: 180px;
-    }
-    
-    /* Il player riappare magicamente SOLO a partita in corso E se apri le impostazioni */
-    body.game-started.settings-open .music-player {
-        display: flex !important;
-        z-index: 100000;
-    }
-}
-
-/* 1. Il player ora ha uno z-index basso per essere coperto dai menu */
-
-
-/* 2. Il menu di start e i vari overlay devono essere altissimi */
-.start-screen, .tutorial-overlay {
-    z-index: 30000 !important;
-}
-
-/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
-@media (max-width: 900px) {
-    .music-player {
-        /* Di base il player scompare sempre su mobile */
-        display: none !important; 
-        
-        /* Lo spostiamo in basso al centro dello schermo! */
-        top: auto !important;
-        bottom: 10px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        width: 90% !important;
-        max-width: 300px;
-    }
-    
-    /* Il player riappare SOLO a partita in corso E se apri le impostazioni */
-    body.game-started.settings-open .music-player {
-        display: flex !important;
-        z-index: 30001 !important; /* Deve essere alto per poterlo cliccare */
-    }
-}
-
-/* --- GESTIONE VISIBILITÀ E GRANDEZZA PLAYER SU MOBILE --- */
-@media (max-width: 900px) {
-    .music-player {
-        /* Invisibile di default! (Risolve il problema della schermata iniziale) */
+        /* Invisibile di default ovunque su mobile */
         display: none !important; 
         
         top: auto !important;
@@ -2208,11 +1872,13 @@ body.overdrive .guide-btn {
         gap: 4px !important; 
     }
     
-    /* Appare SOLO a partita iniziata e con le opzioni aperte */
+    /* Appare SOLO a partita iniziata e se apri il menu delle impostazioni */
     body.game-started.settings-open .music-player {
         display: flex !important;
         z-index: 30001 !important; 
     }
+    
+    .tutorial-overlay { z-index: 30000 !important; }
 
     .music-player .song-title { font-size: 0.65rem; margin-bottom: 0; }
     .music-player .song-duration { font-size: 0.55rem; }
@@ -2220,4 +1886,15 @@ body.overdrive .guide-btn {
     .music-player .player-controls button { font-size: 1.1rem; } 
     .music-player .song-progress { height: 3px; margin: 3px 0; } 
     .music-player .player-volume { margin-top: 2px; padding-top: 4px; gap: 5px; }
+}
+
+@media (max-width: 900px) {
+    .coords-x {
+        transform: translateY(-20px) !important; 
+        
+        
+        /* FIX: Aggiungiamo padding laterale per stringere le lettere! 
+           Il primo 0 è per alto/basso. L'8px è per sinistra/destra. */
+        padding: 0 10px !important; 
+    }
 }
