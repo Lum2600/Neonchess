@@ -292,6 +292,7 @@ function openTutorial() { document.getElementById('tutorial-overlay').classList.
 function closeTutorial() { document.getElementById('tutorial-overlay').classList.remove('show'); }
 
 function openSettings() {
+    clearArrows()
     document.getElementById('start-screen').style.display = 'flex';
     document.body.classList.add('settings-open'); // <-- NUOVA
     let devBtn = document.getElementById('dev-mode-btn');
@@ -1241,14 +1242,16 @@ window.addEventListener('mouseup', e => {
 
 // 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
 // 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
-    function drawArrow(r1, c1, r2, c2) {
+    // --- SISTEMA FRECCE STRATEGICHE AGGIORNATO ---
+function drawArrow(r1, c1, r2, c2) {
     let brd = document.getElementById('board');
     let svg = document.getElementById('arrow-svg');
 
     if (!svg) {
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.id = 'arrow-svg';
-        svg.setAttribute('viewBox', '0 0 100 100'); // Coordinate fisse 0-100
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('preserveAspectRatio', 'none'); // FIX: Allinea perfettamente l'SVG alla scacchiera
         svg.style.position = 'absolute';
         svg.style.top = '0';
         svg.style.left = '0';
@@ -1261,14 +1264,14 @@ window.addEventListener('mouseup', e => {
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         marker.setAttribute('id', 'arrowhead');
-        marker.setAttribute('markerWidth', '4');
-        marker.setAttribute('markerHeight', '4');
-        marker.setAttribute('refX', '2.5');
-        marker.setAttribute('refY', '2');
+        marker.setAttribute('markerWidth', '5');
+        marker.setAttribute('markerHeight', '5');
+        marker.setAttribute('refX', '2.5'); // Centra la punta della freccia
+        marker.setAttribute('refY', '2.5');
         marker.setAttribute('orient', 'auto');
 
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', '0 0, 4 2, 0 4');
+        polygon.setAttribute('points', '0 0, 5 2.5, 0 5');
         polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)');
 
         marker.appendChild(polygon);
@@ -1278,25 +1281,23 @@ window.addEventListener('mouseup', e => {
     }
 
     const cellSize = 100 / 8;
-    const x1 = c1 * cellSize + cellSize / 2;
-    const y1 = r1 * cellSize + cellSize / 2;
-    const x2 = c2 * cellSize + cellSize / 2;
-    const y2 = r2 * cellSize + cellSize / 2;
+    const x1 = c1 * cellSize + (cellSize / 2);
+    const y1 = r1 * cellSize + (cellSize / 2);
+    const x2 = c2 * cellSize + (cellSize / 2);
+    const y2 = r2 * cellSize + (cellSize / 2);
 
     let isKnightMove = (Math.abs(r2 - r1) === 2 && Math.abs(c2 - c1) === 1) ||
                        (Math.abs(r2 - r1) === 1 && Math.abs(c2 - c1) === 2);
 
     let graphic;
     if (isKnightMove) {
-        // Logica scacchistica: se il salto è lungo verticale, l'angolo segue la riga di arrivo
-        // Se il salto è lungo orizzontale, l'angolo segue la colonna di arrivo
         let cx = Math.abs(r2 - r1) === 2 ? x1 : x2;
         let cy = Math.abs(r2 - r1) === 2 ? y2 : y1;
-
+        
         graphic = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         graphic.setAttribute('d', `M ${x1} ${y1} L ${cx} ${cy} L ${x2} ${y2}`);
         graphic.setAttribute('fill', 'none');
-        graphic.setAttribute('stroke-linejoin', 'round');
+        graphic.setAttribute('stroke-linejoin', 'round'); // Arrotonda il "gomito" della L
     } else {
         graphic = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         graphic.setAttribute('x1', x1);
@@ -1313,11 +1314,11 @@ window.addEventListener('mouseup', e => {
     svg.appendChild(graphic);
 }
 
-// 4. Funzione per pulire le frecce
 function clearArrows() {
     let svg = document.getElementById('arrow-svg');
     if (svg) {
-        const lines = svg.querySelectorAll('line');
+        // FIX: Ora cancella correttamente anche i percorsi a "L" (path)
+        const lines = svg.querySelectorAll('line, path');
         lines.forEach(l => l.remove());
     }
 }

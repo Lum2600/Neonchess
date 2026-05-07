@@ -2162,25 +2162,50 @@ body.overdrive .guide-btn {
 }
 
 /* 1. Il player ora ha uno z-index basso per essere coperto dai menu */
-.music-player {
-    z-index: 80 !important; 
-    /* ... resto delle proprietà ... */
-}
+
 
 /* 2. Il menu di start e i vari overlay devono essere altissimi */
 .start-screen, .tutorial-overlay {
     z-index: 30000 !important;
 }
 
-/* 3. FIX MOBILE: compare solo SE siamo in partita E premiamo opzioni */
+/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
 @media (max-width: 900px) {
     .music-player {
-        display: none !important;
+        /* Di base il player scompare sempre su mobile */
+        display: none !important; 
+        
+        /* Lo spostiamo in basso al centro dello schermo! */
+        top: auto !important;
+        bottom: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 300px;
     }
     
-    /* Forza la comparsa solo nel contesto richiesto */
+    /* Il player riappare SOLO a partita in corso E se apri le impostazioni */
     body.game-started.settings-open .music-player {
         display: flex !important;
-        z-index: 30001 !important; /* Qui sale sopra tutto per essere usato */
+        z-index: 30001 !important; /* Deve essere alto per poterlo cliccare */
+    }
+}
+
+/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
+@media (max-width: 900px) {
+    .music-player {
+        display: none !important; /* Invisibile di default ovunque */
+        top: auto !important;
+        bottom: 10px !important; /* Si posiziona in fondo allo schermo */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 300px;
+    }
+    
+    /* Appare SOLO se la partita è iniziata E si apre il menu delle impostazioni */
+    body.game-started.settings-open .music-player {
+        display: flex !important;
+        z-index: 30001 !important; 
     }
 }
