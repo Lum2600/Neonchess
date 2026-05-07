@@ -1243,15 +1243,62 @@ window.addEventListener('mouseup', e => {
 // 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
 // 3. Funzione che disegna fisicamente la linea SVG (Centrata e Neon!)
     // --- SISTEMA FRECCE STRATEGICHE AGGIORNATO ---
+// ==========================================
+// SISTEMA FRECCE STRATEGICHE (TASTO DESTRO)
+// ==========================================
+let arrowStartCell = null;
+
+let boardWrapper = document.getElementById('main-board-wrapper');
+if(boardWrapper) {
+    boardWrapper.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+window.addEventListener('mousedown', e => {
+    if (e.button === 0) { clearArrows(); return; }
+    if (e.button !== 2) return;
+    if (!e.target.closest('.board-wrapper')) return;
+
+    let boardEl = document.getElementById('board');
+    const rect = boardEl.getBoundingClientRect();
+    const cellSize = rect.width / 8;
+    let c = Math.floor((e.clientX - rect.left) / cellSize);
+    let r = Math.floor((e.clientY - rect.top) / cellSize);
+
+    if (r < 0 || r > 7 || c < 0 || c > 7) return;
+
+    if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+    arrowStartCell = { r, c };
+});
+
+window.addEventListener('mouseup', e => {
+    if (e.button !== 2) return; 
+    if (!arrowStartCell) return;
+
+    let boardEl = document.getElementById('board');
+    const rect = boardEl.getBoundingClientRect();
+    const cellSize = rect.width / 8;
+    let c = Math.floor((e.clientX - rect.left) / cellSize);
+    let r = Math.floor((e.clientY - rect.top) / cellSize);
+
+    if (r >= 0 && r <= 7 && c >= 0 && c <= 7) {
+        if (document.body.getAttribute('data-team') === 'B') { c = 7 - c; r = 7 - r; }
+        if (arrowStartCell.r !== r || arrowStartCell.c !== c) {
+            drawArrow(arrowStartCell.r, arrowStartCell.c, r, c);
+        }
+    }
+    arrowStartCell = null;
+});
+
 function drawArrow(r1, c1, r2, c2) {
     let brd = document.getElementById('board');
+    brd.style.position = 'relative';
+
     let svg = document.getElementById('arrow-svg');
 
     if (!svg) {
         svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.id = 'arrow-svg';
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('preserveAspectRatio', 'none'); // FIX: Allinea perfettamente l'SVG alla scacchiera
+        svg.setAttribute('viewBox', '0 0 800 800'); 
         svg.style.position = 'absolute';
         svg.style.top = '0';
         svg.style.left = '0';
@@ -1259,19 +1306,19 @@ function drawArrow(r1, c1, r2, c2) {
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
         svg.style.zIndex = '500';
-        svg.style.filter = 'drop-shadow(0 0 6px rgba(0, 243, 255, 0.8))';
+        svg.style.filter = 'drop-shadow(0 0 10px rgba(0, 243, 255, 0.9))';
 
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         marker.setAttribute('id', 'arrowhead');
-        marker.setAttribute('markerWidth', '5');
-        marker.setAttribute('markerHeight', '5');
-        marker.setAttribute('refX', '2.5'); // Centra la punta della freccia
-        marker.setAttribute('refY', '2.5');
+        marker.setAttribute('markerWidth', '4');
+        marker.setAttribute('markerHeight', '4');
+        marker.setAttribute('refX', '4'); 
+        marker.setAttribute('refY', '2');
         marker.setAttribute('orient', 'auto');
 
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', '0 0, 5 2.5, 0 5');
+        polygon.setAttribute('points', '0 0, 4 2, 0 4');
         polygon.setAttribute('fill', 'rgba(0, 243, 255, 0.9)');
 
         marker.appendChild(polygon);
@@ -1280,11 +1327,10 @@ function drawArrow(r1, c1, r2, c2) {
         brd.appendChild(svg);
     }
 
-    const cellSize = 100 / 8;
-    const x1 = c1 * cellSize + (cellSize / 2);
-    const y1 = r1 * cellSize + (cellSize / 2);
-    const x2 = c2 * cellSize + (cellSize / 2);
-    const y2 = r2 * cellSize + (cellSize / 2);
+    const x1 = c1 * 100 + 50;
+    const y1 = r1 * 100 + 50;
+    const x2 = c2 * 100 + 50;
+    const y2 = r2 * 100 + 50;
 
     let isKnightMove = (Math.abs(r2 - r1) === 2 && Math.abs(c2 - c1) === 1) ||
                        (Math.abs(r2 - r1) === 1 && Math.abs(c2 - c1) === 2);
@@ -1293,11 +1339,10 @@ function drawArrow(r1, c1, r2, c2) {
     if (isKnightMove) {
         let cx = Math.abs(r2 - r1) === 2 ? x1 : x2;
         let cy = Math.abs(r2 - r1) === 2 ? y2 : y1;
-        
         graphic = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         graphic.setAttribute('d', `M ${x1} ${y1} L ${cx} ${cy} L ${x2} ${y2}`);
         graphic.setAttribute('fill', 'none');
-        graphic.setAttribute('stroke-linejoin', 'round'); // Arrotonda il "gomito" della L
+        graphic.setAttribute('stroke-linejoin', 'round'); 
     } else {
         graphic = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         graphic.setAttribute('x1', x1);
@@ -1307,7 +1352,7 @@ function drawArrow(r1, c1, r2, c2) {
     }
 
     graphic.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)');
-    graphic.setAttribute('stroke-width', '1.5');
+    graphic.setAttribute('stroke-width', '14'); 
     graphic.setAttribute('marker-end', 'url(#arrowhead)');
     graphic.setAttribute('stroke-linecap', 'round');
 
@@ -1317,7 +1362,6 @@ function drawArrow(r1, c1, r2, c2) {
 function clearArrows() {
     let svg = document.getElementById('arrow-svg');
     if (svg) {
-        // FIX: Ora cancella correttamente anche i percorsi a "L" (path)
         const lines = svg.querySelectorAll('line, path');
         lines.forEach(l => l.remove());
     }

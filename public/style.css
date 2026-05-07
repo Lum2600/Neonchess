@@ -2169,35 +2169,55 @@ body.overdrive .guide-btn {
     z-index: 30000 !important;
 }
 
-/* --- GESTIONE VISIBILITÀ E GRANDEZZA PLAYER SU MOBILE --- */
+/* --- GESTIONE VISIBILITÀ PLAYER SU MOBILE --- */
 @media (max-width: 900px) {
     .music-player {
         /* Di base il player scompare sempre su mobile */
         display: none !important; 
         
+        /* Lo spostiamo in basso al centro dello schermo! */
         top: auto !important;
-        bottom: 15px !important; /* Un pochino più alzato dal bordo inferiore */
+        bottom: 10px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 300px;
+    }
+    
+    /* Il player riappare SOLO a partita in corso E se apri le impostazioni */
+    body.game-started.settings-open .music-player {
+        display: flex !important;
+        z-index: 30001 !important; /* Deve essere alto per poterlo cliccare */
+    }
+}
+
+/* --- GESTIONE VISIBILITÀ E GRANDEZZA PLAYER SU MOBILE --- */
+@media (max-width: 900px) {
+    .music-player {
+        /* Invisibile di default! (Risolve il problema della schermata iniziale) */
+        display: none !important; 
+        
+        top: auto !important;
+        bottom: 15px !important; 
         left: 50% !important;
         transform: translateX(-50%) !important;
         
-        /* -- RIMPICCIOLIMENTO GENERALE -- */
         width: 85% !important;
-        max-width: 250px !important; /* Più stretto */
-        padding: 8px 12px !important; /* Meno spazio vuoto ai bordi */
-        gap: 4px !important; /* Elementi più vicini tra loro */
+        max-width: 250px !important; 
+        padding: 8px 12px !important; 
+        gap: 4px !important; 
     }
     
-    /* Appare SOLO a partita in corso E se apri le impostazioni */
+    /* Appare SOLO a partita iniziata e con le opzioni aperte */
     body.game-started.settings-open .music-player {
         display: flex !important;
         z-index: 30001 !important; 
     }
 
-    /* -- RIMPICCIOLIMENTO TESTI E PULSANTI (Solo Mobile) -- */
     .music-player .song-title { font-size: 0.65rem; margin-bottom: 0; }
     .music-player .song-duration { font-size: 0.55rem; }
     .music-player .player-controls { gap: 15px; }
-    .music-player .player-controls button { font-size: 1.1rem; } /* Tasti play/skip più piccoli */
-    .music-player .song-progress { height: 3px; margin: 3px 0; } /* Barre più sottili */
+    .music-player .player-controls button { font-size: 1.1rem; } 
+    .music-player .song-progress { height: 3px; margin: 3px 0; } 
     .music-player .player-volume { margin-top: 2px; padding-top: 4px; gap: 5px; }
 }
