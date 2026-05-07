@@ -2160,3 +2160,27 @@ body.overdrive .guide-btn {
         z-index: 100000;
     }
 }
+
+/* 1. Il player ora ha uno z-index basso per essere coperto dai menu */
+.music-player {
+    z-index: 80 !important; 
+    /* ... resto delle proprietà ... */
+}
+
+/* 2. Il menu di start e i vari overlay devono essere altissimi */
+.start-screen, .tutorial-overlay {
+    z-index: 30000 !important;
+}
+
+/* 3. FIX MOBILE: compare solo SE siamo in partita E premiamo opzioni */
+@media (max-width: 900px) {
+    .music-player {
+        display: none !important;
+    }
+    
+    /* Forza la comparsa solo nel contesto richiesto */
+    body.game-started.settings-open .music-player {
+        display: flex !important;
+        z-index: 30001 !important; /* Qui sale sopra tutto per essere usato */
+    }
+}
