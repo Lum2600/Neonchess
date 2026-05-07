@@ -309,8 +309,10 @@ function openSettings() {
     clearArrows();
     document.getElementById('start-screen').style.display = 'flex';
     document.body.classList.add('settings-open');
+    
     let devBtn = document.getElementById('dev-mode-btn');
-    if (devBtn) devBtn.style.display = isMultiplayer ? 'none' : 'inline-block';
+    // FIX: Ora il bottone appare sempre, anche in multiplayer!
+    if (devBtn) devBtn.style.display = 'inline-block'; 
 }
 
 function promptDev() {
