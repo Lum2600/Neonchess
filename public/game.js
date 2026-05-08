@@ -732,6 +732,11 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     let wasClonedIdx = clonedPieces.findIndex(pos => pos.r === fr && pos.c === fc);
     let wasCloned = wasClonedIdx !== -1;
     if (wasCloned) clonedPieces.splice(wasClonedIdx, 1);
+    // FIX: Distrugge le targhette della pedina bersaglio prima di mangiarla!
+    clonedPieces = clonedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
+    promotedPieces = promotedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
+    // (Gestione speciale per catture En Passant)
+    if (special && special.isEnPassant) { clonedPieces = clonedPieces.filter(pos => pos.r !== fr || pos.c !== tc); promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== tc); }
 
     if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; while (cr !== tr || cc !== tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor }); grid[cr][cc] = ''; if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death' && cl !== 'k') isAttackerDead = true; } cr += dr; cc += dc; } }
     
