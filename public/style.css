@@ -1050,13 +1050,15 @@ body[data-gfx="LO"] .game-over-screen.show {
 
 /* --- 3. LA SCACCHIERA --- */
 .board {
-    grid-column: 2; /* Forza in seconda colonna */
-    grid-row: 1;    /* Forza in prima riga */
-    
+    grid-column: 2; 
+    grid-row: 1;    
     width: 100% !important;
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
+    
+    /* FIX MOBILE: minmax(0, 1fr) obbliga le celle a NON allargarsi per nessun motivo */
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-rows: repeat(8, minmax(0, 1fr));
+    
     aspect-ratio: 1 / 1;
     border: 2px solid var(--t2) !important;
     background: #000;
@@ -1102,11 +1104,13 @@ body[data-gfx="LO"] .game-over-screen.show {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Ingrandite pesantemente le pedine! (erano 18-36, ora sono 24-46) */
     font-size: clamp(24px, 7.5vw, 46px); 
     cursor: pointer;
     position: relative;
     user-select: none;
+    box-sizing: border-box;
+    /* FIX MOBILE: Nasconde le sbordature delle pedine giganti che deformano la griglia */
+    overflow: hidden; 
 }
 
 .cell.l {

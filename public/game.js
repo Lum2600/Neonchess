@@ -702,6 +702,7 @@ function animateMovement(fr, fc, tr, tc, pColor, callback, bouncePoint = null) {
     setTimeout(() => { isAnimating = false; callback(); }, 350);
 }
 
+
 function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null, remoteSeed = null) {
     let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
     let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
@@ -732,8 +733,14 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     let wasCloned = wasClonedIdx !== -1;
     if (wasCloned) clonedPieces.splice(wasClonedIdx, 1);
 
-    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; while (cr !== tr || cc !== tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor }); grid[cr][cc] = ''; if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; } cr += dr; cc += dc; } }
-    if (target) { deadPieces[enemyColor].push(target); pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor }); if (target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true; }
+    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; while (cr !== tr || cc !== tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { let passedTarget = grid[cr][cc]; deadPieces[enemyColor].push(passedTarget); pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor }); grid[cr][cc] = ''; if (passedTarget.toLowerCase() === 'r' && getMod(cr, cc, enemyColor, 'r')?.n === 'Voodoo Death' && cl !== 'k') isAttackerDead = true; } cr += dr; cc += dc; } }
+    
+    if (target) { 
+        deadPieces[enemyColor].push(target); 
+        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor }); 
+        // FIX: VOODOO DEATH NON FUNZIONA PIU' SUL RE (cl !== 'k')
+        if (target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death' && cl !== 'k') isAttackerDead = true; 
+    }
 
     if (isAttackerDead) { deadPieces[pColor].push(p); pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor }); let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens.splice(pIdx, 1); }
 
@@ -826,9 +833,13 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             if (unlockedTierText !== "") showModAlert(unlockedTierText, unlockedColor);
         }
 
-        updateKillsCounter(); draw();
+        updateKillsCounter(); 
         if (target || cl === 'p') halfMoveClock = 0; else halfMoveClock++;
+        
+        // FIX: PASSIAMO IL TURNO *PRIMA* DI DISEGNARE. In questo modo calcola lo scacco di scoperta!
         turno = (turno === 'W') ? 'B' : 'W';
+        draw();
+        
         let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
         checkGameState();
 
@@ -846,7 +857,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         else showPromotionUI(pColor, finishMove);
     } else { finishMove(null); }
 }
-
 function evaluateMove(fr, fc, tr, tc, special) {
     let pColor = 'B'; let enemyColor = 'W'; let p = grid[fr][fc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
     let score = Math.random() * 0.5; let target = grid[tr][tc];
@@ -1139,6 +1149,7 @@ function isUnderAttack(tR, tC, aColor, testGrid = grid) {
 
 function isInCheck(color, testGrid = grid) { if (isCheckingLogic) return false; let kPos = findKing(color, testGrid); if (!kPos) return false; isCheckingLogic = true; let attack = isUnderAttack(kPos.r, kPos.c, color === 'W' ? 'B' : 'W', testGrid); isCheckingLogic = false; return attack; }
 
+// Sostituisci interamente simulateMoveDestruction
 function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
     let p = testGrid[fr][fc]; if (!p) return; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
     let enemyColor = pColor === 'W' ? 'B' : 'W'; let target = testGrid[tr][tc];
@@ -1150,7 +1161,9 @@ function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
     testGrid[tr][tc] = p; testGrid[fr][fc] = '';
 
     let isAttackerDead = false;
-    if (target && target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death') isAttackerDead = true;
+    
+    // FIX VOODOO: Il re (k) è immune anche nelle simulazioni per scappare dallo scacco!
+    if (target && target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death' && cl !== 'k') isAttackerDead = true;
 
     if (isAttackerDead) { testGrid[tr][tc] = ''; }
     else {
