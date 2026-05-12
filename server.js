@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
             io.to(roomCode).emit('gameStart', { 
                 p1Name: player1.playerName, 
                 p2Name: player2.playerName,
-                roomCode: roomCode // <--- ECCO IL FIX SUL SERVER!
+                roomCode: roomCode,// <--- ECCO IL FIX SUL SERVER!
                 seed: matchSeed 
             });
         }
