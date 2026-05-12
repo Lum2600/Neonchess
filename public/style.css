@@ -1219,3 +1219,48 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
         padding: 0 !important; 
     }
 }
+/* Stile Avanzato per il tasto Matchmaking */
+.btn-matchmaking {
+    width: 100%;
+    background: transparent;
+    color: var(--t1);
+    border: 2px solid var(--t1);
+    padding: 15px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(0, 221, 255, 0.2), inset 0 0 5px rgba(0, 221, 255, 0.1);
+    margin-top: 15px;
+}
+
+.btn-matchmaking:hover {
+    background: var(--t1);
+    color: #000;
+    box-shadow: 0 0 30px var(--t1);
+    transform: scale(1.02);
+}
+
+/* Effetto di scansione laser che passa sul tasto ogni tanto */
+.btn-matchmaking::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 20%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: rotate(30deg);
+    transition: all 0.5s;
+    animation: scan 3s infinite;
+}
+
+@keyframes scan {
+    0% { left: -60%; }
+    100% { left: 120%; }
+}
