@@ -1,4 +1,5 @@
 {
+  "id": "/?source=pwa",
   "name": "Neon Chess: God Mode",
   "short_name": "Neon Chess",
   "description": "Scacchi Cyberpunk con poteri distruttivi e multiplayer.",
@@ -7,16 +8,35 @@
   "background_color": "#02040a",
   "theme_color": "#00ddff",
   "orientation": "portrait",
+  "lang": "it",
+  "dir": "ltr",
+  "categories": ["games", "strategy"],
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshot-pc.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }
