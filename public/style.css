@@ -1193,6 +1193,7 @@ body.overdrive .cell.last-move {
     display: inline-block;
     position: relative;
     transform: rotate(var(--rot));
+    font-variant-emoji: text;
     -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
 }
 
@@ -1906,6 +1907,23 @@ body.overdrive .play-classic-btn, body.overdrive .guide-btn { color: #ffffff !im
     .music-player .player-volume { margin-top: 2px; padding-top: 4px; gap: 5px; }
 }
 
+/* --- ROTAZIONE VISIVA PER IL GIOCATORE NERO --- */
+body[data-team="B"] .board {
+    transform: rotate(180deg) !important;
+}
+
+/* Contro-rotazione per non vedere le pedine a testa in giù */
+body[data-team="B"] .board .piece {
+    --rot: 180deg;
+}
+
+/* Contro-rotazione per i numeri e le lettere a bordo scacchiera */
+body[data-team="B"] .coords-y span,
+body[data-team="B"] .coords-x span {
+    transform: rotate(180deg) !important;
+    display: inline-block;
+}
+
 @media (max-width: 900px) {
     .coords-x {
         transform: translateY(-20px) !important; 
@@ -1915,4 +1933,41 @@ body.overdrive .play-classic-btn, body.overdrive .guide-btn { color: #ffffff !im
            Il primo 0 è per alto/basso. L'8px è per sinistra/destra. */
         padding: 0 10px !important; 
     }
+}
+
+/* --- FIX PUNTINI MOSSA IN OVERDRIVE --- */
+body.overdrive .cell.h-m::after {
+    /* Cyan ultra-acceso per "bucare" lo sfondo rosso dell'overdrive */
+    background: #00f3ff !important; 
+    
+    /* Doppio bagliore: uno cyan largo e uno bianco stretto per la massima brillantezza */
+    box-shadow: 0 0 15px #00f3ff, 0 0 5px #ffffff, 0 0 25px rgba(0, 243, 255, 0.5) !important;
+    
+    /* Li rendiamo leggermente più grandi per vederli meglio nel caos */
+    width: 30%;
+    height: 30%;
+    opacity: 1;
+}
+
+/* Anche il bordo delle caselle di cattura (nemici) deve diventare Cyan in Overdrive */
+body.overdrive .cell.h-c {
+    box-shadow: inset 0 0 25px #00f3ff, inset 0 0 10px rgba(255, 255, 255, 0.8) !important;
+    border: 3px solid #00f3ff !important;
+}
+
+/* --- VISIBILITÀ PROMOZIONE IN OVERDRIVE --- */
+/* Forza tutte le pedine opzionali a diventare bianche con un bagliore Cyan neon */
+body.overdrive #promotion-overlay .play-btn {
+    color: #ffffff !important; /* Testo/Pedina Bianco puro */
+    text-shadow: 0 0 10px #ffffff, 0 0 20px #00f3ff, 0 0 30px #00f3ff !important; /* Bagliore Cyan potente */
+    border: 2px solid #00f3ff !important; /* Bordo Cyan neon */
+    background: rgba(0, 0, 0, 0.6) !important; /* Sfondo scuro per far risaltare il bianco */
+    transition: all 0.2s ease;
+}
+
+/* Effetto al passaggio del mouse (hover) per renderle "selezionabili" visivamente */
+body.overdrive #promotion-overlay .play-btn:hover {
+    background: rgba(0, 243, 255, 0.2) !important;
+    box-shadow: 0 0 25px #00f3ff, inset 0 0 15px rgba(255, 255, 255, 0.5) !important;
+    transform: scale(1.1); /* Leggero ingrandimento */
 }

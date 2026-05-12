@@ -93,7 +93,11 @@ const playlist = [
 ];
 let currentSongIndex = -1;
 
-const glyphs = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♜', 'N': '♞', 'B': '♝', 'Q': '♛', 'K': '♚', 'P': '♙' };
+// FIX: Aggiunto lo scudo anti-emoji (\uFE0E) per i dispositivi mobile
+const glyphs = { 
+    'r': '♜\uFE0E', 'n': '♞\uFE0E', 'b': '♝\uFE0E', 'q': '♛\uFE0E', 'k': '♚\uFE0E', 'p': '♟\uFE0E', 
+    'R': '♜\uFE0E', 'N': '♞\uFE0E', 'B': '♝\uFE0E', 'Q': '♛\uFE0E', 'K': '♚\uFE0E', 'P': '♙\uFE0E' 
+};
 const db = {
     'p': [{ n: "King Soul", t: "common", d: "Si muove come il Re." }, { n: "Front Bite", t: "rare", d: "Può mangiare anche frontalmente." }, { n: "Necromancy", t: "epic", d: "Uccidere fa risorgere un pedone caduto." }, { n: "Mass Infection", t: "legend", d: "Fine turno: infetta nemici adiacenti in pedoni." }],
     'n': [{ n: "L-Slide", t: "common", d: "Può fermarsi lungo il percorso a L." }, { n: "Mount", t: "rare", d: "Acquisisce movimenti dell'ultimo morto." }, { n: "Explosive", t: "epic", d: "Atterrare polverizza l'area." }, { n: "Ghost Rider", t: "legend", d: "Teletrasporto ovunque vuoto." }],
