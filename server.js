@@ -59,19 +59,23 @@ io.on('connection', (socket) => {
             const player1 = waitingQueue.shift();
             const player2 = waitingQueue.shift();
             const roomCode = 'MATCH_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            // GENERIAMO IL SEME UNICO PER QUESTA PARTITA
+            const matchSeed = Math.floor(Math.random() * 1000000);
 
             player1.join(roomCode);
             player2.join(roomCode);
-            
-            // Creiamo la stanza e IMPONIAMO che il turno iniziale sia del Bianco ('W')
             activeRooms[roomCode] = { p1: player1.id, p2: player2.id, turn: 'W', isPrivate: false };
-            player1.roomCode = roomCode;
-            player2.roomCode = roomCode;
-
+            
             player1.emit('assignTeam', 'W');
             player2.emit('assignTeam', 'B');
 
-            io.to(roomCode).emit('gameStart', { p1Name: player1.playerName, p2Name: player2.playerName });
+            // INVIAMO IL SEME A ENTRAMBI
+            io.to(roomCode).emit('gameStart', { 
+                p1Name: player1.playerName, 
+                p2Name: player2.playerName,
+                seed: matchSeed 
+            });
         }
     });
 
@@ -90,6 +94,8 @@ io.on('connection', (socket) => {
         const roomCode = typeof code === 'string' ? code.toUpperCase() : code.roomCode.toUpperCase();
         
         if (activeRooms[roomCode] && !activeRooms[roomCode].p2) {
+            const matchSeed = Math.floor(Math.random() * 1000000);
+            io.to(roomCode).emit('gameStart', { p1Name: "HOST", p2Name: "GUEST", seed: matchSeed });
             socket.join(roomCode);
             socket.roomCode = roomCode;
             activeRooms[roomCode].p2 = socket.id;
