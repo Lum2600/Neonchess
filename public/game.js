@@ -61,18 +61,26 @@ if (socket) {
         document.getElementById('btn-opp-ai').classList.remove('active');
     });
 
-    socket.on('gameStart', (names) => {
+    socket.on('gameStart', (data) => {
         isMultiplayer = true;
-        document.getElementById('name-w').innerText = names.p1Name;
-        document.getElementById('name-b').innerText = names.p2Name;
         
+        // FIX: Salviamo il codice stanza generato dal server!
+        roomCode = data.roomCode; 
+        
+        document.getElementById('name-w').innerText = data.p1Name;
+        document.getElementById('name-b').innerText = data.p2Name;
+        
+        // Ora il seed matematico combacerà alla perfezione
         let hash = 0; let str = roomCode;
         for (let i = 0; i < str.length; i++) { hash = (hash << 5) - hash + str.charCodeAt(i); hash |= 0; }
         gameSeed = Math.abs(hash) + 12345;
 
         startGame(false, true);
+        
+        // Chiudiamo il menu e avvisiamo il giocatore
+        document.getElementById('mp-waiting').style.display = 'none';
         closeMultiplayerMenu();
-        showModAlert("VS " + (myTeam === 'W' ? names.p2Name : names.p1Name), "mod-c1");
+        showModAlert("VS " + (myTeam === 'W' ? data.p2Name : data.p1Name), "mod-c1");
     });
 
     socket.on('errorMsg', (msg) => { alert(msg); });

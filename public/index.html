@@ -10,6 +10,10 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
+    <script src="game.js"></script>
+    <!-- ricordati di cambiare le versioni dei file css e js ogni volta che fai modifiche, altrimenti i giocatori non vedranno gli aggiornamenti a causa della cache! -->
+    <link rel="stylesheet" href="style.css?v=1.1">
+    <script src="game.js?v=2.0"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ddff">
 
@@ -22,9 +26,9 @@
             <div id="song-title" class="song-title">In attesa...</div>
             <div id="song-duration" class="song-duration">00:00 / 00:00</div>
         </div>
-        
+
         <input type="range" id="song-progress" class="song-progress" value="0" step="0.1">
-        
+
         <div class="player-controls">
             <button id="play-pause-btn" onclick="togglePlayPause()">⏸</button>
             <button onclick="playNextSong()">⏭</button>
@@ -32,7 +36,8 @@
 
         <div class="player-volume">
             <span style="font-size: 0.8rem; opacity: 0.8;">🔈</span>
-            <input type="range" id="vol-slider" class="song-progress" min="0" max="1" step="0.1" value="0.4" oninput="updateVolume(this.value)" style="width: 100%;">
+            <input type="range" id="vol-slider" class="song-progress" min="0" max="1" step="0.1" value="0.4"
+                oninput="updateVolume(this.value)" style="width: 100%;">
             <span style="font-size: 0.8rem; opacity: 0.8;">🔊</span>
         </div>
     </div>
@@ -75,7 +80,7 @@
                     class="opt-btn time-btn" onclick="setTimeVal(10, this)">10M</button><button class="opt-btn time-btn"
                     onclick="setTimeVal(30, this)">30M</button><button class="opt-btn time-btn"
                     onclick="setTimeVal(60, this)">60M</button></div>
-            
+
             <div class="opt-row" style="flex-direction: column; align-items: flex-start; gap: 5px;"><span>SFX
                     VOL:</span>
                 <div class="slider-container" style="width: 100%;"><span>🔈</span><input type="range" id="sfx-slider"
@@ -122,11 +127,12 @@
 
                 <input type="text" id="join-code" placeholder="CODICE STANZA" maxlength="4"
                     style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:var(--panel); color:white; border:1px solid var(--t2); border-radius:6px; margin-bottom:10px;">
-                <button class="play-classic-btn" style="width:100%; margin-bottom: 25px;" onclick="joinRoom()">ENTRA (NERO)</button>
-                
+                <button class="play-classic-btn" style="width:100%; margin-bottom: 25px;" onclick="joinRoom()">ENTRA
+                    (NERO)</button>
+
                 <button class="btn-matchmaking" onclick="findRandomMatch()">
-    🌍 CERCA PARTITA CASUALE
-</button>
+                    🌍 CERCA PARTITA CASUALE
+                </button>
             </div>
 
             <div id="mp-waiting" style="display:none;">
@@ -195,12 +201,25 @@
 
             <h3>📚 CODEX MODIFICATORI</h3>
             <div class="codex-list">
-                <p><b>PEDONE:</b> King Soul (Muove come Re), Front Bite (Mangia frontale), Necromancy (Resuscita subito tutto l'esercito morto come pedoni. Da lì in poi le pedine che muoiono tornano come pedoni. Se muoiono di nuovo, è per sempre!), Mass Infection (Fine turno: converte i pedoni nemici adiacenti in alleati. Per gli altri pezzi funziona come prima).</p>
-                <p><b>CAVALLO:</b> L-Slide (Scorre liberamente a L, ma da scacco solo nella casella finale!), Mount (Copia mosse ultimo pezzo morto), Explosive (Polverizza la sua area di atterraggio tranne i Re), Ghost Rider (Si muove due volte di fila!).</p>
-                <p><b>ALFIERE:</b> Side Step (Guadagna step orizzontale), Vault (Scavalca alleati e dà scacco), Wall Bounce (Rimbalza sui bordi percorrendo la nuova diagonale), Chain Reaction (A fine mossa, disintegra nemici laterali e diagonale di fronte a lui).</p>
-                <p><b>TORRE:</b> Homecoming (Teletrasporto in una base libera), Voodoo Death (Se uccisa, distrugge una torre avversaria! Se non ce ne sono, uccide l'attaccante. I Re sono immuni!), Gravity Well (Blocca i nemici in linea), Factory (Genera una Torre quando lascia una cella).</p>
-                <p><b>REGINA:</b> Knight Soul (Aggiunge mosse cavallo), Brainwash (Converte la regina nemica mettendola al sicuro), Immortal (Rinasce in base se uccisa), Annihilation (Passa attraverso e uccide nemici).</p>
-                <p><b>RE:</b> Row Warp (Teletrasporto libero sulla sua riga), Emperor (Si muove come Regina), Great Resurrection (Resuscita istantaneamente tutti nella tua metà), The Betrayal (Teletrasporto killer su un nemico).</p>
+                <p><b>PEDONE:</b> King Soul (Muove come Re), Front Bite (Mangia frontale), Necromancy (Resuscita subito
+                    tutto l'esercito morto come pedoni. Da lì in poi le pedine che muoiono tornano come pedoni. Se
+                    muoiono di nuovo, è per sempre!), Mass Infection (Fine turno: converte i pedoni nemici adiacenti in
+                    alleati. Per gli altri pezzi funziona come prima).</p>
+                <p><b>CAVALLO:</b> L-Slide (Scorre liberamente a L, ma da scacco solo nella casella finale!), Mount
+                    (Copia mosse ultimo pezzo morto), Explosive (Polverizza la sua area di atterraggio tranne i Re),
+                    Ghost Rider (Si muove due volte di fila!).</p>
+                <p><b>ALFIERE:</b> Side Step (Guadagna step orizzontale), Vault (Scavalca alleati e dà scacco), Wall
+                    Bounce (Rimbalza sui bordi percorrendo la nuova diagonale), Chain Reaction (A fine mossa, disintegra
+                    nemici laterali e diagonale di fronte a lui).</p>
+                <p><b>TORRE:</b> Homecoming (Teletrasporto in una base libera), Voodoo Death (Se uccisa, distrugge una
+                    torre avversaria! Se non ce ne sono, uccide l'attaccante. I Re sono immuni!), Gravity Well (Blocca i
+                    nemici in linea), Factory (Genera una Torre quando lascia una cella).</p>
+                <p><b>REGINA:</b> Knight Soul (Aggiunge mosse cavallo), Brainwash (Converte la regina nemica mettendola
+                    al sicuro), Immortal (Rinasce in base se uccisa), Annihilation (Passa attraverso e uccide nemici).
+                </p>
+                <p><b>RE:</b> Row Warp (Teletrasporto libero sulla sua riga), Emperor (Si muove come Regina), Great
+                    Resurrection (Resuscita istantaneamente tutti nella tua metà), The Betrayal (Teletrasporto killer su
+                    un nemico).</p>
             </div>
 
             <button class="close-tut-btn" onclick="closeTutorial()">HO CAPITO</button>
@@ -255,7 +274,9 @@
                 </div>
             </div>
 
-            <button id="skip-turn-btn" onclick="skipTurn(false)" style="display:none; margin: 15px auto; padding: 12px 25px; font-family:'Orbitron'; font-weight:bold; font-size: 1rem; background:var(--legend); color:#fff; border:2px solid #fff; border-radius:6px; box-shadow: 0 0 15px var(--legend); cursor:pointer;">SKIP TURNO (GHOST RIDER)</button>
+            <button id="skip-turn-btn" onclick="skipTurn(false)"
+                style="display:none; margin: 15px auto; padding: 12px 25px; font-family:'Orbitron'; font-weight:bold; font-size: 1rem; background:var(--legend); color:#fff; border:2px solid #fff; border-radius:6px; box-shadow: 0 0 15px var(--legend); cursor:pointer;">SKIP
+                TURNO (GHOST RIDER)</button>
 
             <div id="kills-counter" class="kills-counter">NEXT MOD IN: 2 KILLS (MOD 1/4)</div>
         </div>
