@@ -6,23 +6,47 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Carica il gioco dalla cartella "public"
 app.use(express.static('public'));
 
 let waitingQueue = []; 
 let activeRooms = {};  
+let rateLimits = {}; // Memoria per lo scudo Anti-Spam
 
 function sanitizeString(str) {
     if (!str) return "Sconosciuto";
     return str.replace(/</g, "&lt;").replace(/>/g, "&gt;").trim().substring(0, 15);
 }
 
+// MIDDLEWARE ANTI-SPAM (Scudo DDoS)
+io.use((socket, next) => {
+    socket.use((packet, nextPacket) => {
+        const now = Date.now();
+        if (!rateLimits[socket.id]) rateLimits[socket.id] = { count: 0, lastReset: now };
+        
+        const limiter = rateLimits[socket.id];
+        
+        // Ogni secondo, azzera il contatore
+        if (now - limiter.lastReset > 1000) {
+            limiter.count = 0;
+            limiter.lastReset = now;
+        }
+        
+        limiter.count++;
+        
+        // Se manda più di 10 richieste al secondo, è un Bot/Hacker!
+        if (limiter.count > 10) {
+            console.warn(`Spam bloccato dal giocatore: ${socket.id}`);
+            return nextPacket(new Error('Rate limit superato. Fermo!'));
+        }
+        nextPacket();
+    });
+    next();
+});
+
 io.on('connection', (socket) => {
     console.log('Nuovo giocatore connesso:', socket.id);
 
-    // ==========================================
-    // 1. MATCHMAKING GLOBALE (Cerca Partita)
-    // ==========================================
+    // 1. MATCHMAKING GLOBALE
     socket.on('findMatch', (username) => {
         const cleanName = sanitizeString(username);
         socket.playerName = cleanName; 
@@ -38,7 +62,9 @@ io.on('connection', (socket) => {
 
             player1.join(roomCode);
             player2.join(roomCode);
-            activeRooms[roomCode] = { p1: player1.id, p2: player2.id, isPrivate: false };
+            
+            // Creiamo la stanza e IMPONIAMO che il turno iniziale sia del Bianco ('W')
+            activeRooms[roomCode] = { p1: player1.id, p2: player2.id, turn: 'W', isPrivate: false };
             player1.roomCode = roomCode;
             player2.roomCode = roomCode;
 
@@ -49,22 +75,17 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ==========================================
-    // 2. STANZE PRIVATE (Crea e Unisciti)
-    // ==========================================
-    // Ascolta quando un giocatore clicca "CREA STANZA"
+    // 2. STANZE PRIVATE
     socket.on('createRoom', () => {
-        const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase(); // Codice di 4 lettere
+        const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase(); 
         socket.join(roomCode);
         socket.roomCode = roomCode;
-        activeRooms[roomCode] = { p1: socket.id, p2: null, isPrivate: true };
+        activeRooms[roomCode] = { p1: socket.id, p2: null, turn: 'W', isPrivate: true };
         
-        socket.emit('roomCreated', roomCode); // Risponde al client col codice
-        socket.emit('assignTeam', 'W');       // Chi crea è sempre il Bianco
-        console.log(`Stanza privata creata: ${roomCode}`);
+        socket.emit('roomCreated', roomCode); 
+        socket.emit('assignTeam', 'W');       
     });
 
-    // Ascolta quando un giocatore inserisce un codice e clicca "ENTRA"
     socket.on('joinRoom', (code) => {
         const roomCode = typeof code === 'string' ? code.toUpperCase() : code.roomCode.toUpperCase();
         
@@ -73,26 +94,51 @@ io.on('connection', (socket) => {
             socket.roomCode = roomCode;
             activeRooms[roomCode].p2 = socket.id;
             
-            socket.emit('assignTeam', 'B'); // Chi entra è sempre il Nero
-            
-            // La stanza è piena, avvia la partita per entrambi!
+            socket.emit('assignTeam', 'B'); 
             io.to(roomCode).emit('gameStart', { p1Name: "HOST", p2Name: "GUEST" });
-            console.log(`Giocatore entrato nella stanza privata: ${roomCode}`);
         } else {
-            // Se la stanza non esiste o è già piena
             socket.emit('error', 'Stanza inesistente o già piena!');
         }
     });
 
-    // ==========================================
-    // 3. PASSACARTE DELLE MOSSE E DISCONNESSIONI
-    // ==========================================
+    // 3. PASSACARTE DELLE MOSSE E ANTI-CHEAT
     socket.on('sendMove', (data) => {
+        const room = activeRooms[data.roomCode];
+        if (!room) return; // Se la stanza non c'è, ignora.
+
+        // Identifichiamo chi sta cercando di muovere
+        const isPlayer1 = socket.id === room.p1; // P1 è il Bianco
+        const isPlayer2 = socket.id === room.p2; // P2 è il Nero
+
+        // ANTI-CHEAT: Controllo del Turno Assoluto
+        // Se un giocatore prova a muovere quando non è il suo turno, il server lo blocca.
+        if ((isPlayer1 && room.turn !== 'W') || (isPlayer2 && room.turn !== 'B')) {
+            console.warn(`Hackeraggio sventato! ${socket.id} ha provato a muovere fuori turno.`);
+            return; // IGNORA LA MOSSA COMPLETAMENTE
+        }
+
+        // ANTI-CHEAT: Validazione Coordinate (Fuori dalla scacchiera)
+        const move = data.moveData;
+        if (move.fr < 0 || move.fr > 7 || move.fc < 0 || move.fc > 7 || 
+            move.tr < 0 || move.tr > 7 || move.tc < 0 || move.tc > 7) {
+            console.warn(`Hackeraggio sventato! Mossa fuori dalla scacchiera.`);
+            return; 
+        }
+
+        // Se la mossa è sicura, passiamo il turno all'avversario sul Server
+        room.turn = room.turn === 'W' ? 'B' : 'W';
+
+        // Inoltra la mossa lecita all'avversario
         socket.to(data.roomCode).emit('receiveMove', data.moveData);
     });
 
+    // 4. DISCONNESSIONI E PULIZIA MEMORIA
     socket.on('disconnect', () => {
         console.log('Giocatore disconnesso:', socket.id);
+        
+        // Pulisce la memoria del limitatore Anti-Spam
+        delete rateLimits[socket.id];
+        
         waitingQueue = waitingQueue.filter(p => p.id !== socket.id);
 
         if (socket.roomCode) {
@@ -104,5 +150,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server in ascolto sulla porta ${PORT}`);
+    console.log(`Server Ultra-Sicuro in ascolto sulla porta ${PORT}`);
 });
