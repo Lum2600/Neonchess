@@ -2,25 +2,25 @@
     /* VARIABILE DI PROGRESSIONE (Gestita dal JS, da 0% a 100%) */
     --od-mix: 0%;
 
-    /* --- SFONDI (Sempre più tendenti al bianco) --- */
+    /* --- SFONDI --- */
     --bg: color-mix(in srgb, #fdfbf5 var(--od-mix), #02040a); 
     --panel: color-mix(in srgb, #e2e8f0 var(--od-mix), #0a0f1a);
     
-    /* --- COLORI BIANCO E NERO (Si scuriscono per rimanere leggibili sul bianco) --- */
+    /* --- COLORI BIANCO E NERO --- */
     --white: color-mix(in srgb, #0a0a0a var(--od-mix), #ffffff); 
     --black: color-mix(in srgb, #0044ff var(--od-mix), #f43f5e); 
     
-    /* --- COLORI NEON (Sfumano verso la loro versione Overdrive) --- */
-   --t1: color-mix(in srgb, #c600eb var(--od-mix), #39ff14); 
-    --t2: color-mix(in srgb, #ff7700 var(--od-mix), #00ddff); /* Quello di prima */
-    
-    /* FIX TIER 3: Fucsia/Magenta ultra-luminoso per contrasto massimo */
+    /* --- COLORI NEON --- */
+    --t1: color-mix(in srgb, #c600eb var(--od-mix), #39ff14); 
+    --t2: color-mix(in srgb, #ff7700 var(--od-mix), #00ddff); 
     --t3: color-mix(in srgb, #43ec01 var(--od-mix), #f055ff);
-    --t4: color-mix(in srgb, #00ffc3 var(--od-mix), #ff003c); 
+    --t4: color-mix(in srgb, #00ffc3 var(--od-mix), #ff003c);
+    --legend: #ffaa00;
     
     /* --- DETTAGLI E BORDI --- */
     --glass-border: color-mix(in srgb, rgba(0, 0, 0, 0.3) var(--od-mix), rgba(255, 255, 255, 0.1));
 }
+
 /* --- COLORI OVERDRIVE (NEGATIVI MATEMATICI) --- */
 body.overdrive {
     --bg: #fdfbf5;
@@ -36,7 +36,6 @@ body.overdrive {
     color: var(--white);
 }
 
-/* Animazione Sfondo Overdrive Corretta */
 body[data-gfx="HI"].overdrive,
 body[data-gfx="MED"].overdrive {
     background-image: linear-gradient(rgba(253, 251, 245, 0.85), rgba(226, 232, 240, 0.95)), url("sfondo.jpg") !important;
@@ -45,27 +44,17 @@ body[data-gfx="MED"].overdrive {
 }
 
 @keyframes overdriveBgPulse {
-    0% {
-        filter: hue-rotate(0deg) contrast(1.1);
-    }
-
-    100% {
-        filter: hue-rotate(15deg) contrast(1.3);
-    }
+    0% { filter: hue-rotate(0deg) contrast(1.1); }
+    100% { filter: hue-rotate(15deg) contrast(1.3); }
 }
 
 body.overdrive .board {
     background: #ffffff;
-    border-color: var(--t4);
+    border-color: var(--t4) !important;
 }
 
-body.overdrive .cell.l {
-    background: #d0d5e0;
-}
-
-body.overdrive .cell.d {
-    background: #a0a5b0;
-}
+body.overdrive .cell.l { background: #d0d5e0; }
+body.overdrive .cell.d { background: #a0a5b0; }
 
 body.overdrive .card {
     background: rgba(0, 0, 0, 0.05);
@@ -83,13 +72,8 @@ body.overdrive .kills-counter.overdrive-text {
 }
 
 @keyframes pulse-cyan {
-    0% {
-        box-shadow: 0 0 10px rgba(0, 255, 195, 0.3);
-    }
-
-    100% {
-        box-shadow: 0 0 25px rgba(0, 255, 195, 0.7);
-    }
+    0% { box-shadow: 0 0 10px rgba(0, 255, 195, 0.3); }
+    100% { box-shadow: 0 0 25px rgba(0, 255, 195, 0.7); }
 }
 
 /* Base Body */
@@ -107,10 +91,7 @@ body {
     transition: background-image 0.3s ease;
 }
 
-/* --- MODALITA' CLASSICA CSS --- */
-body.classic-mode .side-panel {
-    display: none !important;
-}
+body.classic-mode .side-panel { display: none !important; }
 
 /* --- IMPOSTAZIONI GRAFICHE --- */
 body[data-gfx="HI"]:not(.overdrive) {
@@ -131,14 +112,8 @@ body[data-gfx="LO"] {
     background-color: var(--bg);
 }
 
-/* Low non ha sfarfallio CRT né laser */
-body[data-gfx="LO"] .crt-overlay {
-    display: none !important;
-}
-
-body[data-gfx="LO"] .laser-wipe {
-    display: none !important;
-}
+body[data-gfx="LO"] .crt-overlay,
+body[data-gfx="LO"] .laser-wipe { display: none !important; }
 
 body[data-gfx="LO"].overdrive {
     background-image: none !important;
@@ -146,9 +121,7 @@ body[data-gfx="LO"].overdrive {
     animation: none !important;
 }
 
-body[data-gfx="LO"].overdrive .crt-overlay {
-    display: none !important;
-}
+body[data-gfx="LO"].overdrive .crt-overlay { display: none !important; }
 
 body[data-gfx="LO"].overdrive .board-overdrive-jump {
     animation: none !important;
@@ -156,36 +129,18 @@ body[data-gfx="LO"].overdrive .board-overdrive-jump {
     box-shadow: 0 0 30px var(--t4) !important;
 }
 
-/* Disable heavy glows for Med and Lo */
 body[data-gfx="MED"] .board-wrapper::before,
-body[data-gfx="LO"] .board-wrapper::before {
-    display: none !important;
-}
+body[data-gfx="LO"] .board-wrapper::before { display: none !important; }
 
 body[data-gfx="MED"] .board-wrapper,
-body[data-gfx="LO"] .board-wrapper {
-    animation: none !important;
-}
+body[data-gfx="LO"] .board-wrapper { animation: none !important; }
 
-body[data-gfx="MED"] .board-overdrive-jump {
-    animation: none !important;
-    transform: none !important;
-}
+body[data-gfx="MED"] .board-overdrive-jump { animation: none !important; transform: none !important; }
 
 @keyframes bgMove {
-    0% {
-        background-position: 0% 0%;
-        filter: hue-rotate(0deg) brightness(1);
-    }
-
-    50% {
-        filter: hue-rotate(15deg) brightness(1.2);
-    }
-
-    100% {
-        background-position: 100% 100%;
-        filter: hue-rotate(-15deg) brightness(1);
-    }
+    0% { background-position: 0% 0%; filter: hue-rotate(0deg) brightness(1); }
+    50% { filter: hue-rotate(15deg) brightness(1.2); }
+    100% { background-position: 100% 100%; filter: hue-rotate(-15deg) brightness(1); }
 }
 
 /* --- EFFETTO TV CRT NORMALE E OVERDRIVE --- */
@@ -223,24 +178,12 @@ body.overdrive .crt-overlay {
 }
 
 @keyframes laser-sweep-bounce {
-    0% {
-        transform: translateX(0);
-    }
-
-    45% {
-        transform: translateX(220vw);
-    }
-
-    55% {
-        transform: translateX(220vw);
-    }
-
-    100% {
-        transform: translateX(0);
-    }
+    0% { transform: translateX(0); }
+    45% { transform: translateX(220vw); }
+    55% { transform: translateX(220vw); }
+    100% { transform: translateX(0); }
 }
 
-/* --- FLASH DI TRANSIZIONE --- */
 .screen-flash {
     position: fixed;
     inset: 0;
@@ -252,13 +195,8 @@ body.overdrive .crt-overlay {
 }
 
 @keyframes flashAnim {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+    0% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 /* --- ANIMAZIONI TESTI POPUP --- */
@@ -284,25 +222,11 @@ body.overdrive .crt-overlay {
 }
 
 @keyframes overdrive-shake {
-    0% {
-        transform: translate(-51%, -51%) scale(1.2) rotate(-2deg);
-    }
-
-    25% {
-        transform: translate(-49%, -49%) scale(1.2) rotate(2deg);
-    }
-
-    50% {
-        transform: translate(-50%, -52%) scale(1.2) rotate(-1deg);
-    }
-
-    75% {
-        transform: translate(-50%, -48%) scale(1.2) rotate(1deg);
-    }
-
-    100% {
-        transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
-    }
+    0% { transform: translate(-51%, -51%) scale(1.2) rotate(-2deg); }
+    25% { transform: translate(-49%, -49%) scale(1.2) rotate(2deg); }
+    50% { transform: translate(-50%, -52%) scale(1.2) rotate(-1deg); }
+    75% { transform: translate(-50%, -48%) scale(1.2) rotate(1deg); }
+    100% { transform: translate(-50%, -50%) scale(1.2) rotate(0deg); }
 }
 
 .mod-alert {
@@ -320,55 +244,19 @@ body.overdrive .crt-overlay {
     filter: blur(0px);
 }
 
-.mod-alert.show {
-    animation: modAlertAnim 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+.mod-alert.show { animation: modAlertAnim 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
 @keyframes modAlertAnim {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
-    }
-
-    10% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.1);
-        filter: blur(0px);
-    }
-
-    20% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-        filter: blur(0px);
-    }
-
-    85% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-        filter: blur(0px);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -60%) scale(1.2);
-        filter: blur(6px);
-    }
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); filter: blur(0px); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px); }
+    85% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px); }
+    100% { opacity: 0; transform: translate(-50%, -60%) scale(1.2); filter: blur(6px); }
 }
 
-.mod-alert.mod-c1 {
-    color: var(--t1);
-    text-shadow: 0 0 20px var(--t1), 0 0 30px var(--white);
-}
-
-.mod-alert.mod-c2 {
-    color: var(--t2);
-    text-shadow: 0 0 20px var(--t2), 0 0 30px var(--white);
-}
-
-.mod-alert.mod-c3 {
-    color: var(--t3);
-    text-shadow: 0 0 20px var(--t3), 0 0 30px var(--white);
-}
+.mod-alert.mod-c1 { color: var(--t1); text-shadow: 0 0 20px var(--t1), 0 0 30px var(--white); }
+.mod-alert.mod-c2 { color: var(--t2); text-shadow: 0 0 20px var(--t2), 0 0 30px var(--white); }
+.mod-alert.mod-c3 { color: var(--t3); text-shadow: 0 0 20px var(--t3), 0 0 30px var(--white); }
 
 /* --- SCHERMATA START & MENU --- */
 .start-screen {
@@ -390,13 +278,8 @@ body.overdrive .crt-overlay {
 }
 
 @keyframes grid-move {
-    0% {
-        background-position: 0 0, 0 0, center;
-    }
-
-    100% {
-        background-position: 60px 60px, 60px 60px, center;
-    }
+    0% { background-position: 0 0, 0 0, center; }
+    100% { background-position: 60px 60px, 60px 60px, center; }
 }
 
 .start-title {
@@ -451,14 +334,8 @@ body.overdrive .crt-overlay {
     box-shadow: 0 0 10px var(--t2);
 }
 
-.time-btn {
-    padding: 4px 8px;
-    font-size: 0.8rem;
-}
-
-input[type="range"] {
-    accent-color: var(--t2);
-}
+.time-btn { padding: 4px 8px; font-size: 0.8rem; }
+input[type="range"] { accent-color: var(--t2); }
 
 .play-btn {
     padding: 15px 40px;
@@ -474,10 +351,7 @@ input[type="range"] {
     text-transform: uppercase;
 }
 
-.play-btn:hover {
-    transform: scale(1.05);
-    filter: brightness(1.2);
-}
+.play-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
 
 .play-classic-btn {
     padding: 15px 40px;
@@ -511,9 +385,7 @@ input[type="range"] {
     transition: 0.2s;
 }
 
-.guide-btn:hover {
-    background: rgba(0, 217, 255, 0.2);
-}
+.guide-btn:hover { background: rgba(0, 217, 255, 0.2); }
 
 /* Loader Animato */
 .loader {
@@ -526,15 +398,7 @@ input[type="range"] {
     margin: 20px auto;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
 /* --- OVERLAYS --- */
 .tutorial-overlay {
@@ -551,9 +415,7 @@ input[type="range"] {
     text-align: left;
 }
 
-.tutorial-overlay.show {
-    display: flex;
-}
+.tutorial-overlay.show { display: flex; }
 
 .tutorial-content {
     max-width: 600px;
@@ -604,14 +466,8 @@ input[type="range"] {
     color: #bbb;
 }
 
-.codex-list b {
-    color: var(--t2);
-    font-family: 'Orbitron';
-}
-
-.codex-list p {
-    margin: 5px 0 15px 0;
-}
+.codex-list b { color: var(--t2); font-family: 'Orbitron'; }
+.codex-list p { margin: 5px 0 15px 0; }
 
 /* --- UI PRINCIPALE --- */
 .game-container {
@@ -625,9 +481,7 @@ input[type="range"] {
     box-sizing: border-box;
 }
 
-.game-container.show {
-    display: flex;
-}
+.game-container.show { display: flex; }
 
 .header-bar {
     flex: 0 0 100%;
@@ -735,17 +589,25 @@ input[type="range"] {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-.timer-box.W {
-    color: var(--white);
-    border: 1px solid var(--white);
+.timer-box.W { color: var(--white); border: 1px solid var(--white); }
+.timer-box.B { color: var(--black); border: 1px solid var(--black); }
+
+/* --- 1. WRAPPER (Griglia geometrica inflessibile) --- */
+.board-wrapper {
+    display: grid !important;
+    grid-template-columns: 15px 1fr; 
+    grid-template-rows: auto 20px; 
+    position: relative;
+    padding: 12px !important;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
 }
-
-.timer-box.B {
-    color: var(--black);
-    border: 1px solid var(--black);
-}
-
-
 
 body[data-gfx="HI"] .board-wrapper:not(.zoom-finish):not(.board-overdrive-jump) {
     animation: boardGlow 4s ease-in-out infinite alternate;
@@ -766,45 +628,10 @@ body[data-gfx="HI"].mod-level-3 .board-wrapper:not(.zoom-finish):not(.board-over
     border-color: rgba(188, 19, 254, 0.8);
 }
 
-@keyframes boardGlow {
-    from {
-        box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
-    }
-
-    to {
-        box-shadow: 0 0 35px rgba(0, 217, 255, 0.5);
-    }
-}
-
-@keyframes boardGlowL1 {
-    from {
-        box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
-    }
-
-    to {
-        box-shadow: 0 0 50px rgba(57, 255, 20, 0.6);
-    }
-}
-
-@keyframes boardGlowL2 {
-    from {
-        box-shadow: 0 0 30px rgba(0, 136, 255, 0.3);
-    }
-
-    to {
-        box-shadow: 0 0 70px rgba(0, 136, 255, 0.7);
-    }
-}
-
-@keyframes boardGlowL3 {
-    from {
-        box-shadow: 0 0 40px rgba(188, 19, 254, 0.4);
-    }
-
-    to {
-        box-shadow: 0 0 90px rgba(188, 19, 254, 0.8);
-    }
-}
+@keyframes boardGlow { from { box-shadow: 0 0 15px rgba(0, 217, 255, 0.2); } to { box-shadow: 0 0 35px rgba(0, 217, 255, 0.5); } }
+@keyframes boardGlowL1 { from { box-shadow: 0 0 20px rgba(57, 255, 20, 0.2); } to { box-shadow: 0 0 50px rgba(57, 255, 20, 0.6); } }
+@keyframes boardGlowL2 { from { box-shadow: 0 0 30px rgba(0, 136, 255, 0.3); } to { box-shadow: 0 0 70px rgba(0, 136, 255, 0.7); } }
+@keyframes boardGlowL3 { from { box-shadow: 0 0 40px rgba(188, 19, 254, 0.4); } to { box-shadow: 0 0 90px rgba(188, 19, 254, 0.8); } }
 
 /* FIAMME IN OVERDRIVE REALISTICHE (Solo HI) */
 body[data-gfx="HI"].overdrive .board-wrapper {
@@ -827,44 +654,13 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
     opacity: 0.85;
     mix-blend-mode: color-dodge;
 }
-/* --- 1. WRAPPER (Griglia geometrica inflessibile) --- */
-.board-wrapper {
-    display: grid !important;
-    
-    /* Colonna 1: 15px (Numeri) | Colonna 2: Il resto dello spazio (Scacchiera) */
-    grid-template-columns: 15px 1fr; 
-    
-    /* Riga 1: Automatica in base alla scacchiera | Riga 2: 20px (Lettere) */
-    grid-template-rows: auto 20px; 
-    
-    position: relative;
-    padding: 12px !important;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    border-radius: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
-    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
-}
+
 @keyframes overdrive-flames {
-    0% {
-        opacity: 0.6;
-        transform: scale(1) translateY(2px);
-        filter: blur(12px) hue-rotate(0deg);
-    }
-
-    100% {
-        opacity: 1;
-        transform: scale(1.02) translateY(-8px);
-        filter: blur(18px) hue-rotate(15deg);
-    }
+    0% { opacity: 0.6; transform: scale(1) translateY(2px); filter: blur(12px) hue-rotate(0deg); }
+    100% { opacity: 1; transform: scale(1.02) translateY(-8px); filter: blur(18px) hue-rotate(15deg); }
 }
 
-.board-overdrive-jump {
-    animation: board-jump 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
-}
+.board-overdrive-jump { animation: board-jump 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
 
 /* --- ANIMAZIONE ALFIERE RIMBALZANTE (WALL BOUNCE) --- */
 @keyframes board-elastic {
@@ -876,23 +672,12 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
     100% { transform: scale(1) skew(0deg); }
 }
 
-.board-elastic-anim {
-    animation: board-elastic 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-}
+.board-elastic-anim { animation: board-elastic 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
 
 @keyframes board-jump {
-    0% {
-        transform: scale(1) translateY(0);
-    }
-
-    40% {
-        transform: scale(1.05) translateY(-30px);
-        box-shadow: 0 0 100px var(--t4);
-    }
-
-    100% {
-        transform: scale(1) translateY(0);
-    }
+    0% { transform: scale(1) translateY(0); }
+    40% { transform: scale(1.05) translateY(-30px); box-shadow: 0 0 100px var(--t4); }
+    100% { transform: scale(1) translateY(0); }
 }
 
 /* --- ANIMAZIONE CRASH DI FINE PARTITA (SLOW MOTION GLITCH) --- */
@@ -902,46 +687,14 @@ body[data-gfx="HI"].overdrive .board-wrapper::before {
 }
 
 @keyframes glitch-crash {
-    0% {
-        transform: scale(1);
-        filter: contrast(1) hue-rotate(0deg);
-    }
-
-    10% {
-        transform: scale(1.05) translate(5px, -5px) skewX(2deg);
-        filter: contrast(1.5) hue-rotate(-20deg);
-    }
-
-    15% {
-        transform: scale(1.02) translate(-5px, 5px) skewX(-2deg);
-        filter: invert(0.2) hue-rotate(90deg);
-    }
-
-    25% {
-        transform: scale(1.1) translate(3px, -3px);
-        filter: contrast(2) saturate(2);
-    }
-
-    35% {
-        transform: scale(1.12) translate(-8px, 2px) skewY(3deg);
-        filter: hue-rotate(40deg);
-    }
-
-    50% {
-        transform: scale(1.15) translate(4px, 0);
-        filter: blur(2px) contrast(1.5);
-    }
-
-    70% {
-        transform: scale(1.18) translate(0, 5px);
-        filter: blur(4px) brightness(1.5);
-    }
-
-    100% {
-        transform: scale(1.2) translateY(2vh);
-        filter: blur(0px) contrast(1.2) brightness(0.4) grayscale(0.5);
-        box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
-    }
+    0% { transform: scale(1); filter: contrast(1) hue-rotate(0deg); }
+    10% { transform: scale(1.05) translate(5px, -5px) skewX(2deg); filter: contrast(1.5) hue-rotate(-20deg); }
+    15% { transform: scale(1.02) translate(-5px, 5px) skewX(-2deg); filter: invert(0.2) hue-rotate(90deg); }
+    25% { transform: scale(1.1) translate(3px, -3px); filter: contrast(2) saturate(2); }
+    35% { transform: scale(1.12) translate(-8px, 2px) skewY(3deg); filter: hue-rotate(40deg); }
+    50% { transform: scale(1.15) translate(4px, 0); filter: blur(2px) contrast(1.5); }
+    70% { transform: scale(1.18) translate(0, 5px); filter: blur(4px) brightness(1.5); }
+    100% { transform: scale(1.2) translateY(2vh); filter: blur(0px) contrast(1.2) brightness(0.4) grayscale(0.5); box-shadow: 0 0 60px rgba(0, 0, 0, 0.8); }
 }
 
 /* --- CYBERPUNK GAME OVER SCREEN --- */
@@ -965,10 +718,7 @@ body:not([data-gfx="LO"]) .game-over-screen {
     background-size: 20px 20px;
 }
 
-body:not([data-gfx="LO"]) .game-over-screen.show {
-    display: flex;
-    animation: fadeInScale 0.6s ease-out forwards !important;
-}
+body:not([data-gfx="LO"]) .game-over-screen.show { display: flex; animation: fadeInScale 0.6s ease-out forwards !important; }
 
 .game-over-screen h1 {
     font-family: 'Orbitron';
@@ -979,26 +729,12 @@ body:not([data-gfx="LO"]) .game-over-screen.show {
     letter-spacing: 4px;
 }
 
-body[data-gfx="LO"] .game-over-screen {
-    background: rgba(10, 15, 26, 0.95);
-    border: 2px solid var(--t2);
-}
-
-body[data-gfx="LO"] .game-over-screen.show {
-    display: flex;
-    animation: fadeInScale 0.3s ease-out forwards;
-}
+body[data-gfx="LO"] .game-over-screen { background: rgba(10, 15, 26, 0.95); border: 2px solid var(--t2); }
+body[data-gfx="LO"] .game-over-screen.show { display: flex; animation: fadeInScale 0.3s ease-out forwards; }
 
 @keyframes fadeInScale {
-    0% {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
 .cyberpunk-btn {
@@ -1018,31 +754,21 @@ body[data-gfx="LO"] .game-over-screen.show {
     transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.cyberpunk-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 var(--t4);
-}
+.cyberpunk-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--t4); }
 
-
-/* --- 3. LA SCACCHIERA --- */
-/* --- 3. LA SCACCHIERA --- */
 /* --- 2. NUMERI VERTICALI --- */
 .coords-y {
-    grid-column: 1; /* Forza in prima colonna */
-    grid-row: 1;    /* Forza in prima riga */
-    
+    grid-column: 1;
+    grid-row: 1;    
     display: flex !important;
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    
     color: var(--t2);
     font-family: 'Orbitron';
     font-size: clamp(0.6rem, 2vw, 0.8rem);
     margin: 0 !important;
     padding: 0 !important;
-    
-    /* Compensa il bordo alto/basso della scacchiera (2px) per allineamento perfetto */
     border-top: 2px solid transparent !important;
     border-bottom: 2px solid transparent !important;
     transform: translate(-6px, 0px) !important;
@@ -1054,11 +780,8 @@ body[data-gfx="LO"] .game-over-screen.show {
     grid-row: 1;    
     width: 100% !important;
     display: grid;
-    
-    /* FIX MOBILE: minmax(0, 1fr) obbliga le celle a NON allargarsi per nessun motivo */
     grid-template-columns: repeat(8, minmax(0, 1fr));
     grid-template-rows: repeat(8, minmax(0, 1fr));
-    
     aspect-ratio: 1 / 1;
     border: 2px solid var(--t2) !important;
     background: #000;
@@ -1070,33 +793,21 @@ body[data-gfx="LO"] .game-over-screen.show {
 .coords-x {
     grid-column: 2; 
     grid-row: 2;    
-    
     display: grid !important;
     grid-template-columns: repeat(8, 1fr); 
-    
     width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important; /* Rimosso il padding per farle salire di base */
-    
+    padding: 0 !important;
     color: var(--t2);
     font-family: 'Orbitron';
     font-size: clamp(0.6rem, 2vw, 0.8rem);
     box-sizing: border-box !important;
-    
     border-left: 2px solid transparent !important;
     border-right: 2px solid transparent !important;
-    
-    /* IL TOCCO MAGICO: Trasla l'intero blocco! 
-       Il primo valore (2px) sposta a DESTRA.
-       Il secondo valore (-4px) sposta in ALTO. */
-    /* 4px la spinge ancora più a DESTRA, -7px la alza ancora di PIÙ */
     transform: translate(25px, -25px) !important;
 }
 
-.coords-x span {
-    text-align: center;
-    display: block;
-}
+.coords-x span { text-align: center; display: block; }
 
 .cell {
     width: 100%;
@@ -1109,18 +820,11 @@ body[data-gfx="LO"] .game-over-screen.show {
     position: relative;
     user-select: none;
     box-sizing: border-box;
-    /* FIX MOBILE: Nasconde le sbordature delle pedine giganti che deformano la griglia */
     overflow: hidden; 
 }
 
-.cell.l {
-    background: var(--panel);
-    filter: brightness(1.5);
-}
-
-.cell.d {
-    background: var(--panel);
-}
+.cell.l { background: var(--panel); filter: brightness(1.5); }
+.cell.d { background: var(--panel); }
 
 .cell.h-m::after {
     content: '';
@@ -1142,9 +846,7 @@ body[data-gfx="LO"] .game-over-screen.show {
     z-index: 10;
 }
 
-body:not([data-gfx="LO"]) .cell.check {
-    animation: pulse-red 1.5s infinite;
-}
+body:not([data-gfx="LO"]) .cell.check { animation: pulse-red 1.5s infinite; }
 
 .cell.check {
     background-color: rgba(255, 0, 0, 0.6) !important;
@@ -1153,38 +855,24 @@ body:not([data-gfx="LO"]) .cell.check {
 
 /* --- EVIDENZIAZIONE ULTIMA MOSSA --- */
 .cell.last-move {
-    /* Un giallo dorato traslucido, classico ma in stile Neon */
     background: rgba(255, 215, 0, 0.25) !important; 
     box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5) !important;
     border: 1px solid rgba(255, 215, 0, 0.6);
 }
 
-/* Colore Fucsia/Magenta SOLO per il Tier 3 */
 body.mod-level-3 .cell.last-move {
     background: rgba(240, 85, 255, 0.25) !important; 
     box-shadow: inset 0 0 20px rgba(240, 85, 255, 0.5) !important;
     border: 1px solid rgba(240, 85, 255, 0.6);
 }
 
-/* Colore Rosso fuoco SOLO per l'Overdrive (Tier 4) */
 body.overdrive .cell.last-move {
     background: rgba(255, 0, 0, 0.25) !important; 
     box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.5) !important;
     border: 1px solid rgba(255, 0, 0, 0.6);
 }
-@keyframes pulse-red {
-    0% {
-        opacity: 1;
-    }
 
-    50% {
-        opacity: 0.6;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
+@keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
 .piece {
     --rot: 0deg;
@@ -1197,63 +885,24 @@ body.overdrive .cell.last-move {
     -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
 }
 
-/* Rotazione pedine nere per modalità Umano vs Umano */
-body.human-vs-human .board .piece.B {
-    --rot: 180deg;
-}
+body.human-vs-human .board .piece.B { --rot: 180deg; }
 
-body:not([data-gfx="LO"]) .piece.W {
-    color: var(--white);
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-}
-
-body:not([data-gfx="LO"]) .piece.B {
-    color: var(--black);
-    text-shadow: 0 0 10px rgba(244, 63, 94, 0.8);
-}
-
-body[data-gfx="LO"] .piece.W {
-    color: var(--white);
-}
-
-body[data-gfx="LO"] .piece.B {
-    color: var(--black);
-}
+body:not([data-gfx="LO"]) .piece.W { color: var(--white); text-shadow: 0 0 8px rgba(255, 255, 255, 0.8); }
+body:not([data-gfx="LO"]) .piece.B { color: var(--black); text-shadow: 0 0 10px rgba(244, 63, 94, 0.8); }
+body[data-gfx="LO"] .piece.W { color: var(--white); }
+body[data-gfx="LO"] .piece.B { color: var(--black); }
 
 /* AUREE FIXATE PER HI E MED */
-body:not([data-gfx="LO"]) .piece.aura-common {
-    text-shadow: 0 0 10px var(--t1), 0 0 20px var(--t1) !important;
-}
-
-body:not([data-gfx="LO"]) .piece.aura-rare {
-    text-shadow: 0 0 10px var(--t2), 0 0 20px var(--t2) !important;
-}
-
-body:not([data-gfx="LO"]) .piece.aura-epic {
-    text-shadow: 0 0 12px var(--t3), 0 0 25px var(--t3) !important;
-}
-
-body:not([data-gfx="LO"]) .piece.aura-legend {
-    text-shadow: 0 0 15px var(--legend), 0 0 30px var(--legend) !important;
-    filter: brightness(1.2);
-}
+body:not([data-gfx="LO"]) .piece.aura-common { text-shadow: 0 0 10px var(--t1), 0 0 20px var(--t1) !important; }
+body:not([data-gfx="LO"]) .piece.aura-rare { text-shadow: 0 0 10px var(--t2), 0 0 20px var(--t2) !important; }
+body:not([data-gfx="LO"]) .piece.aura-epic { text-shadow: 0 0 12px var(--t3), 0 0 25px var(--t3) !important; }
+body:not([data-gfx="LO"]) .piece.aura-legend { text-shadow: 0 0 15px var(--legend), 0 0 30px var(--legend) !important; filter: brightness(1.2); }
 
 /* AUREE LEGGERE PER LO */
-body[data-gfx="LO"] .piece.aura-common {
-    text-shadow: 1px 1px 0 var(--t1), -1px -1px 0 var(--t1) !important;
-}
-
-body[data-gfx="LO"] .piece.aura-rare {
-    text-shadow: 1px 1px 0 var(--t2), -1px -1px 0 var(--t2) !important;
-}
-
-body[data-gfx="LO"] .piece.aura-epic {
-    text-shadow: 1px 1px 0 var(--t3), -1px -1px 0 var(--t3) !important;
-}
-
-body[data-gfx="LO"] .piece.aura-legend {
-    text-shadow: 1px 1px 0 var(--legend), -1px -1px 0 var(--legend) !important;
-}
+body[data-gfx="LO"] .piece.aura-common { text-shadow: 1px 1px 0 var(--t1), -1px -1px 0 var(--t1) !important; }
+body[data-gfx="LO"] .piece.aura-rare { text-shadow: 1px 1px 0 var(--t2), -1px -1px 0 var(--t2) !important; }
+body[data-gfx="LO"] .piece.aura-epic { text-shadow: 1px 1px 0 var(--t3), -1px -1px 0 var(--t3) !important; }
+body[data-gfx="LO"] .piece.aura-legend { text-shadow: 1px 1px 0 var(--legend), -1px -1px 0 var(--legend) !important; }
 
 /* Etichette CLONE E PROMOTED */
 .clone-tag {
@@ -1273,71 +922,26 @@ body[data-gfx="LO"] .piece.aura-legend {
 
 /* --- ANIMAZIONE PEDINA MODDATA (SOBBALZO CON ROTAZIONE) --- */
 @keyframes modReceiveAnim {
-    0% {
-        transform: translateY(0) scale(1) rotate(var(--rot));
-        filter: brightness(1);
-    }
-
-    20% {
-        transform: translateY(-25px) scale(1.4) rotate(var(--rot));
-        filter: brightness(2) drop-shadow(0 0 15px white);
-    }
-
-    40% {
-        transform: translateY(0) scale(1.1) rotate(var(--rot));
-        filter: brightness(1.5) drop-shadow(0 0 10px white);
-    }
-
-    60% {
-        transform: translateY(-12px) scale(1.25) rotate(var(--rot));
-        filter: brightness(1.8) drop-shadow(0 0 15px white);
-    }
-
-    80% {
-        transform: translateY(0) scale(1.05) rotate(var(--rot));
-        filter: brightness(1.2);
-    }
-
-    100% {
-        transform: translateY(0) scale(1) rotate(var(--rot));
-        filter: brightness(1);
-    }
+    0% { transform: translateY(0) scale(1) rotate(var(--rot)); filter: brightness(1); }
+    20% { transform: translateY(-25px) scale(1.4) rotate(var(--rot)); filter: brightness(2) drop-shadow(0 0 15px white); }
+    40% { transform: translateY(0) scale(1.1) rotate(var(--rot)); filter: brightness(1.5) drop-shadow(0 0 10px white); }
+    60% { transform: translateY(-12px) scale(1.25) rotate(var(--rot)); filter: brightness(1.8) drop-shadow(0 0 15px white); }
+    80% { transform: translateY(0) scale(1.05) rotate(var(--rot)); filter: brightness(1.2); }
+    100% { transform: translateY(0) scale(1) rotate(var(--rot)); filter: brightness(1); }
 }
 
-.mod-receive-anim {
-    animation: modReceiveAnim 1s ease-in-out forwards !important;
-    z-index: 110 !important;
-}
+.mod-receive-anim { animation: modReceiveAnim 1s ease-in-out forwards !important; z-index: 110 !important; }
 
 @keyframes modReceiveAnimLo {
-    0% {
-        transform: translateY(0) scale(1) rotate(var(--rot));
-    }
-
-    20% {
-        transform: translateY(-25px) scale(1.4) rotate(var(--rot));
-    }
-
-    40% {
-        transform: translateY(0) scale(1.1) rotate(var(--rot));
-    }
-
-    60% {
-        transform: translateY(-12px) scale(1.25) rotate(var(--rot));
-    }
-
-    80% {
-        transform: translateY(0) scale(1.05) rotate(var(--rot));
-    }
-
-    100% {
-        transform: translateY(0) scale(1) rotate(var(--rot));
-    }
+    0% { transform: translateY(0) scale(1) rotate(var(--rot)); }
+    20% { transform: translateY(-25px) scale(1.4) rotate(var(--rot)); }
+    40% { transform: translateY(0) scale(1.1) rotate(var(--rot)); }
+    60% { transform: translateY(-12px) scale(1.25) rotate(var(--rot)); }
+    80% { transform: translateY(0) scale(1.05) rotate(var(--rot)); }
+    100% { transform: translateY(0) scale(1) rotate(var(--rot)); }
 }
 
-body[data-gfx="LO"] .mod-receive-anim {
-    animation: modReceiveAnimLo 1s ease-in-out forwards !important;
-}
+body[data-gfx="LO"] .mod-receive-anim { animation: modReceiveAnimLo 1s ease-in-out forwards !important; }
 
 .capture-burst {
     position: absolute;
@@ -1349,26 +953,12 @@ body[data-gfx="LO"] .mod-receive-anim {
     z-index: 20;
 }
 
-.capture-burst.W {
-    background: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 30px #fff;
-}
-
-.capture-burst.B {
-    background: rgba(255, 0, 60, 0.5);
-    box-shadow: 0 0 30px var(--t4);
-}
+.capture-burst.W { background: rgba(255, 255, 255, 0.5); box-shadow: 0 0 30px #fff; }
+.capture-burst.B { background: rgba(255, 0, 60, 0.5); box-shadow: 0 0 30px var(--t4); }
 
 @keyframes burstAnim {
-    0% {
-        transform: scale(0.3);
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(1.8);
-        opacity: 0;
-    }
+    0% { transform: scale(0.3); opacity: 1; }
+    100% { transform: scale(1.8); opacity: 0; }
 }
 
 .spark {
@@ -1381,44 +971,19 @@ body[data-gfx="LO"] .mod-receive-anim {
     z-index: 25;
 }
 
-.spark.W {
-    background: #fff;
-    box-shadow: 0 0 10px #fff;
-}
-
-.spark.B {
-    background: var(--t4);
-    box-shadow: 0 0 10px var(--t4);
-}
+.spark.W { background: #fff; box-shadow: 0 0 10px #fff; }
+.spark.B { background: var(--t4); box-shadow: 0 0 10px var(--t4); }
 
 @keyframes sparkAnim {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translate(var(--tx), var(--ty)) scale(0);
-        opacity: 0;
-    }
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
 }
 
-.spawn-anim {
-    animation: spawnPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
+.spawn-anim { animation: spawnPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
 @keyframes spawnPop {
-    0% {
-        transform: scale(0) translateY(-20px) rotate(var(--rot));
-        opacity: 0;
-        filter: brightness(2);
-    }
-
-    100% {
-        transform: scale(1) translateY(0) rotate(var(--rot));
-        opacity: 1;
-        filter: brightness(1);
-    }
+    0% { transform: scale(0) translateY(-20px) rotate(var(--rot)); opacity: 0; filter: brightness(2); }
+    100% { transform: scale(1) translateY(0) rotate(var(--rot)); opacity: 1; filter: brightness(1); }
 }
 
 /* --- UI COUNTER IMPAZIENTE --- */
@@ -1441,52 +1006,16 @@ body[data-gfx="LO"] .mod-receive-anim {
     box-sizing: border-box;
 }
 
-.kills-counter.impatience-1 {
-    animation: imp1 1s infinite alternate;
-}
+.kills-counter.impatience-1 { animation: imp1 1s infinite alternate; }
+.kills-counter.impatience-2 { border-color: var(--legend); color: var(--legend); text-shadow: 0 0 10px var(--legend); animation: imp2 0.5s infinite alternate; }
+.kills-counter.impatience-3 { border-color: var(--t4); color: var(--t4); text-shadow: 0 0 10px var(--t4); animation: imp3 0.15s infinite alternate; }
 
-.kills-counter.impatience-2 {
-    border-color: var(--legend);
-    color: var(--legend);
-    text-shadow: 0 0 10px var(--legend);
-    animation: imp2 0.5s infinite alternate;
-}
-
-.kills-counter.impatience-3 {
-    border-color: var(--t4);
-    color: var(--t4);
-    text-shadow: 0 0 10px var(--t4);
-    animation: imp3 0.15s infinite alternate;
-}
-
-@keyframes imp1 {
-    100% {
-        box-shadow: 0 0 20px rgba(0, 136, 255, 0.5);
-        transform: scale(1.02);
-    }
-}
-
-@keyframes imp2 {
-    100% {
-        box-shadow: 0 0 25px var(--legend);
-        transform: scale(1.05) rotate(1deg);
-    }
-}
-
+@keyframes imp1 { 100% { box-shadow: 0 0 20px rgba(0, 136, 255, 0.5); transform: scale(1.02); } }
+@keyframes imp2 { 100% { box-shadow: 0 0 25px var(--legend); transform: scale(1.05) rotate(1deg); } }
 @keyframes imp3 {
-    0% {
-        transform: translate(1px, 1px) rotate(0deg);
-        box-shadow: 0 0 15px var(--t4);
-    }
-
-    50% {
-        transform: translate(-1px, -2px) rotate(-1deg);
-    }
-
-    100% {
-        transform: translate(-2px, 1px) rotate(1deg);
-        box-shadow: 0 0 35px var(--t4);
-    }
+    0% { transform: translate(1px, 1px) rotate(0deg); box-shadow: 0 0 15px var(--t4); }
+    50% { transform: translate(-1px, -2px) rotate(-1deg); }
+    100% { transform: translate(-2px, 1px) rotate(1deg); box-shadow: 0 0 35px var(--t4); }
 }
 
 .side-panel {
@@ -1513,211 +1042,59 @@ body[data-gfx="LO"] .mod-receive-anim {
     transition: all 0.3s ease;
 }
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 4px;
-    margin-bottom: 4px;
-}
+.card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 4px; margin-bottom: 4px; }
+.card-title { font-family: 'Orbitron'; font-size: 0.85rem; font-weight: bold; color: #ffffff !important; text-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+.card-desc { font-size: 0.7rem; color: #ccc; line-height: 1.2; }
+.badge { font-size: 0.55rem; padding: 2px 5px; border-radius: 4px; font-weight: bold; text-transform: uppercase; color: #fff; }
 
-.card-title {
-    font-family: 'Orbitron';
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: #ffffff !important;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
-
-.card-desc {
-    font-size: 0.7rem;
-    color: #ccc;
-    line-height: 1.2;
-}
-
-.badge {
-    font-size: 0.55rem;
-    padding: 2px 5px;
-    border-radius: 4px;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #fff;
-}
-
-.c-common {
-    border-color: var(--t1);
-}
-
-.c-common .badge {
-    background: rgba(57, 255, 20, 0.2);
-    color: var(--t1);
-}
-
-.c-rare {
-    border-color: var(--t2);
-}
-
-.c-rare .badge {
-    background: rgba(0, 136, 255, 0.2);
-    color: var(--t2);
-}
-
-.c-epic {
-    border-color: var(--t3);
-}
-
-.c-epic .badge {
-    background: rgba(188, 19, 254, 0.2);
-    color: var(--t3);
-}
-
-.c-legend {
-    border-color: var(--legend);
-}
-
-.c-legend .badge {
-    background: rgba(255, 170, 0, 0.2);
-    color: var(--legend);
-}
-
-.disabled-card {
-    filter: grayscale(1) opacity(0.4);
-    text-decoration: line-through;
-}
+.c-common { border-color: var(--t1); }
+.c-common .badge { background: rgba(57, 255, 20, 0.2); color: var(--t1); }
+.c-rare { border-color: var(--t2); }
+.c-rare .badge { background: rgba(0, 136, 255, 0.2); color: var(--t2); }
+.c-epic { border-color: var(--t3); }
+.c-epic .badge { background: rgba(188, 19, 254, 0.2); color: var(--t3); }
+.c-legend { border-color: var(--legend); }
+.c-legend .badge { background: rgba(255, 170, 0, 0.2); color: var(--legend); }
+.disabled-card { filter: grayscale(1) opacity(0.4); text-decoration: line-through; }
 
 /* Ottimizzazione Mobile Layout */
 @media (max-width: 900px) {
-    .game-container {
-        flex-direction: column;
-        align-items: center;
-        padding-top: 15px;
-        overflow-x: hidden;
-    }
-
-    .header-bar {
-        order: -2;
-        justify-content: center;
-        width: 95%;
-        padding: 0;
-    }
-
-    .center-column {
-        order: -1;
-        width: 95%;
-    }
-
-    .side-panel {
-        max-height: 250px;
-        width: 95%;
-        max-width: 500px;
-        margin: 0 auto;
-    }
-
-    .board-wrapper {
-        padding: 5px;
-    }
-
-    .kills-counter {
-        width: 100%;
-        margin: 15px 0 10px 0;
-    }
+    .game-container { flex-direction: column; align-items: center; padding-top: 15px; overflow-x: hidden; }
+    .header-bar { order: -2; justify-content: center; width: 95%; padding: 0; }
+    .center-column { order: -1; width: 95%; }
+    .side-panel { max-height: 250px; width: 95%; max-width: 500px; margin: 0 auto; }
+    .board-wrapper { padding: 5px; }
+    .kills-counter { width: 100%; margin: 15px 0 10px 0; }
+    #skip-turn-btn { margin: 10px auto; width: 95%; }
 }
 
-/* Stile per gli Username sopra i pannelli */
-.player-name {
-    font-family: 'Orbitron';
-    font-weight: bold;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: 1px;
-}
-
-.player-name.W {
-    color: var(--white);
-    text-shadow: 0 0 8px var(--white);
-}
-
-.player-name.B {
-    color: var(--black);
-    text-shadow: 0 0 8px var(--black);
-}
-
-
+.player-name { font-family: 'Orbitron'; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 1px; }
+.player-name.W { color: var(--white); text-shadow: 0 0 8px var(--white); }
+.player-name.B { color: var(--black); text-shadow: 0 0 8px var(--black); }
 
 /* --- DISPOSIZIONE E GRANDEZZA PANNELLI E SCACCHIERA (Solo su schermi grandi PC) --- */
 @media (min-width: 901px) {
-    .board {
-        width: 580px !important;
-        height: 580px !important;
-    }
-
-    .board-wrapper {
-        width: 580px !important;
-        max-width: 580px !important;
-    }
-
-    .center-column {
-        order: 2 !important;
-        margin: 0 30px;
-    }
-
+    .board { width: 580px !important; height: 580px !important; }
+    .board-wrapper { width: 580px !important; max-width: 580px !important; }
+    .center-column { order: 2 !important; margin: 0 30px; }
     #w-mods { order: 1 !important; }
     #b-mods { order: 3 !important; }
-
     body[data-team="B"] #w-mods { order: 3 !important; }
     body[data-team="B"] #b-mods { order: 1 !important; }
-
-    .side-panel {
-        width: 240px !important;
-        transform: scale(0.95);
-        opacity: 0.5;
-        transition: all 0.4s ease;
-    }
-
+    .side-panel { width: 240px !important; transform: scale(0.95); opacity: 0.5; transition: all 0.4s ease; }
     body[data-team="W"] #w-mods,
-    body[data-team="B"] #b-mods {
-        width: 340px !important;
-        transform: scale(1.02);
-        opacity: 1 !important;
-        box-shadow: 0 0 25px rgba(255, 255, 255, 0.05);
-    }
+    body[data-team="B"] #b-mods { width: 340px !important; transform: scale(1.02); opacity: 1 !important; box-shadow: 0 0 25px rgba(255, 255, 255, 0.05); }
 }
 
 /* --- SFONDO IMPOSTAZIONI --- */
-#start-screen {
-    background: rgba(0, 0, 0, 0.5) !important; 
-    backdrop-filter: blur(5px); 
-    position: fixed;
-    inset: 0;
-    z-index: 30000;
-}
-
-/* IL FIX FONDAMENTALE DELLA PARENTESI CHE MANCAVA ERA QUI! */
-body.settings-open #start-screen {
-    background: rgba(0, 0, 0, 0.85) !important;
-    backdrop-filter: blur(12px);
-} 
+#start-screen { background: rgba(0, 0, 0, 0.5) !important; backdrop-filter: blur(5px); position: fixed; inset: 0; z-index: 30000; }
+body.settings-open #start-screen { background: rgba(0, 0, 0, 0.85) !important; backdrop-filter: blur(12px); } 
 
 /* --- ROTAZIONE FRECCE PER IL NERO --- */
-body[data-team="B"] #arrow-svg {
-    transform: rotate(180deg) !important;
-}
+body[data-team="B"] #arrow-svg { transform: rotate(180deg) !important; }
 
 /* --- VERSIONE DEL GIOCO --- */
-.version-tag {
-    position: fixed;
-    bottom: 5px;
-    right: 15px;
-    color: rgba(255, 255, 255, 0.3);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
-    z-index: 100000;
-    pointer-events: none;
-    letter-spacing: 2px;
-}
+.version-tag { position: fixed; bottom: 5px; right: 15px; color: rgba(255, 255, 255, 0.3); font-family: 'Orbitron', sans-serif; font-size: 0.75rem; z-index: 100000; pointer-events: none; letter-spacing: 2px; }
 
 /* --- RIPRISTINO ZOOM FINISH (FINE NORMALE) --- */
 .zoom-finish {
@@ -1739,59 +1116,22 @@ body[data-team="B"] #arrow-svg {
 }
 
 @keyframes cube-fly-up {
-    0% {
-        opacity: 1;
-        transform: scale(1) translate(0, 0) rotate(0deg);
-    }
-
-    100% {
-        opacity: 0;
-        transform: scale(0) translate(var(--dx), var(--dy)) rotate(var(--rot));
-    }
+    0% { opacity: 1; transform: scale(1) translate(0, 0) rotate(0deg); }
+    100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)) rotate(var(--rot)); }
 }
 
 /* --- NUOVO EFFETTO GLITCH SUL TESTO VITTORIA/SCONFITTA --- */
-.glitch-anim {
-    animation: text-glitch-intense 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-}
+.glitch-anim { animation: text-glitch-intense 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
 @keyframes text-glitch-intense {
-    0% {
-        transform: translate(0) scale(1);
-        text-shadow: none;
-        opacity: 0;
-    }
-    10% {
-        transform: translate(-20px, 5px) skewX(-30deg);
-        text-shadow: 10px 0 var(--t4), -10px 0 var(--t2);
-        opacity: 1;
-        color: var(--white);
-    }
-    20% {
-        transform: translate(20px, -5px) skewX(30deg);
-        text-shadow: -10px 0 var(--t4), 10px 0 var(--t2);
-        color: currentColor;
-    }
-    30% {
-        transform: translate(-10px, 5px) skewX(-10deg);
-        text-shadow: 5px 0 var(--t4), -5px 0 var(--t2);
-    }
-    40% {
-        transform: translate(10px, -5px) skewX(10deg);
-        text-shadow: -5px 0 var(--t4), 5px 0 var(--t2);
-    }
-    50% {
-        transform: translate(0) scale(1.1);
-        filter: invert(1);
-    }
-    60% {
-        transform: translate(0) scale(1);
-        filter: invert(0);
-    }
-    100% {
-        transform: translate(0) scale(1);
-        text-shadow: 0 0 20px currentColor;
-    }
+    0% { transform: translate(0) scale(1); text-shadow: none; opacity: 0; }
+    10% { transform: translate(-20px, 5px) skewX(-30deg); text-shadow: 10px 0 var(--t4), -10px 0 var(--t2); opacity: 1; color: var(--white); }
+    20% { transform: translate(20px, -5px) skewX(30deg); text-shadow: -10px 0 var(--t4), 10px 0 var(--t2); color: currentColor; }
+    30% { transform: translate(-10px, 5px) skewX(-10deg); text-shadow: 5px 0 var(--t4), -5px 0 var(--t2); }
+    40% { transform: translate(10px, -5px) skewX(10deg); text-shadow: -5px 0 var(--t4), 5px 0 var(--t2); }
+    50% { transform: translate(0) scale(1.1); filter: invert(1); }
+    60% { transform: translate(0) scale(1); filter: invert(0); }
+    100% { transform: translate(0) scale(1); text-shadow: 0 0 20px currentColor; }
 }
 
 /* --- ROTTURA DEL SISTEMA --- */
@@ -1810,95 +1150,46 @@ body[data-team="B"] #arrow-svg {
     100% { transform: translate(1px, -2px) rotate(-1deg); }
 }
 
-.piece-falling {
-    animation: piece-drop 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
-}
+.piece-falling { animation: piece-drop 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important; }
 
 @keyframes piece-drop {
-    0% {
-        transform: translateY(0) rotate(var(--rot)) scale(1);
-        opacity: 1;
-    }
-    20% {
-        transform: translateY(-30px) rotate(calc(var(--rot) + 15deg)) scale(1.2);
-        filter: brightness(2);
-    }
-    100% {
-        transform: translateY(120vh) rotate(calc(var(--rot) + 720deg)) scale(0.5);
-        opacity: 0;
-    }
+    0% { transform: translateY(0) rotate(var(--rot)) scale(1); opacity: 1; }
+    20% { transform: translateY(-30px) rotate(calc(var(--rot) + 15deg)) scale(1.2); filter: brightness(2); }
+    100% { transform: translateY(120vh) rotate(calc(var(--rot) + 720deg)) scale(0.5); opacity: 0; }
 }
 
 /* ========================================= */
 /* --- GRAFICA E STRUTTURA MUSIC PLAYER ---  */
 /* ========================================= */
-
-/* 1. Stile Base (PC) */
 .music-player {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(10, 15, 26, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--t2);
-    border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 80;
-    width: 200px;
-    box-shadow: 0 0 20px rgba(0, 136, 255, 0.3);
-    user-select: none;
-    touch-action: none;
-    pointer-events: auto;
+    position: fixed; bottom: 20px; left: 20px; background: rgba(10, 15, 26, 0.85); backdrop-filter: blur(10px);
+    border: 1px solid var(--t2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column;
+    gap: 8px; z-index: 80; width: 200px; box-shadow: 0 0 20px rgba(0, 136, 255, 0.3); user-select: none; touch-action: none; pointer-events: auto;
 }
-
 .player-info { cursor: grab; padding-bottom: 5px; text-align: center; font-family: 'Orbitron', sans-serif; color: #ffffff !important;}
 .player-info:active { cursor: grabbing; }
 .song-title { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 5px var(--t2); margin-bottom: 2px; color: #ffffff !important; }
 .song-duration { font-size: 0.65rem; opacity: 0.7; font-variant-numeric: tabular-nums; color: #ffffff !important; }
-
 .player-controls { display: flex; justify-content: center; gap: 20px; }
 .player-controls button { background: none; border: none; color: var(--t2); font-size: 1.4rem; cursor: pointer; transition: transform 0.1s, color 0.2s; line-height: 1; }
 .player-controls button:hover { transform: scale(1.2); color: #ffffff !important; }
-
 .song-progress { width: 100%; height: 5px; cursor: pointer; accent-color: var(--t2); background: rgba(255, 255, 255, 0.1); border-radius: 5px; outline: none; margin: 5px 0; }
 .player-volume { display: flex; align-items: center; gap: 8px; margin-top: 5px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px; color: #ffffff;}
 
-
-/* --- FIX LEGGIBILITÀ TESTI SU SFONDI SCURI DURANTE L'OVERDRIVE --- */
 body.overdrive #start-screen, body.overdrive .opt-row span { color: #ffffff !important; }
 body.overdrive .start-title { color: #ffffff !important; text-shadow: 0 0 15px #ffffff !important; }
 body.overdrive .opt-btn { color: #ffffff !important; border-color: rgba(255, 255, 255, 0.5) !important; }
 body.overdrive .opt-btn.active { background: #ffffff !important; color: #000000 !important; box-shadow: 0 0 10px #ffffff !important; }
 body.overdrive .play-classic-btn, body.overdrive .guide-btn { color: #ffffff !important; border-color: #ffffff !important; }
 
-/* 2. Comportamento su Cellulare (Mobile) - FINAL FIX */
 @media (max-width: 900px) {
     .music-player {
-        /* Invisibile di default ovunque su mobile */
         display: none !important; 
-        
-        top: auto !important;
-        bottom: 15px !important; 
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        
-        width: 85% !important;
-        max-width: 250px !important; 
-        padding: 8px 12px !important; 
-        gap: 4px !important; 
+        top: auto !important; bottom: 15px !important; left: 50% !important; transform: translateX(-50%) !important;
+        width: 85% !important; max-width: 250px !important; padding: 8px 12px !important; gap: 4px !important; 
     }
-    
-    /* Appare SOLO a partita iniziata e se apri il menu delle impostazioni */
-    body.game-started.settings-open .music-player {
-        display: flex !important;
-        z-index: 30001 !important; 
-    }
-    
+    body.game-started.settings-open .music-player { display: flex !important; z-index: 30001 !important; }
     .tutorial-overlay { z-index: 30000 !important; }
-
     .music-player .song-title { font-size: 0.65rem; margin-bottom: 0; }
     .music-player .song-duration { font-size: 0.55rem; }
     .music-player .player-controls { gap: 15px; }
@@ -1907,67 +1198,24 @@ body.overdrive .play-classic-btn, body.overdrive .guide-btn { color: #ffffff !im
     .music-player .player-volume { margin-top: 2px; padding-top: 4px; gap: 5px; }
 }
 
-/* --- ROTAZIONE VISIVA PER IL GIOCATORE NERO --- */
-body[data-team="B"] .board {
-    transform: rotate(180deg) !important;
-}
+body[data-team="B"] .board { transform: rotate(180deg) !important; }
+body[data-team="B"] .board .piece { --rot: 180deg; }
+body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transform: rotate(180deg) !important; display: inline-block; }
 
-/* Contro-rotazione per non vedere le pedine a testa in giù */
-body[data-team="B"] .board .piece {
-    --rot: 180deg;
-}
+body.overdrive .cell.h-m::after { background: #00f3ff !important; box-shadow: 0 0 15px #00f3ff, 0 0 5px #ffffff, 0 0 25px rgba(0, 243, 255, 0.5) !important; width: 30%; height: 30%; opacity: 1; }
+body.overdrive .cell.h-c { box-shadow: inset 0 0 25px #00f3ff, inset 0 0 10px rgba(255, 255, 255, 0.8) !important; border: 3px solid #00f3ff !important; }
 
-/* Contro-rotazione per i numeri e le lettere a bordo scacchiera */
-body[data-team="B"] .coords-y span,
-body[data-team="B"] .coords-x span {
-    transform: rotate(180deg) !important;
-    display: inline-block;
-}
+body.overdrive #promotion-overlay .play-btn { color: #ffffff !important; text-shadow: 0 0 10px #ffffff, 0 0 20px #00f3ff, 0 0 30px #00f3ff !important; border: 2px solid #00f3ff !important; background: rgba(0, 0, 0, 0.6) !important; transition: all 0.2s ease; }
+body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255, 0.2) !important; box-shadow: 0 0 25px #00f3ff, inset 0 0 15px rgba(255, 255, 255, 0.5) !important; transform: scale(1.1); }
 
 @media (max-width: 900px) {
-    .coords-x {
-        transform: translateY(-20px) !important; 
-        
-        
-        /* FIX: Aggiungiamo padding laterale per stringere le lettere! 
-           Il primo 0 è per alto/basso. L'8px è per sinistra/destra. */
-        padding: 0 10px !important; 
+    .board-wrapper {
+        padding: 6px !important;
+        width: 96vw !important;
+        max-width: 100%;
     }
-}
-
-/* --- FIX PUNTINI MOSSA IN OVERDRIVE --- */
-body.overdrive .cell.h-m::after {
-    /* Cyan ultra-acceso per "bucare" lo sfondo rosso dell'overdrive */
-    background: #00f3ff !important; 
-    
-    /* Doppio bagliore: uno cyan largo e uno bianco stretto per la massima brillantezza */
-    box-shadow: 0 0 15px #00f3ff, 0 0 5px #ffffff, 0 0 25px rgba(0, 243, 255, 0.5) !important;
-    
-    /* Li rendiamo leggermente più grandi per vederli meglio nel caos */
-    width: 30%;
-    height: 30%;
-    opacity: 1;
-}
-
-/* Anche il bordo delle caselle di cattura (nemici) deve diventare Cyan in Overdrive */
-body.overdrive .cell.h-c {
-    box-shadow: inset 0 0 25px #00f3ff, inset 0 0 10px rgba(255, 255, 255, 0.8) !important;
-    border: 3px solid #00f3ff !important;
-}
-
-/* --- VISIBILITÀ PROMOZIONE IN OVERDRIVE --- */
-/* Forza tutte le pedine opzionali a diventare bianche con un bagliore Cyan neon */
-body.overdrive #promotion-overlay .play-btn {
-    color: #ffffff !important; /* Testo/Pedina Bianco puro */
-    text-shadow: 0 0 10px #ffffff, 0 0 20px #00f3ff, 0 0 30px #00f3ff !important; /* Bagliore Cyan potente */
-    border: 2px solid #00f3ff !important; /* Bordo Cyan neon */
-    background: rgba(0, 0, 0, 0.6) !important; /* Sfondo scuro per far risaltare il bianco */
-    transition: all 0.2s ease;
-}
-
-/* Effetto al passaggio del mouse (hover) per renderle "selezionabili" visivamente */
-body.overdrive #promotion-overlay .play-btn:hover {
-    background: rgba(0, 243, 255, 0.2) !important;
-    box-shadow: 0 0 25px #00f3ff, inset 0 0 15px rgba(255, 255, 255, 0.5) !important;
-    transform: scale(1.1); /* Leggero ingrandimento */
+    .coords-x {
+        transform: translateY(2px) !important; 
+        padding: 0 !important; 
+    }
 }

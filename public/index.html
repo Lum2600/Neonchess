@@ -6,14 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NEON CHESS: GOD MODE (MULTIPLAYER)</title>
 
-    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;600&display=swap"
         rel="stylesheet">
 
-    <!-- Colleghiamo il CSS esterno -->
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ddff">
 
-    <!-- Libreria Socket.IO fornita dal server -->
     <script src="/socket.io/socket.io.js"></script>
 </head>
 
@@ -38,16 +37,12 @@
         </div>
     </div>
 
-    <!-- OVERLAY CRT -->
     <div class="crt-overlay"></div>
 
-    <!-- SCRITTE ANIMATE -->
     <div id="overdrive-alert" class="overdrive-alert">OVERDRIVE</div>
     <div id="mod-alert" class="mod-alert">MOD UNLOCKED</div>
 
-    <!-- MUSICA -->
     <audio id="bg-music"></audio>
-    <!-- MAIN MENU -->
     <div id="start-screen" class="start-screen">
         <h1 class="start-title">NEON CHESS</h1>
         <div class="options-box">
@@ -111,7 +106,6 @@
         </div>
     </div>
 
-    <!-- OVERLAY MULTIPLAYER -->
     <div id="multiplayer-overlay" class="tutorial-overlay" style="z-index: 600;">
         <div class="tutorial-content" style="max-width: 400px; text-align: center;">
             <h2 style="color:var(--t2); border-bottom-color:var(--t2);">MULTIPLAYER ONLINE</h2>
@@ -143,7 +137,6 @@
         </div>
     </div>
 
-    <!-- OVERLAY PROMOZIONE -->
     <div id="promotion-overlay" class="tutorial-overlay" style="z-index: 600;">
         <div class="tutorial-content" style="max-width: 400px; text-align: center;">
             <h2 style="color:var(--t2); border-bottom-color:var(--t2);">PROMOZIONE</h2>
@@ -152,7 +145,6 @@
         </div>
     </div>
 
-    <!-- DEV MODE OVERLAY -->
     <div id="dev-overlay" class="tutorial-overlay" style="z-index: 400;">
         <div class="tutorial-content" style="max-width: 700px; text-align: center;">
             <h2 style="color:var(--t3); border-bottom-color:var(--t3);">🛠 DEV MODE: GESTIONE MODS</h2>
@@ -179,7 +171,6 @@
         </div>
     </div>
 
-    <!-- OVERLAY TUTORIAL -->
     <div id="tutorial-overlay" class="tutorial-overlay">
         <div class="tutorial-content">
             <h2>COME GIOCARE A NEON CHESS</h2>
@@ -197,50 +188,27 @@
                 <li><b>15 Kills (OVERDRIVE):</b> L'ultimo potere innesca il collasso del sistema. La musica accelera
                     salendo di un'ottava, i colori diventano negativi.</li>
             </ul>
-            <p><b>Strategia:</b> Il sistema preferisce dare poteri a pedine ancora in vita. Se tutte le tue pedine hanno
-                già un potere, ne verrà sovrascritto uno vecchio rendendo inattiva la card precedente.</p>
-
-            <h3>👑 REGOLE RE & REGINA</h3>
-            <p>Nessun potere può uccidere il Re direttamente. Deve essere sconfitto con mosse legali.
-                <br><b>Attenzione:</b> Solo le Regine originali possiedono l'Immortalità se estraggono il potere. I
-                pedoni promossi non acquisiscono NESSUN potere.
-            </p>
 
             <h3>📚 CODEX MODIFICATORI</h3>
             <div class="codex-list">
-                <p><b>PEDONE:</b> King Soul (Muove come Re), Front Bite (Mangia frontale), Necromancy (Resuscita pedone
-                    alleato alla kill), Mass Infection (A fine turno infetta i nemici adiacenti in pedoni).</p>
-                <p><b>CAVALLO:</b> L-Slide (Si ferma lungo la L), Mount (Copia le mosse dell'ultimo pezzo morto),
-                    Explosive (Polverizza la sua area di atterraggio tranne i Re), Ghost Rider (Teletrasporto libero su
-                    caselle vuote).</p>
-                <p><b>ALFIERE:</b> Side Step (Guadagna step orizzontale), Vault (Scavalca pezzi alleati e può dare
-                    scacco), Wall Bounce (Rimbalza sui bordi della scacchiera per colpire dietro gli angoli), Chain
-                    Reaction (A fine mossa, disintegra i due nemici laterali frontali e l'intera diagonale di fronte a
-                    lui).</p>
-                <p><b>TORRE:</b> Homecoming (Torna istantaneamente ad una sua base originale libera), Voodoo Death
-                    (Maledizione: se uccisa distrugge istantaneamente il suo killer), Gravity Well (Blocca il movimento
-                    dei nemici sulla sua linea, tranne il Re), Factory (Genera una nuova torre alleata quando si muove).
-                </p>
-                <p><b>REGINA:</b> Knight Soul (Aggiunge mosse cavallo), Brainwash (Converte la regina nemica e la
-                    teletrasporta al sicuro), Immortal (Se uccisa rinasce in base all'infinito), Annihilation (Non si
-                    ferma: passa attraverso e uccide tutti i nemici sulla strada).</p>
-                <p><b>RE:</b> Row Warp (Teletrasporto libero lungo la sua riga), Emperor (Si muove come la Regina), The
-                    Betrayal (Si teletrasporta sopra un nemico uccidendolo), Great Resurrection (Resuscita
-                    istantaneamente tutto il tuo esercito morto nella tua metà campo).</p>
+                <p><b>PEDONE:</b> King Soul (Muove come Re), Front Bite (Mangia frontale), Necromancy (Resuscita subito tutto l'esercito morto come pedoni. Da lì in poi le pedine che muoiono tornano come pedoni. Se muoiono di nuovo, è per sempre!), Mass Infection (Fine turno: converte i pedoni nemici adiacenti in alleati. Per gli altri pezzi funziona come prima).</p>
+                <p><b>CAVALLO:</b> L-Slide (Scorre liberamente a L, ma da scacco solo nella casella finale!), Mount (Copia mosse ultimo pezzo morto), Explosive (Polverizza la sua area di atterraggio tranne i Re), Ghost Rider (Si muove due volte di fila!).</p>
+                <p><b>ALFIERE:</b> Side Step (Guadagna step orizzontale), Vault (Scavalca alleati e dà scacco), Wall Bounce (Rimbalza sui bordi percorrendo la nuova diagonale), Chain Reaction (A fine mossa, disintegra nemici laterali e diagonale di fronte a lui).</p>
+                <p><b>TORRE:</b> Homecoming (Teletrasporto in una base libera), Voodoo Death (Se uccisa, distrugge una torre avversaria! Se non ce ne sono, uccide l'attaccante. I Re sono immuni!), Gravity Well (Blocca i nemici in linea), Factory (Genera una Torre quando lascia una cella).</p>
+                <p><b>REGINA:</b> Knight Soul (Aggiunge mosse cavallo), Brainwash (Converte la regina nemica mettendola al sicuro), Immortal (Rinasce in base se uccisa), Annihilation (Passa attraverso e uccide nemici).</p>
+                <p><b>RE:</b> Row Warp (Teletrasporto libero sulla sua riga), Emperor (Si muove come Regina), Great Resurrection (Resuscita istantaneamente tutti nella tua metà), The Betrayal (Teletrasporto killer su un nemico).</p>
             </div>
 
             <button class="close-tut-btn" onclick="closeTutorial()">HO CAPITO</button>
         </div>
     </div>
 
-    <!-- UI DI GIOCO -->
     <div id="game-ui" class="game-container">
         <div class="header-bar">
             <div class="header">NEON CHESS: GOD MODE</div>
             <button class="settings-btn" onclick="openSettings()">⚙️</button>
         </div>
 
-        <!-- PANNELLO SINISTRO (Di base BIANCO) -->
         <div id="w-mods" class="side-panel">
             <h2 id="name-w" class="player-name W" style="text-align: center; margin: 0 0 5px 0; font-size: 1.2rem;">
                 WHITE</h2>
@@ -250,7 +218,6 @@
             <div id="w-mods-list" style="overflow-y: auto; padding-right: 5px; margin-top: 10px;"></div>
         </div>
 
-        <!-- COLONNA CENTRALE -->
         <div class="center-column">
             <div class="timers-container" id="timers-container">
                 <div id="w-timer" class="timer-box W">05:00.0</div>
@@ -271,7 +238,6 @@
                     </div>
                     <div class="board" id="board"></div>
 
-                    <!-- GAME OVER SCREEN -->
                     <div id="game-over-screen" class="game-over-screen">
                         <h1 id="go-title">CHECKMATE</h1>
                         <p id="go-desc"
@@ -285,10 +251,11 @@
                 </div>
             </div>
 
+            <button id="skip-turn-btn" onclick="skipTurn(false)" style="display:none; margin: 15px auto; padding: 12px 25px; font-family:'Orbitron'; font-weight:bold; font-size: 1rem; background:var(--legend); color:#fff; border:2px solid #fff; border-radius:6px; box-shadow: 0 0 15px var(--legend); cursor:pointer;">SKIP TURNO (GHOST RIDER)</button>
+
             <div id="kills-counter" class="kills-counter">NEXT MOD IN: 2 KILLS (MOD 1/4)</div>
         </div>
 
-        <!-- PANNELLO DESTRO (Di base NERO) -->
         <div id="b-mods" class="side-panel">
             <h2 id="name-b" class="player-name B" style="text-align: center; margin: 0 0 5px 0; font-size: 1.2rem;">
                 BLACK</h2>
@@ -299,11 +266,9 @@
         </div>
     </div>
 
-    <!-- Colleghiamo il JS esterno alla fine del body -->
     <script src="game.js"></script>
 
-    <!-- VERSIONE DEL GIOCO -->
-    <div class="version-tag">v0.3</div>
+    <div class="version-tag">v0.4</div>
 </body>
 
 </html>
