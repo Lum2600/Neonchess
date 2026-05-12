@@ -29,6 +29,21 @@ function joinRoom() {
         socket.emit('joinRoom', { code: code, username: username });
     }
 }
+function findRandomMatch() {
+    if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
+    
+    const username = document.getElementById('player-username').value.trim() || "GUEST";
+    
+    // Cambiamo la UI per mostrare il caricamento
+    document.getElementById('mp-menu').style.display = 'none';
+    document.getElementById('mp-waiting').style.display = 'block';
+    
+    // Mettiamo un bel messaggio per far capire che sta cercando
+    document.getElementById('display-room-code').innerHTML = "<span style='font-size: 0.5em;'>Ricerca avversario...</span>";
+    
+    // Invia la richiesta al server
+    socket.emit('findMatch', username);
+}
 
 if (socket) {
     socket.on('roomCreated', (code) => {
@@ -1556,4 +1571,18 @@ function clearArrows() {
         const elements = svg.querySelectorAll('path, line, circle');
         elements.forEach(el => el.remove());
     }
+}
+
+function findRandomMatch() {
+    if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
+    
+    // Mostriamo un caricamento all'utente
+    document.getElementById('mp-menu').style.display = 'none';
+    document.getElementById('mp-waiting').style.display = 'block';
+    document.getElementById('mp-waiting').innerHTML = "<h3>RICERCA AVVERSARIO IN CORSO...</h3><div class='loader'></div>";
+    
+    const username = document.getElementById('player-username').value.trim() || "GUEST";
+    
+    // Invia il segnale al server per mettersi in coda
+    socket.emit('findMatch', username);
 }
