@@ -213,6 +213,60 @@ if (socket) {
             startGame(isClassicMatch, true);
         }
     }
+    const handleStartLogic = (data) => {
+    isMultiplayer = true;
+    roomCode = data.roomCode;
+
+    // Imposta i nomi (usando i dati del server o "GUEST" come backup)
+    let p1N = data.p1Name || "GIOCATORE 1";
+    let p2N = data.p2Name || "GIOCATORE 2";
+    if (document.getElementById('name-w')) document.getElementById('name-w').innerText = p1N;
+    if (document.getElementById('name-b')) document.getElementById('name-b').innerText = p2N;
+
+    const vsScreen = document.getElementById('vs-screen');
+    if (vsScreen) {
+        const topText = document.getElementById('vs-p1-text');
+        const botText = document.getElementById('vs-p2-text');
+
+        // Personalizza le scritte in base al tuo team
+        if (myTeam === 'W') {
+            if (topText) topText.innerText = "TU (BIANCO)";
+            if (botText) botText.innerText = p2N + " (NERO)";
+        } else {
+            if (topText) topText.innerText = p1N + " (BIANCO)";
+            if (botText) botText.innerText = "TU (NERO)";
+        }
+
+        // FASE 1: Entrata barre
+        vsScreen.classList.remove('exit');
+        vsScreen.classList.add('show', 'animate');
+
+        setTimeout(() => {
+            // FASE 2: Uscita barre
+            vsScreen.classList.remove('animate');
+            vsScreen.classList.add('exit');
+
+            setTimeout(() => {
+                // FASE 3: Sveliamo la scacchiera
+                vsScreen.classList.remove('show', 'exit');
+                
+                killAllMenus(); // Spegniamo i menu iniziali
+                
+                // Lanciamo la funzione di avvio corretta
+                startGame(isClassicMode, true); 
+
+            }, 400); // Tempo dell'animazione CSS di uscita
+        }, 2200); // Tempo di attesa al centro
+    } else {
+        // Backup se lo schermo VS non viene trovato
+        killAllMenus();
+        startGame(isClassicMode, true);
+    }
+};
+
+// Colleghiamo entrambi i segnali alla stessa logica
+socket.on('gameStart', handleStartLogic);
+socket.on('matchFound', handleStartLogic);
 
     // Diciamo al socket di usare l'animazione per QUALSIASI tipo di partita!
     socket.on('gameStart', handleGameStart);
@@ -1797,32 +1851,24 @@ function findRandomMatch() {
 
 // Controlla se spawnare un pedone in (spawnR, spawnC) darebbe scacco al re nemico
 function wouldPawnGiveCheck(spawnR, spawnC, pawnTeam) {
-    // 1. Identifica il Re nemico (Maiuscolo = Bianco, Minuscolo = Nero)
     let enemyKingChar = (pawnTeam === 'W') ? 'k' : 'K';
     let kingR = -1, kingC = -1;
 
-    // 2. Trova le coordinate del Re nemico sulla scacchiera
+    // Usiamo grid invece di board
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            if (board[r][c] === enemyKingChar) {
+            if (grid[r][c] === enemyKingChar) {
                 kingR = r;
                 kingC = c;
                 break;
             }
         }
     }
+    if (kingR === -1) return false;
 
-    if (kingR === -1) return false; // Se non c'è il re (strano), nessun problema
-
-    // 3. Calcola la direzione di attacco del pedone
-    // Il Bianco (W) attacca verso l'alto (riga - 1)
-    // Il Nero (B) attacca verso il basso (riga + 1)
     let dir = (pawnTeam === 'W') ? -1 : 1;
-
-    // 4. Se il Re nemico si trova nelle due caselle diagonali davanti al pedone, è SCACCO!
     if (kingR === spawnR + dir && (kingC === spawnC - 1 || kingC === spawnC + 1)) {
         return true;
     }
-
-    return false; // Cella sicura
+    return false;
 }
