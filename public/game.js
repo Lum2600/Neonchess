@@ -400,10 +400,40 @@ function openSettings() {
 }
 
 function promptDev() {
-    let pwd = prompt("Inserisci la password per la DEV MODE:");
-    if (pwd === "Murry2") openDev();
-    else if (pwd !== null) alert("Password errata!");
+    const password = prompt("Inserisci la password di accesso al sistema:");
+    if (!password) return;
+
+    // Non controlliamo qui se è giusta! La spediamo e basta.
+    socket.emit('tryDevMode', password);
 }
+
+socket.on('devAuthResponse', (data) => {
+    if (data.success) {
+        alert("Accesso Sviluppatore Garantito. Comandi sbloccati.");
+        document.body.classList.add('dev-authenticated');
+        // Qui puoi mostrare l'overlay delle mod che avevi nascosto
+    } else {
+        alert("Accesso Negato: Password Errata.");
+    }
+});
+function identificaAdmin() {
+    const password = prompt("Inserisci Password Amministratore:");
+    if (!password) return;
+
+    // Spediamo la chiave all'arbitro
+    socket.emit('auth_admin', password);
+}
+
+// Ascoltiamo il verdetto del server
+socket.on('admin_verified', (data) => {
+    if (data.success) {
+        console.log("Accesso garantito. Sei identificato come Amministratore.");
+        // Mostriamo visivamente i controlli dev
+        document.body.classList.add('is-admin');
+    } else {
+        alert("Password errata. Accesso negato.");
+    }
+});
 
 function openDev() {
     document.getElementById('dev-overlay').classList.add('show');

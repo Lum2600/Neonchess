@@ -212,6 +212,60 @@ io.on('connection', (socket) => {
     });
 });
 
+// Aggiungi un oggetto per tenere traccia dei permessi dei socket attivi
+const authenticatedDevs = new Set();
+
+io.on('connection', (socket) => {
+    
+    socket.on('tryDevMode', (pass) => {
+        const SECRET_PASS = "bicocca2026"; // La tua password segreta
+
+        if (pass === SECRET_PASS) {
+            authenticatedDevs.add(socket.id); // Registriamo il "buttafuori"
+            socket.emit('devAuthResponse', { success: true });
+            console.log(`[AUTH] Utente ${socket.id} autenticato come DEV.`);
+        } else {
+            socket.emit('devAuthResponse', { success: false });
+        }
+    });
+
+    // PROTEZIONE: Ogni comando sensibile deve controllare i permessi!
+    socket.on('forceOverdrive', () => {
+        if (authenticatedDevs.has(socket.id)) {
+            io.emit('triggerOverdrive'); // Esegue il comando per tutti
+        } else {
+            console.log(`[HACK-ALERT] Tentativo non autorizzato da ${socket.id}`);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        authenticatedDevs.delete(socket.id); // Pulizia quando esce
+    });
+});
+// Lista dei socket autorizzati (vive solo nella RAM del server)
+const authorizedAdmins = new Set();
+
+io.on('connection', (socket) => {
+    
+    // Gestione della richiesta di identificazione
+    socket.on('auth_admin', (pass) => {
+        const CHIAVE_SEGRETA = "bicocca2026"; // La tua password
+
+        if (pass === CHIAVE_SEGRETA) {
+            authorizedAdmins.add(socket.id); // Marchiamo il socket come Admin
+            socket.emit('admin_verified', { success: true });
+            console.log(`[AUTH] Socket ${socket.id} identificato come Admin.`);
+        } else {
+            socket.emit('admin_verified', { success: false });
+        }
+    });
+
+    // Quando l'utente si disconnette, lo rimuoviamo dalla lista
+    socket.on('disconnect', () => {
+        authorizedAdmins.delete(socket.id);
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server Ultra-Sicuro in ascolto sulla porta ${PORT}`);
