@@ -1856,3 +1856,10 @@ function wouldPawnGiveCheck(spawnR, spawnC, pawnTeam) {
     }
     return false;
 }
+function clearArrows() {
+    let svg = document.getElementById('arrow-svg');
+    if (svg) {
+        const elements = svg.querySelectorAll('path, line, circle');
+        elements.forEach(el => el.remove());
+    }
+}
