@@ -541,6 +541,8 @@ body:not([data-gfx="LO"]) .cell.check { animation: pulse-red 1.5s infinite; }
 .piece {
     --rot: 0deg; z-index: 5; pointer-events: none; display: inline-block; position: relative;
     transform: rotate(var(--rot)); font-variant-emoji: text; -webkit-text-stroke: 1px rgba(0, 0, 0, 0.6);
+    /* FIX DEFINITIVO PER IPHONE E ANDROID: Blocca le emoji standard */
+    font-family: "Segoe UI Symbol", "Arial Unicode MS", "DejaVu Sans", sans-serif !important;
 }
 
 body.human-vs-human .board .piece.B { --rot: 180deg; }
