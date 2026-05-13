@@ -132,8 +132,13 @@ if (socket) {
     socket.on('assignTeam', (team) => {
         setTeam(team);
         opponentMode = 'HUMAN';
-        document.getElementById('btn-opp-hum').classList.add('active');
-        document.getElementById('btn-opp-ai').classList.remove('active');
+        
+        // Controlliamo se i bottoni esistono prima di modificarli
+        let btnHum = document.getElementById('btn-opp-hum');
+        if (btnHum) btnHum.classList.add('active');
+        
+        let btnAi = document.getElementById('btn-opp-ai');
+        if (btnAi) btnAi.classList.remove('active');
     });
 
     socket.on('gameStart', (data) => {
