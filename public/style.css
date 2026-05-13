@@ -889,3 +889,45 @@ body.game-started #resume-btn {
 }
 body.overdrive .snapshot-container { border-color: var(--t4); box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(255, 0, 60, 0.2); }
 #go-snapshot-board .piece { animation: none !important; transition: none !important; }
+
+/* ========================================= */
+/* --- 11. EFFETTI DI STATO (SCUDI E STUN) - */
+/* ========================================= */
+
+/* Bolla dello Scudo Energetico */
+.piece.shielded {
+    filter: drop-shadow(0 0 8px #00ffff) brightness(1.2);
+}
+.piece.shielded::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 120%; height: 120%;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(0, 255, 255, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.3);
+    pointer-events: none;
+    animation: pulse-shield 1.5s infinite alternate;
+}
+@keyframes pulse-shield {
+    from { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    to { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+/* Effetto Pacifista / Stordimento */
+.piece.pacified, .piece.stunned {
+    filter: grayscale(1) blur(1px) opacity(0.5);
+}
+.piece.pacified::before, .piece.stunned::before {
+    content: '💤';
+    position: absolute;
+    top: -15px; right: -10px;
+    font-size: 0.4em;
+    filter: none;
+    animation: zzz-float 2s infinite;
+}
+@keyframes zzz-float {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-15px) scale(1.5); opacity: 0; }
+}

@@ -800,9 +800,23 @@ function draw() {
                 let isPromo = isPromoted(r, c);
                 let isClone = clonedPieces && clonedPieces.some(s => s.r === r && s.c === c);
                 
-                // Shield e Stun Indicator
+                // --- INDICATORI SCUDO E STORDIMENTO ---
                 if (pawnShields.some(s => s.r === r && s.c === c)) animClass += ' shielded';
                 if (stunnedPieces.some(s => s.r === r && s.c === c)) aClass += ' stunned';
+
+                // --- CONTROLLO AURA PACIFISTA ---
+                let isPacified = false;
+                let enemyColor = color === 'W' ? 'B' : 'W';
+                if (pc !== 'k') {
+                    [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]].forEach(d => {
+                        let nr = r+d[0], nc = c+d[1];
+                        if(nr>=0 && nr<8 && nc>=0 && nc<8) {
+                            let adj = grid[nr][nc];
+                            if (adj && adj.toLowerCase() === 'n' && (adj === adj.toUpperCase() ? 'W' : 'B') === enemyColor && getMod(nr, nc, enemyColor, 'n')?.n === 'Pacifist') isPacified = true;
+                        }
+                    });
+                }
+                if (isPacified) animClass += ' pacified';
 
                 let spawnClass = (gfxLevel !== 'LO' && recentSpawns && (recentSpawns.some(s => s.r === r && s.c === c) || isPromo)) ? 'spawn-anim' : '';
                 let cloneTag = isPromo ? '<span class="clone-tag" style="color:var(--t2); border-color:var(--t2);">[P]</span>' : (isClone ? '<span class="clone-tag">[C]</span>' : '');
@@ -1112,25 +1126,34 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         let targetIsZombie = targetWasZombieIdx !== -1;
         if (targetIsZombie) zombiePawns.splice(targetWasZombieIdx, 1);
 
-        // --- ENERGY SHIELD (Rimbalzo) ---
+        // --- ENERGY SHIELD (Rimbalzo all'indietro) ---
         let shieldIdx = pawnShields.findIndex(s => s.r === tr && s.c === tc);
         if (target.toLowerCase() === 'p' && targetMod?.n === 'Energy Shield' && shieldIdx !== -1) {
-            pawnShields.splice(shieldIdx, 1); // Rompe scudo
-            isAttackerDead = true; // Non muore ma rimbalza
+            pawnShields.splice(shieldIdx, 1); // Lo scudo si rompe
+            if (targetIsZombie) zombiePawns.push({r: tr, c: tc}); // Ripristina lo stato zombie per evitare bug
             
-            // Cerca quadrato libero vicino al target per far atterrare l'attaccante
-            let empties = [];
-            for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
-                if(tr+i>=0 && tr+i<8 && tc+j>=0 && tc+j<8 && !grid[tr+i][tc+j]) empties.push({r:tr+i, c:tc+j});
+            // Calcola la direzione dell'attacco
+            let dr = Math.sign(tr - fr);
+            let dc = Math.sign(tc - fc);
+            
+            // Respinge indietro di una casella
+            let bounceR = tr - dr; 
+            let bounceC = tc - dc;
+            
+            // Se la casella indietro è fuori dalla mappa, è occupata da un altro pezzo, 
+            // o è una mossa nulla (es. teletrasporto dritto su di lui), torna alla casella di partenza
+            if (bounceR < 0 || bounceR > 7 || bounceC < 0 || bounceC > 7 || grid[bounceR][bounceC] || (dr === 0 && dc === 0)) {
+                bounceR = fr; 
+                bounceC = fc;
             }
-            if(empties.length > 0) {
-                let bounce = empties[Math.floor(getGameRandom() * empties.length)];
-                grid[bounce.r][bounce.c] = p; // L'attaccante atterra li
-                recentSpawns.push(bounce);
-                tr = bounce.r; tc = bounce.c; // Hack per farlo disegnare li
-                isAttackerDead = false; 
-            }
-            target = null; // Nessuna uccisione
+            
+            // L'attaccante finisce nella nuova casella
+            tr = bounceR; 
+            tc = bounceC; 
+            
+            target = null; // Il pedone bersaglio NON muore
+            isAttackerDead = false; // L'attaccante NON muore
+        }
         }
         else if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
             let attackerRooks = [];
