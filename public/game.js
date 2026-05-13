@@ -234,6 +234,22 @@ if (socket) {
         triggerEnd(myTeam, 'DISCONNESSO', "L'avversario ha abbandonato la partita.");
     });
 }
+// Funzione universale per nascondere tutti i menu
+function killAllMenus() {
+    const overlays = ['multiplayer-overlay', 'start-screen', 'mp-menu', 'mp-waiting', 'tutorial-overlay'];
+    overlays.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = 'none';
+            el.classList.remove('show');
+        }
+    });
+    const gameUI = document.getElementById('game-ui');
+    if (gameUI) {
+        gameUI.style.display = 'flex';
+        gameUI.classList.add('show');
+    }
+}
 
 // ==========================================
 // 2. VARIABILI GLOBALI E DATABASE
