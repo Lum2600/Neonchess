@@ -88,11 +88,16 @@ function setMpMode(isClassic) {
 }
 
 function openMultiplayerMenu() { document.getElementById('multiplayer-overlay').classList.add('show'); }
-function closeMultiplayerMenu() {
-    document.getElementById('multiplayer-overlay').classList.remove('show');
+function closeMultiplayerMenu() { 
+    const overlay = document.getElementById('multiplayer-overlay');
+    if (overlay) overlay.classList.remove('show'); 
+    
     document.getElementById('mp-menu').style.display = 'block';
     document.getElementById('mp-waiting').style.display = 'none';
-    if (isMultiplayer && roomCode && !gameHasStarted) location.reload();
+    
+    // Rimosso location.reload() per evitare il reset durante l'animazione VS
+    isMultiplayer = false; 
+    roomCode = '';
 }
 
 function createRoom() {
