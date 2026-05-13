@@ -609,6 +609,15 @@ input[type="range"] { accent-color: var(--t2); }
     transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
     width: fit-content;
 }
+.coords-y-right{
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 5px;
+}
 
 body[data-gfx="HI"] .board-wrapper:not(.zoom-finish):not(.board-overdrive-jump) {
     animation: boardGlow 4s ease-in-out infinite alternate;
