@@ -131,7 +131,39 @@ if (socket) {
         closeMultiplayerMenu();
         showModAlert("VS " + (myTeam === 'W' ? data.p2Name : data.p1Name), "mod-c1");
     });
+    // Quando il server ci avvisa che l'avversario è stato trovato...
+socket.on('matchFound', (data) => {
+    console.log("Partita Trovata!", data);
 
+    // --- 1. NASCONDI TUTTI I MENU ---
+    const mpOverlay = document.getElementById('multiplayer-overlay');
+    if (mpOverlay) {
+        mpOverlay.classList.remove('show');
+        mpOverlay.style.display = 'none';
+    }
+    
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) {
+        startScreen.style.display = 'none';
+    }
+
+    // --- 2. RESETTA IL MENU MULTIPLAYER PER LA PROSSIMA VOLTA ---
+    const mpWaiting = document.getElementById('mp-waiting');
+    const mpMenu = document.getElementById('mp-menu');
+    if (mpWaiting) mpWaiting.style.display = 'none';
+    if (mpMenu) mpMenu.style.display = 'block';
+
+    // --- 3. MOSTRA LA SCACCHIERA ---
+    const gameUI = document.getElementById('game-ui');
+    if (gameUI) {
+        gameUI.classList.add('show');
+        gameUI.style.display = 'flex'; // Assicura che usi il layout corretto
+    }
+
+    // (Qui sotto prosegue il tuo codice esistente per impostare 
+    // se sei Bianco o Nero, aggiornare i nomi, generare la griglia ecc...)
+    // ...
+});
     socket.on('errorMsg', (msg) => { alert(msg); });
 
     socket.on('receiveMove', (data) => {
