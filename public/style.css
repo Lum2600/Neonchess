@@ -607,6 +607,7 @@ input[type="range"] { accent-color: var(--t2); }
     border: 1px solid var(--glass-border);
     box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
     transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
+    width: fit-content;
 }
 
 body[data-gfx="HI"] .board-wrapper:not(.zoom-finish):not(.board-overdrive-jump) {
