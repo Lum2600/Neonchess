@@ -1265,10 +1265,11 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
     100% { left: 120%; }
 }
 
-/* Raddrizza le coordinate per il Nero senza rompere la griglia */
-body.play-as-black .coords-x > *,
-body.play-as-black .coords-y > * {
-    transform: rotate(180deg);
+/* Raddrizza lettere e numeri quando si gioca come Nero */
+body.play-as-black .coords-x *,
+body.play-as-black .coords-y * {
+    display: inline-block !important; /* <--- IL SEGRETO È QUI: rende l'elemento ruotabile! */
+    transform: rotate(180deg) !important;
 }
 
 /* Arrotonda solo i 4 angoli estremi della griglia per non farli sbavare dal bordo */
