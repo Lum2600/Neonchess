@@ -34,7 +34,24 @@ function toggleMusic(turnOn) {
         document.body.classList.add('music-off');
     }
 }
+
+
 // Funzione per chiudere il menu impostazioni durante la partita
+function killAllMenus() {
+    const overlays = ['multiplayer-overlay', 'start-screen', 'mp-menu', 'mp-waiting', 'tutorial-overlay'];
+    overlays.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = 'none';
+            el.classList.remove('show');
+        }
+    });
+    const gameUI = document.getElementById('game-ui');
+    if (gameUI) {
+        gameUI.style.display = 'flex';
+        gameUI.classList.add('show');
+    }
+}
 // Funzione per APRIRE le impostazioni
 function openSettings() {
     const menu = document.getElementById('start-screen');
@@ -129,14 +146,14 @@ if (socket) {
         isMultiplayer = true;
     });
 
-   socket.on('assignTeam', (team) => {
+    socket.on('assignTeam', (team) => {
         setTeam(team);
         opponentMode = 'HUMAN';
-        
+
         // FIX: Protezione contro il crash a riga 135
         let btnHum = document.getElementById('btn-opp-hum');
         if (btnHum) btnHum.classList.add('active');
-        
+
         let btnAi = document.getElementById('btn-opp-ai');
         if (btnAi) btnAi.classList.remove('active');
     });
@@ -198,11 +215,11 @@ if (socket) {
 
                 setTimeout(() => {
                     vsScreen.classList.remove('show', 'exit');
-                    
+
                     // SVELA FINALMENTE LA SCACCHIERA! (Passando la modalità Classic se scelta)
                     let isClassicMatch = (data.mode === 'CLASSIC') || isOnlineClassic;
-                    startGame(isClassicMatch, true); 
-                    
+                    startGame(isClassicMatch, true);
+
                 }, 400);
 
             }, 2200);
@@ -213,11 +230,11 @@ if (socket) {
             startGame(isClassicMatch, true);
         }
     }
-  const handleStartLogic = (data) => {
+   const handleStartLogic = (data) => {
     isMultiplayer = true;
     roomCode = data.roomCode;
 
-    // Sincronizza i nomi dei giocatori
+    // Sincronizzazione nomi
     if (data.p1Name && document.getElementById('name-w')) {
         document.getElementById('name-w').innerText = data.p1Name;
     }
@@ -227,45 +244,44 @@ if (socket) {
 
     const vsScreen = document.getElementById('vs-screen');
     if (vsScreen) {
-        // Avvia l'animazione VS
         vsScreen.classList.remove('exit');
         vsScreen.classList.add('show', 'animate');
 
         setTimeout(() => {
-            // Fa scivolare via le barre
             vsScreen.classList.remove('animate');
             vsScreen.classList.add('exit');
 
             setTimeout(() => {
                 vsScreen.classList.remove('show', 'exit');
                 
-                // --- AZIONE CRUCIALE ---
+                // --- AZIONE RISOLUTIVA ---
                 killAllMenus(); 
-                // Chiama la tua funzione di avvio (già presente nel file)
-                startGame(isOnlineClassic, true); 
+                startGame(false, true); 
 
-            }, 400); // Durata transizione CSS
-        }, 2200); // Tempo di sosta al centro
+            }, 400); 
+        }, 2200); 
     } else {
-        // Se l'HTML del VS manca, avvia comunque per non bloccare il gioco
         killAllMenus();
-        startGame(isOnlineClassic, true);
+        startGame(false, true);
     }
 };
 
-// Colleghiamo i segnali del server alla nuova logica
 socket.on('gameStart', handleStartLogic);
 socket.on('matchFound', handleStartLogic);
 
-// Colleghiamo entrambi i segnali alla stessa logica
-socket.on('gameStart', handleStartLogic);
-socket.on('matchFound', handleStartLogic);
+    // Colleghiamo i segnali del server alla nuova logica
+    socket.on('gameStart', handleStartLogic);
+    socket.on('matchFound', handleStartLogic);
+
+    // Colleghiamo entrambi i segnali alla stessa logica
+    socket.on('gameStart', handleStartLogic);
+    socket.on('matchFound', handleStartLogic);
 
     // Diciamo al socket di usare l'animazione per QUALSIASI tipo di partita!
     socket.on('gameStart', handleGameStart);
     socket.on('matchFound', handleGameStart);
     // Quando il server ci avvisa che l'avversario è stato trovato...
-    
+
     socket.on('errorMsg', (msg) => { alert(msg); });
 
     socket.on('receiveMove', (data) => {
@@ -287,21 +303,7 @@ socket.on('matchFound', handleStartLogic);
     });
 }
 // Funzione universale per nascondere tutti i menu
-function killAllMenus() {
-    const overlays = ['multiplayer-overlay', 'start-screen', 'mp-menu', 'mp-waiting', 'tutorial-overlay'];
-    overlays.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.display = 'none';
-            el.classList.remove('show');
-        }
-    });
-    const gameUI = document.getElementById('game-ui');
-    if (gameUI) {
-        gameUI.style.display = 'flex';
-        gameUI.classList.add('show');
-    }
-}
+
 
 // ==========================================
 // 2. VARIABILI GLOBALI E DATABASE
