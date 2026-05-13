@@ -1120,6 +1120,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         }
     }
 
+    // --- INIZIO BLOCCO TARGET CORRETTO ---
     if (target) {
         let targetMod = getMod(tr, tc, enemyColor, target.toLowerCase());
         let targetWasZombieIdx = zombiePawns.findIndex(pos => pos.r === tr && pos.c === tc);
@@ -1140,8 +1141,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             let bounceR = tr - dr;
             let bounceC = tc - dc;
 
-            // Se la casella indietro è fuori dalla mappa, è occupata da un altro pezzo, 
-            // o è una mossa nulla (es. teletrasporto dritto su di lui), torna alla casella di partenza
+            // Se la casella indietro è fuori dalla mappa o occupata, torna alla casella di partenza
             if (bounceR < 0 || bounceR > 7 || bounceC < 0 || bounceC > 7 || grid[bounceR][bounceC] || (dr === 0 && dc === 0)) {
                 bounceR = fr;
                 bounceC = fc;
@@ -1154,53 +1154,54 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             target = null; // Il pedone bersaglio NON muore
             isAttackerDead = false; // L'attaccante NON muore
         }
-    }
-    else if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
-        let attackerRooks = [];
-        for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
-            let piece = grid[i][j];
-            if (piece && piece.toLowerCase() === 'r' && (piece === piece.toUpperCase() ? 'W' : 'B') === pColor && !(i === fr && j === fc)) {
-                attackerRooks.push({ r: i, c: j });
+        // --- VOODOO DEATH ---
+        else if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
+            let attackerRooks = [];
+            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+                let piece = grid[i][j];
+                if (piece && piece.toLowerCase() === 'r' && (piece === piece.toUpperCase() ? 'W' : 'B') === pColor && !(i === fr && j === fc)) {
+                    attackerRooks.push({ r: i, c: j });
+                }
             }
-        }
-        if (cl === 'r') attackerRooks.push({ r: fr, c: fc });
+            if (cl === 'r') attackerRooks.push({ r: fr, c: fc });
 
-        if (attackerRooks.length > 0) {
-            let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
-            if (sacrificedRook.r === fr && sacrificedRook.c === fc) {
+            if (attackerRooks.length > 0) {
+                let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
+                if (sacrificedRook.r === fr && sacrificedRook.c === fc) {
+                    isAttackerDead = true;
+                } else {
+                    let rPiece = grid[sacrificedRook.r][sacrificedRook.c];
+                    grid[sacrificedRook.r][sacrificedRook.c] = '';
+                    let rookZombieIdx = zombiePawns.findIndex(pos => pos.r === sacrificedRook.r && pos.c === sacrificedRook.c);
+                    if (rookZombieIdx !== -1) zombiePawns.splice(rookZombieIdx, 1);
+                    diedThisTurn.push({ color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1 });
+                    pendingAnims.push({ type: 'capture', r: sacrificedRook.r, c: sacrificedRook.c, color: pColor });
+                }
+            } else if (cl !== 'k') {
                 isAttackerDead = true;
-            } else {
-                let rPiece = grid[sacrificedRook.r][sacrificedRook.c];
-                grid[sacrificedRook.r][sacrificedRook.c] = '';
-                let rookZombieIdx = zombiePawns.findIndex(pos => pos.r === sacrificedRook.r && pos.c === sacrificedRook.c);
-                if (rookZombieIdx !== -1) zombiePawns.splice(rookZombieIdx, 1);
-                diedThisTurn.push({ color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1 });
-                pendingAnims.push({ type: 'capture', r: sacrificedRook.r, c: sacrificedRook.c, color: pColor });
             }
-        } else if (cl !== 'k') {
-            isAttackerDead = true;
+        }
+        // --- PHOENIX ROOK ---
+        else if (target.toLowerCase() === 'r' && targetMod?.n === 'Phoenix Rook') {
+            let homeRank = enemyColor === 'W' ? 7 : 0;
+            let homeCol = tc < 4 ? 0 : 7;
+            let homeTarget = grid[homeRank][homeCol];
+            if (homeTarget && homeTarget.toLowerCase() !== 'k') {
+                diedThisTurn.push({ color: homeTarget === homeTarget.toUpperCase() ? 'W' : 'B', piece: homeTarget, r: homeRank, c: homeCol, isZombie: false });
+                pendingAnims.push({ type: 'capture', r: homeRank, c: homeCol, color: enemyColor });
+            }
+            grid[homeRank][homeCol] = enemyColor === 'W' ? 'R' : 'r';
+            recentSpawns.push({ r: homeRank, c: homeCol });
+            target = null; // Annulla kill per stats, si è salvato
+        }
+
+        // REGISTRAZIONE UCCISIONE NORMALE
+        if (target) {
+            diedThisTurn.push({ color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie });
+            pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor });
         }
     }
-
-    // --- PHOENIX ROOK ---
-    else if (target && target.toLowerCase() === 'r' && targetMod?.n === 'Phoenix Rook') {
-        let homeRank = enemyColor === 'W' ? 7 : 0;
-        let homeCol = tc < 4 ? 0 : 7;
-        let homeTarget = grid[homeRank][homeCol];
-        if (homeTarget && homeTarget.toLowerCase() !== 'k') {
-            diedThisTurn.push({ color: homeTarget === homeTarget.toUpperCase() ? 'W' : 'B', piece: homeTarget, r: homeRank, c: homeCol, isZombie: false });
-            pendingAnims.push({ type: 'capture', r: homeRank, c: homeCol, color: enemyColor });
-        }
-        grid[homeRank][homeCol] = enemyColor === 'W' ? 'R' : 'r';
-        recentSpawns.push({ r: homeRank, c: homeCol });
-        target = null; // Annulla kill per stats, si è salvato
-    }
-
-    if (target) {
-        diedThisTurn.push({ color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie });
-        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor });
-    }
-}
+    // --- FINE BLOCCO TARGET CORRETTO ---
 
 // CAVALRY CHARGE (Vita Bonus Globale)
 let globalMod = classMods[enemyColor]['n']?.n === 'Cavalry Charge';
