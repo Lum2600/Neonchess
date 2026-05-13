@@ -34,6 +34,15 @@ function toggleMusic(turnOn) {
         document.body.classList.add('music-off');
     }
 }
+// Funzione per chiudere il menu impostazioni durante la partita
+function closeSettings() {
+    document.body.classList.remove('settings-open');
+}
+
+// (Assicurati che la tua funzione per APRIRE le impostazioni sia così:)
+function openSettings() {
+    document.body.classList.add('settings-open');
+}
 
 function toggleSfx(turnOn) {
     document.getElementById('btn-sfx-on').classList.toggle('active', turnOn);

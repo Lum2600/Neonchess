@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
 
     <!-- ricordati di cambiare le versioni dei file css e js ogni volta che fai modifiche, altrimenti i giocatori non vedranno gli aggiornamenti a causa della cache! -->
-    <link rel="stylesheet" href="style.css?v=2.5">
+    <link rel="stylesheet" href="style.css?v=2.6">
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ddff">
@@ -78,10 +78,12 @@
             </div>
         </div>
 
-        <div style="display:flex; flex-direction: column; gap: 15px; width: 320px; margin-top: 10px;">
+       <div id="main-play-buttons" style="display:flex; flex-direction: column; gap: 15px; width: 320px; margin-top: 10px;">
             <button class="play-btn" onclick="startGame(false, false)"> GIOCA LOCALE</button>
             <button class="play-btn" style="background:var(--t2); box-shadow:0 0 20px var(--t2); color:black;" onclick="openMultiplayerMenu()"> GIOCA ONLINE</button>
         </div>
+
+        <button id="resume-btn" class="play-btn" style="width: 320px; margin-top: 10px; background:var(--t3); box-shadow:0 0 20px var(--t3);" onclick="closeSettings()">▶ RESUME</button>
 
         <div style="display:flex; gap: 10px; justify-content: center; margin-top: 10px;">
             <button class="guide-btn" onclick="openTutorial()">COME SI GIOCA?</button>
@@ -297,7 +299,7 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
 
-    <script src="game.js?v=3.0" defer></script>
+    <script src="game.js?v=3.1" defer></script>
 
 </body>
 

@@ -707,3 +707,19 @@ body.music-off .music-player {
         display: none !important; 
     }
 }
+/* --- GESTIONE TASTI MENU / IMPOSTAZIONI --- */
+
+/* Di default (menu iniziale), il tasto Resume è nascosto */
+#resume-btn {
+    display: none;
+}
+
+/* Quando la partita è iniziata, nascondi i tasti GIOCA */
+body.game-started #main-play-buttons {
+    display: none !important;
+}
+
+/* Quando la partita è iniziata, mostra il tasto RESUME */
+body.game-started #resume-btn {
+    display: block !important;
+}
