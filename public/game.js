@@ -871,7 +871,7 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
             if (mods?.n == 'Front Bite' && testGrid[nr]?.[c] && (testGrid[nr][c] == testGrid[nr][c].toUpperCase() ? 'W' : 'B') != color) m.push({ r: nr, c: c });
         }
 
-        // Il potere Guardian rimane protetto
+        // Il potere Guardian rimane protetto dai crash grazie ai propri limiti interni
         if (mods?.n === 'Guardian' && !isAttackCheck) {
             for (let i = 0; i < 8; i++) {
                 for (let j = 0; j < 8; j++) {
