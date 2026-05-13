@@ -847,26 +847,31 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
     }
 
     if (cl == 'p') {
-        let blockedByEnemy = testGrid[r + dir]?.[c] && (testGrid[r + dir][c] === testGrid[r + dir][c].toUpperCase() ? 'W' : 'B') !== color;
+        let nr = r + dir;
+        
+        // FIX: Blocco di sicurezza per impedire calcoli fuori mappa
+        if (nr >= 0 && nr < 8) {
+            let blockedByEnemy = testGrid[nr]?.[c] && (testGrid[nr][c] === testGrid[nr][c].toUpperCase() ? 'W' : 'B') !== color;
 
-        if (!testGrid[r + dir]?.[c]) {
-            m.push({ r: r + dir, c: c });
-            if ((color == 'W' && r == 6) || (color == 'B' && r == 1)) {
-                if (!testGrid[r + 2 * dir]?.[c]) m.push({ r: r + 2 * dir, c: c });
+            if (!testGrid[nr]?.[c]) {
+                m.push({ r: nr, c: c });
+                if ((color == 'W' && r == 6) || (color == 'B' && r == 1)) {
+                    if (nr + dir >= 0 && nr + dir < 8 && !testGrid[nr + dir]?.[c]) m.push({ r: nr + dir, c: c });
+                }
+            } else if (mods?.n === 'Hurdle' && blockedByEnemy) {
+                // Hurdle: Scavalca
+                if (nr + dir >= 0 && nr + dir < 8 && !testGrid[nr + dir]?.[c]) {
+                    m.push({ r: nr + dir, c: c });
+                }
             }
-        } else if (mods?.n === 'Hurdle' && blockedByEnemy) {
-            if (r + 2 * dir >= 0 && r + 2 * dir < 8 && !testGrid[r + 2 * dir]?.[c]) {
-                m.push({ r: r + 2 * dir, c: c });
-            }
+
+            if (c > 0 && testGrid[nr]?.[c - 1] && (testGrid[nr][c - 1] == testGrid[nr][c - 1].toUpperCase() ? 'W' : 'B') != color) m.push({ r: nr, c: c - 1 });
+            if (c < 7 && testGrid[nr]?.[c + 1] && (testGrid[nr][c + 1] == testGrid[nr][c + 1].toUpperCase() ? 'W' : 'B') != color) m.push({ r: nr, c: c + 1 });
+            if (lastMove && lastMove.piece.toLowerCase() === 'p' && Math.abs(lastMove.to.r - lastMove.from.r) === 2 && lastMove.to.r === r && Math.abs(lastMove.to.c - c) === 1) m.push({ r: nr, c: lastMove.to.c, isEnPassant: true });
+            if (mods?.n == 'Front Bite' && testGrid[nr]?.[c] && (testGrid[nr][c] == testGrid[nr][c].toUpperCase() ? 'W' : 'B') != color) m.push({ r: nr, c: c });
         }
 
-        if (testGrid[r + dir]?.[c - 1] && (testGrid[r + dir][c - 1] == testGrid[r + dir][c - 1].toUpperCase() ? 'W' : 'B') != color) m.push({ r: r + dir, c: c - 1 });
-        if (testGrid[r + dir]?.[c + 1] && (testGrid[r + dir][c + 1] == testGrid[r + dir][c + 1].toUpperCase() ? 'W' : 'B') != color) m.push({ r: r + dir, c: c + 1 });
-        if (lastMove && lastMove.piece.toLowerCase() === 'p' && Math.abs(lastMove.to.r - lastMove.from.r) === 2 && lastMove.to.r === r && Math.abs(lastMove.to.c - c) === 1) m.push({ r: r + dir, c: lastMove.to.c, isEnPassant: true });
-
-        if (mods?.n == 'King Soul') [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => { let nr = r + d[0], nc = c + d[1]; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !testGrid[nr][nc]) m.push({ r: nr, c: nc }); });
-        if (mods?.n == 'Front Bite' && testGrid[r + dir]?.[c] && (testGrid[r + dir][c] == testGrid[r + dir][c].toUpperCase() ? 'W' : 'B') != color) m.push({ r: r + dir, c: c });
-
+        // Il potere Guardian rimane protetto
         if (mods?.n === 'Guardian' && !isAttackCheck) {
             for (let i = 0; i < 8; i++) {
                 for (let j = 0; j < 8; j++) {
@@ -874,8 +879,8 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
                     if (ally && (ally === ally.toUpperCase() ? 'W' : 'B') === color) {
                         if (isUnderAttack(i, j, enemyColor, testGrid)) {
                             [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(d => {
-                                let nr = i + d[0], nc = j + d[1];
-                                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !testGrid[nr][nc]) m.push({ r: nr, c: nc });
+                                let defR = i + d[0], defC = j + d[1];
+                                if (defR >= 0 && defR < 8 && defC >= 0 && defC < 8 && !testGrid[defR][defC]) m.push({ r: defR, c: defC });
                             });
                         }
                     }
