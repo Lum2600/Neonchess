@@ -237,7 +237,6 @@ const glyphs = {
     'R': '♜\uFE0E', 'N': '♞\uFE0E', 'B': '♝\uFE0E', 'Q': '♛\uFE0E', 'K': '♚\uFE0E', 'P': '♙\uFE0E'
 };
 
-// --- NUOVO DATABASE AGGIORNATO ---
 const db = {
     'p': [
         { n: "Guardian", t: "common", d: "Si teletrasporta davanti agli alleati sotto scacco per salvarli." },
@@ -312,7 +311,6 @@ let halfMoveClock = 0; let positionHistory = {}; let gameOver = false; let isAni
 let originalQueens = []; let timeLeftW = 0; let timeLeftB = 0; let timerInterval = null; let lastTime = 0;
 let initialPositions = {};
 
-// Tracker per i nuovi Modificatori
 let recentModdedClasses = [];
 let promotedPieces = [];
 let clonedPieces = [];
@@ -323,7 +321,7 @@ let ghostRiderActive = null;
 let zombiePawns = [];
 let pawnShields = [];
 let stunnedPieces = [];
-let usedBonusLives = [];
+let usedBonusLives = []; 
 
 // ==========================================
 // 3. AUDIO PLAYER E CONTROLLI
@@ -849,7 +847,6 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
     }
 
     if (cl == 'p') {
-        let blockedByAlly = testGrid[r + dir]?.[c] && (testGrid[r + dir][c] === testGrid[r + dir][c].toUpperCase() ? 'W' : 'B') === color;
         let blockedByEnemy = testGrid[r + dir]?.[c] && (testGrid[r + dir][c] === testGrid[r + dir][c].toUpperCase() ? 'W' : 'B') !== color;
 
         if (!testGrid[r + dir]?.[c]) {
@@ -941,9 +938,9 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
             if (t) {
                 let isE = (t == t.toUpperCase() ? 'W' : 'B') != color;
                 if (isE) { m.push(moveObj); if (cl === 'q' && mods?.n === 'Annihilation') continue; }
-                else if (cl === 'r' && mods?.n === 'Ally Vault') { continue; } 
+                else if (cl === 'r' && mods?.n === 'Ally Vault') { continue; }
                 if (mods?.n === 'Vault' && !isE) continue;
-                if (cl === 'b' && mods?.n === 'Phasing') continue; 
+                if (cl === 'b' && mods?.n === 'Phasing') continue;
                 if (cl !== 'q' || mods?.n !== 'Annihilation') break;
             } else m.push(moveObj);
         }
@@ -1116,7 +1113,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         }
     }
 
-    // --- INIZIO BLOCCO TARGET CORRETTO ---
     if (target) {
         let targetMod = getMod(tr, tc, enemyColor, target.toLowerCase());
         let targetWasZombieIdx = zombiePawns.findIndex(pos => pos.r === tr && pos.c === tc);
@@ -1126,8 +1122,8 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         // --- ENERGY SHIELD (Rimbalzo all'indietro) ---
         let shieldIdx = pawnShields.findIndex(s => s.r === tr && s.c === tc);
         if (target.toLowerCase() === 'p' && targetMod?.n === 'Energy Shield' && shieldIdx !== -1) {
-            pawnShields.splice(shieldIdx, 1); 
-            if (targetIsZombie) zombiePawns.push({ r: tr, c: tc }); 
+            pawnShields.splice(shieldIdx, 1);
+            if (targetIsZombie) zombiePawns.push({ r: tr, c: tc });
 
             let dr = Math.sign(tr - fr);
             let dc = Math.sign(tc - fc);
@@ -1143,8 +1139,8 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             tr = bounceR;
             tc = bounceC;
 
-            target = null; 
-            isAttackerDead = false; 
+            target = null;
+            isAttackerDead = false;
         }
         // --- VOODOO DEATH ---
         else if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
@@ -1184,18 +1180,15 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             }
             grid[homeRank][homeCol] = enemyColor === 'W' ? 'R' : 'r';
             recentSpawns.push({ r: homeRank, c: homeCol });
-            target = null; 
+            target = null;
         }
 
-        // REGISTRAZIONE UCCISIONE NORMALE
         if (target) {
             diedThisTurn.push({ color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie });
             pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor });
         }
     }
-    // --- FINE BLOCCO TARGET CORRETTO ---
 
-    // CAVALRY CHARGE (Vita Bonus Globale)
     let globalMod = classMods[enemyColor]['n']?.n === 'Cavalry Charge';
     if (globalMod && target && target.toLowerCase() !== 'k' && target.toLowerCase() !== 'n') {
         let pieceID = tr + "," + tc;
@@ -1207,7 +1200,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 let spot = empties[Math.floor(getGameRandom() * empties.length)];
                 grid[spot.r][spot.c] = target;
                 recentSpawns.push(spot);
-                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc); 
+                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc);
             }
         }
     }
@@ -1397,7 +1390,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             }
         });
 
-        // STUN RAY (Alfieri stordiscono a fine turno)
+        // STUN RAY
         stunnedPieces = [];
         for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
             let pb = grid[i][j];
@@ -1461,7 +1454,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         else showPromotionUI(pColor, finishMove);
     } else { finishMove(null); }
 }
-
 
 function evaluateMove(fr, fc, tr, tc, special) {
     let pColor = 'B'; let enemyColor = 'W'; let p = grid[fr][fc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
