@@ -1284,5 +1284,5 @@ body.playing-black .coords-y {
 /* Assicurazione finale: blocca qualsiasi rotazione residua sulle lettere */
 body.playing-black .coords-x span,
 body.playing-black .coords-y span {
-    transform: none !important;
+    rotate: 180deg !important   ;
 }
