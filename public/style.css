@@ -1266,10 +1266,11 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
 }
 
 /* Raddrizza lettere e numeri quando si gioca come Nero */
-body.play-as-black .coords-x *,
-body.play-as-black .coords-y * {
-    display: inline-block !important; /* <--- IL SEGRETO È QUI: rende l'elemento ruotabile! */
-    transform: rotate(180deg) !important;
+/* Raddrizza le coordinate (span) quando si gioca come Nero */
+body.play-as-black .coords-x span,
+body.play-as-black .coords-y span {
+    display: inline-block !important; /* Trasforma il testo in un blocco ruotabile */
+    transform: rotate(180deg) !important; /* Raddrizza la lettera */
 }
 
 /* Arrotonda solo i 4 angoli estremi della griglia per non farli sbavare dal bordo */
