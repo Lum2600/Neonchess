@@ -39,7 +39,6 @@ function killAllMenus() {
         }
     });
     
-    // Rimuoviamo solo la classe show per overlay speciali come tutorial
     let tut = document.getElementById('tutorial-overlay');
     if(tut) tut.classList.remove('show');
 
@@ -72,7 +71,6 @@ function toggleSfx(turnOn) {
     sfxEnabled = turnOn;
 }
 
-// --- GESTIONE MODALITÀ MULTIPLAYER ---
 function setMpMode(isClassic) {
     isOnlineClassic = isClassic;
     document.getElementById('btn-mp-god').classList.toggle('active', !isClassic);
@@ -146,12 +144,10 @@ if (socket) {
         if (btnAi) btnAi.classList.remove('active');
     });
 
-    // LOGICA UNIFICATA DI INIZIO PARTITA
     const handleStartLogic = (data) => {
-        console.log("Inizio Partita!", data);
         isMultiplayer = true;
         roomCode = data.roomCode;
-        let syncedIsClassic = data.isClassic; // Prende la modalità dettata dal server
+        let syncedIsClassic = data.isClassic; 
 
         let p1N = data.p1Name || "GUEST";
         let p2N = data.p2Name || "GUEST";
@@ -241,13 +237,59 @@ const glyphs = {
     'R': '♜\uFE0E', 'N': '♞\uFE0E', 'B': '♝\uFE0E', 'Q': '♛\uFE0E', 'K': '♚\uFE0E', 'P': '♙\uFE0E'
 };
 
+// --- NUOVO DATABASE AGGIORNATO ---
 const db = {
-    'p': [{ n: "King Soul", t: "common", d: "Si muove come il Re." }, { n: "Front Bite", t: "rare", d: "Può mangiare anche frontalmente." }, { n: "Necromancy", t: "epic", d: "Resuscita le tue pedine morte come pedoni. Se muoiono ancora, muoiono per sempre." }, { n: "Mass Infection", t: "legend", d: "Fine turno: infetta i pedoni nemici adiacenti convertendoli in alleati." }],
-    'n': [{ n: "L-Slide", t: "common", d: "Può fermarsi lungo il percorso a L. Da scacco solo sulla casella finale." }, { n: "Mount", t: "rare", d: "Acquisisce movimenti dell'ultimo morto." }, { n: "Explosive", t: "epic", d: "Atterrare polverizza l'area." }, { n: "Ghost Rider", t: "legend", d: "Il cavallo può muoversi due volte di fila." }],
-    'b': [{ n: "Side Step", t: "common", d: "Move orizzontale +1." }, { n: "Vault", t: "rare", d: "Scavalca alleati diagonali e può dare scacco." }, { n: "Wall Bounce", t: "epic", d: "Rimbalza sui bordi percorrendo la nuova diagonale." }, { n: "Chain Reaction", t: "legend", d: "A fine mossa, disintegra i due nemici laterali frontali e l'intera diagonale di fronte a lui." }],
-    'r': [{ n: "Homecoming", t: "common", d: "Teletrasporto in una base libera." }, { n: "Voodoo Death", t: "rare", d: "Maledizione: se uccisa, distrugge una torre del nemico. Se non ce ne sono, uccide l'attaccante. I Re sono immuni." }, { n: "Gravity Well", t: "epic", d: "Blocca nemici sulla linea (eccetto il Re)." }, { n: "Factory", t: "legend", d: "Genera Torre lasciando cella." }],
-    'q': [{ n: "Knight Soul", t: "common", d: "Aggiunge mosse cavallo." }, { n: "Brainwash", t: "rare", d: "Converte la Regina e la teletrasporta in salvo." }, { n: "Immortal", t: "epic", d: "Rinasce se uccisa (Solo Originali)." }, { n: "Annihilation", t: "legend", d: "Passa attraverso e uccide nemici." }],
-    'k': [{ n: "Row Warp", t: "common", d: "Warp sulla sua riga." }, { n: "Emperor", t: "rare", d: "Move come Regina." }, { n: "The Betrayal", t: "legend", d: "Warp su un nemico e lo distrugge." }, { n: "Great Resurrection", t: "epic", d: "(Istante) Resuscita tutti nella tua metà." }]
+    'p': [
+        { n: "Guardian", t: "common", d: "Si teletrasporta davanti agli alleati sotto scacco per salvarli." },
+        { n: "Hurdle", t: "common", d: "Scavalca le pedine avversarie muovendosi in avanti." },
+        { n: "Energy Shield", t: "rare", d: "Sopravvive al primo attacco rimbalzando il nemico via." },
+        { n: "Leap of Faith", t: "rare", d: "(Istante) I tuoi pedoni avanzano al massimo possibile." },
+        { n: "Vanguard", t: "epic", d: "I pedoni si promuovono a metà scacchiera (riga 4/5)." },
+        { n: "Necromancy", t: "epic", d: "Resuscita le tue pedine morte come pedoni. Se muoiono ancora, muoiono per sempre." },
+        { n: "Wololo", t: "epic", d: "(Istante) Converte tutti i pedoni avversari in alleati." },
+        { n: "Mass Infection", t: "legend", d: "Fine turno: infetta i pedoni nemici adiacenti convertendoli in alleati." }
+    ],
+    'n': [
+        { n: "Cavalry", t: "common", d: "Trasporta gli alleati adiacenti donando loro mosse a L." },
+        { n: "L-Slide", t: "common", d: "Può fermarsi lungo il percorso a L." },
+        { n: "Pacifist", t: "rare", d: "I nemici adiacenti (tranne il Re) non possono attaccare." },
+        { n: "Mount", t: "rare", d: "Acquisisce i movimenti dell'ultimo pezzo alleato morto." },
+        { n: "Trample", t: "epic", d: "Mangia automaticamente le pedine su cui salta." },
+        { n: "Explosive", t: "epic", d: "Atterrare polverizza l'area." },
+        { n: "Cavalry Charge", t: "legend", d: "Tutti gli alleati hanno mosse a L e una vita bonus." },
+        { n: "Ghost Rider", t: "legend", d: "Il cavallo può muoversi due volte di fila." }
+    ],
+    'b': [
+        { n: "Side Step", t: "common", d: "Move orizzontale +1." },
+        { n: "Phasing", t: "common", d: "Attraversa tutte le pedine sulla sua diagonale." },
+        { n: "Stun Ray", t: "rare", d: "Stordisce per 1 turno i nemici che minaccia." },
+        { n: "Vault", t: "rare", d: "Scavalca alleati diagonali e può dare scacco." },
+        { n: "Wide Beam", t: "epic", d: "Mangia tutto anche sulle diagonali adiacenti." },
+        { n: "Wall Bounce", t: "epic", d: "Rimbalza sui bordi percorrendo la nuova diagonale." },
+        { n: "Chain Reaction", t: "legend", d: "A fine mossa, disintegra l'intera linea di fronte a lui." }
+    ],
+    'r': [
+        { n: "Phoenix Rook", t: "common", d: "Torna in vita al punto di partenza se uccisa." },
+        { n: "Homecoming", t: "common", d: "Teletrasporto in una base libera." },
+        { n: "Ally Vault", t: "rare", d: "Scavalca le pedine alleate senza fermarsi." },
+        { n: "Voodoo Death", t: "rare", d: "Maledizione: se uccisa, distrugge una torre del nemico." },
+        { n: "Air Superiority", t: "epic", d: "(Istante) Bombarda le torri nemiche, Mussolini te ne invia 2 nuove." },
+        { n: "Gravity Well", t: "epic", d: "Blocca i nemici sulla sua linea di tiro." },
+        { n: "Juggernaut", t: "legend", d: "Enorme: schiaccia e distrugge ogni cosa adiacente quando atterra." },
+        { n: "Factory", t: "legend", d: "Genera Torre lasciando cella." }
+    ],
+    'q': [
+        { n: "Knight Soul", t: "common", d: "Aggiunge mosse cavallo." }, 
+        { n: "Brainwash", t: "rare", d: "Converte la Regina e la teletrasporta in salvo." }, 
+        { n: "Immortal", t: "epic", d: "Rinasce se uccisa (Solo Originali)." }, 
+        { n: "Annihilation", t: "legend", d: "Passa attraverso e uccide nemici." }
+    ],
+    'k': [
+        { n: "Row Warp", t: "common", d: "Warp sulla sua riga." }, 
+        { n: "Emperor", t: "rare", d: "Move come Regina." }, 
+        { n: "Great Resurrection", t: "epic", d: "(Istante) Resuscita tutti nella tua metà." },
+        { n: "The Betrayal", t: "legend", d: "Warp su un nemico e lo distrugge." }
+    ]
 };
 
 const openingBook = {
@@ -270,15 +312,18 @@ let halfMoveClock = 0; let positionHistory = {}; let gameOver = false; let isAni
 let originalQueens = []; let timeLeftW = 0; let timeLeftB = 0; let timerInterval = null; let lastTime = 0;
 let initialPositions = {};
 
+// Tracker per i nuovi Modificatori
 let recentModdedClasses = [];
 let promotedPieces = [];
 let clonedPieces = [];
 let recentSpawns = [];
 let isCheckingLogic = false;
 let arrowStartCell = null;
-
 let ghostRiderActive = null;
 let zombiePawns = [];
+let pawnShields = []; 
+let stunnedPieces = [];
+let usedBonusLives = []; // Tiene traccia di chi ha già usato la vita extra di Cavalry Charge
 
 // ==========================================
 // 3. AUDIO PLAYER E CONTROLLI
@@ -447,10 +492,8 @@ function setOpponent(mode) {
 function setTeam(team) {
     myTeam = team;
     document.body.setAttribute('data-team', team);
-
     const btnW = document.getElementById('btn-team-w');
     const btnB = document.getElementById('btn-team-b');
-
     if (btnW) btnW.classList.toggle('active', team === 'W');
     if (btnB) btnB.classList.toggle('active', team === 'B');
 }
@@ -467,17 +510,8 @@ function setGraphics(lvl) {
 function setTimer(enabled) { timerEnabled = enabled; document.getElementById('btn-timer-on').classList.toggle('active', enabled); document.getElementById('btn-timer-off').classList.toggle('active', !enabled); document.getElementById('time-select-row').style.display = enabled ? 'flex' : 'none'; tryStartMusic(); }
 function setTimeVal(mins, btnElement) { timeLimitMinutes = mins; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); tryStartMusic(); }
 
-function openTutorial() { 
-    let el = document.getElementById('tutorial-overlay');
-    if(el) {
-        el.style.display = ''; // Ripristina il flex via CSS
-        el.classList.add('show'); 
-    }
-}
-function closeTutorial() { 
-    let el = document.getElementById('tutorial-overlay');
-    if(el) el.classList.remove('show'); 
-}
+function openTutorial() { let el = document.getElementById('tutorial-overlay'); if(el) { el.style.display = ''; el.classList.add('show'); } }
+function closeTutorial() { let el = document.getElementById('tutorial-overlay'); if(el) el.classList.remove('show'); }
 
 function promptDev() {
     const password = prompt("Inserisci la password di accesso al sistema:");
@@ -538,7 +572,6 @@ function openDev() {
             <button class="opt-btn" style="color:var(--t3); border-color:var(--t3);" onclick="setDevTier(3)">T3</button>
             <button class="opt-btn" style="color:var(--t4); border-color:var(--t4);" onclick="setDevTier(4)">OD (T4)</button>
         `;
-
         let container = devOverlay.querySelector('.options-box') || devOverlay;
         container.appendChild(devControls);
     }
@@ -588,6 +621,11 @@ function setDevMod(color, pc, modName) {
         classMods[color][pc] = mod;
         recentModdedClasses.push({ color: color, cl: pc });
         setTimeout(() => { recentModdedClasses = recentModdedClasses.filter(x => !(x.color === color && x.cl === pc)); }, 1200);
+        
+        // Applica poteri istantanei o globali se testati da Dev
+        if(modName === 'Energy Shield') {
+            for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(grid[r][c] && grid[r][c].toLowerCase()==='p' && (grid[r][c]===grid[r][c].toUpperCase()?'W':'B')===color) pawnShields.push({r,c});
+        }
     }
 }
 
@@ -709,7 +747,9 @@ function init() {
     classMods = { 'W': {}, 'B': {} }; deadPieces = { 'W': [], 'B': [] };
 
     recentModdedClasses = []; promotedPieces = []; clonedPieces = []; recentSpawns = [];
-    zombiePawns = []; ghostRiderActive = null;
+    zombiePawns = []; ghostRiderActive = null; 
+    pawnShields = []; stunnedPieces = []; usedBonusLives = [];
+
     document.getElementById('skip-turn-btn').style.display = 'none';
 
     initialPositions = {};
@@ -759,6 +799,11 @@ function draw() {
 
                 let isPromo = isPromoted(r, c);
                 let isClone = clonedPieces && clonedPieces.some(s => s.r === r && s.c === c);
+                
+                // Shield e Stun Indicator
+                if (pawnShields.some(s => s.r === r && s.c === c)) animClass += ' shielded';
+                if (stunnedPieces.some(s => s.r === r && s.c === c)) aClass += ' stunned';
+
                 let spawnClass = (gfxLevel !== 'LO' && recentSpawns && (recentSpawns.some(s => s.r === r && s.c === c) || isPromo)) ? 'spawn-anim' : '';
                 let cloneTag = isPromo ? '<span class="clone-tag" style="color:var(--t2); border-color:var(--t2);">[P]</span>' : (isClone ? '<span class="clone-tag">[C]</span>' : '');
 
@@ -771,20 +816,97 @@ function draw() {
 
 function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, isAttackCheck = false) {
     let p = testGrid[r][c]; if (!p) return []; let cl = p.toLowerCase(); let mods = ignoreMods || isPromoted(r, c) ? null : classMods[color][cl]; let m = []; let dir = color == 'W' ? -1 : 1;
+    let enemyColor = color === 'W' ? 'B' : 'W';
+
+    // --- Controllo STUN e PACIFY AURA ---
+    if (!ignoreMods) {
+        if (stunnedPieces.some(s => s.r === r && s.c === c)) return [];
+        
+        if (cl !== 'k') {
+            let isPacified = false;
+            [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]].forEach(d => {
+                let nr = r+d[0], nc = c+d[1];
+                if(nr>=0 && nr<8 && nc>=0 && nc<8) {
+                    let adj = testGrid[nr][nc];
+                    if (adj && adj.toLowerCase() === 'n' && (adj === adj.toUpperCase() ? 'W' : 'B') === enemyColor && getMod(nr, nc, enemyColor, 'n')?.n === 'Pacifist') isPacified = true;
+                }
+            });
+            if (isPacified) return [];
+        }
+    }
 
     if (cl == 'p') {
-        if (!testGrid[r + dir]?.[c]) { m.push({ r: r + dir, c: c }); if ((color == 'W' && r == 6) || (color == 'B' && r == 1)) if (!testGrid[r + 2 * dir]?.[c]) m.push({ r: r + 2 * dir, c: c }); }
+        let blockedByAlly = testGrid[r+dir]?.[c] && (testGrid[r+dir][c] === testGrid[r+dir][c].toUpperCase() ? 'W' : 'B') === color;
+        let blockedByEnemy = testGrid[r+dir]?.[c] && (testGrid[r+dir][c] === testGrid[r+dir][c].toUpperCase() ? 'W' : 'B') !== color;
+        
+        if (!testGrid[r + dir]?.[c]) { 
+            m.push({ r: r + dir, c: c }); 
+            if ((color == 'W' && r == 6) || (color == 'B' && r == 1)) {
+                if (!testGrid[r + 2 * dir]?.[c]) m.push({ r: r + 2 * dir, c: c }); 
+            }
+        } else if (mods?.n === 'Hurdle' && blockedByEnemy) {
+            // Hurdle: Salta il nemico se la cella dopo è libera
+            if (r + 2 * dir >= 0 && r + 2 * dir < 8 && !testGrid[r + 2 * dir]?.[c]) {
+                m.push({ r: r + 2 * dir, c: c });
+            }
+        }
+        
         if (testGrid[r + dir]?.[c - 1] && (testGrid[r + dir][c - 1] == testGrid[r + dir][c - 1].toUpperCase() ? 'W' : 'B') != color) m.push({ r: r + dir, c: c - 1 });
         if (testGrid[r + dir]?.[c + 1] && (testGrid[r + dir][c + 1] == testGrid[r + dir][c + 1].toUpperCase() ? 'W' : 'B') != color) m.push({ r: r + dir, c: c + 1 });
         if (lastMove && lastMove.piece.toLowerCase() === 'p' && Math.abs(lastMove.to.r - lastMove.from.r) === 2 && lastMove.to.r === r && Math.abs(lastMove.to.c - c) === 1) m.push({ r: r + dir, c: lastMove.to.c, isEnPassant: true });
+        
         if (mods?.n == 'King Soul') [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => { let nr = r + d[0], nc = c + d[1]; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !testGrid[nr][nc]) m.push({ r: nr, c: nc }); });
         if (mods?.n == 'Front Bite' && testGrid[r + dir]?.[c] && (testGrid[r + dir][c] == testGrid[r + dir][c].toUpperCase() ? 'W' : 'B') != color) m.push({ r: r + dir, c: c });
+        
+        if (mods?.n === 'Guardian' && !isAttackCheck) {
+            // Cerca alleati minacciati per saltare davanti
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    let ally = testGrid[i][j];
+                    if (ally && (ally === ally.toUpperCase() ? 'W' : 'B') === color) {
+                        if (isUnderAttack(i, j, enemyColor, testGrid)) {
+                            [[-1,0],[1,0],[0,-1],[0,1]].forEach(d => {
+                                let nr = i+d[0], nc = j+d[1];
+                                if(nr>=0 && nr<8 && nc>=0 && nc<8 && !testGrid[nr][nc]) m.push({r: nr, c: nc});
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    if (cl == 'n') {
-        [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(d => { let nr = r + d[0], nc = c + d[1]; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && (!testGrid[nr][nc] || (testGrid[nr][nc] == testGrid[nr][nc].toUpperCase() ? 'W' : 'B') != color)) m.push({ r: nr, c: nc }); });
-        if (mods?.n == 'L-Slide' && !isAttackCheck) [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1], [-2, 0], [2, 0], [0, -2], [0, 2]].forEach(d => { let nr = r + d[0], nc = c + d[1]; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && (!testGrid[nr][nc] || (testGrid[nr][nc] == testGrid[nr][nc].toUpperCase() ? 'W' : 'B') != color)) m.push({ r: nr, c: nc }); });
-        if (mods?.n == 'Mount' && deadPieces[color].length > 0) { let ld = deadPieces[color][deadPieces[color].length - 1].toLowerCase(); if (ld !== 'n' && ld !== 'k') { testGrid[r][c] = color === 'W' ? ld.toUpperCase() : ld; m.push(...getMovesPseudoLegal(r, c, color, testGrid, true)); testGrid[r][c] = p; } }
+    // --- Controllo Cavalleria Aggiuntiva ---
+    let isNextToCavalry = false;
+    if (!isAttackCheck) {
+        [[-1,0],[1,0],[0,-1],[0,1]].forEach(d => {
+            let nr = r+d[0], nc = c+d[1];
+            if(nr>=0 && nr<8 && nc>=0 && nc<8) {
+                let adj = testGrid[nr][nc];
+                if (adj && adj.toLowerCase() === 'n' && (adj === adj.toUpperCase() ? 'W' : 'B') === color && getMod(nr, nc, color, 'n')?.n === 'Cavalry') isNextToCavalry = true;
+            }
+        });
+    }
+
+    if (cl == 'n' || isNextToCavalry || classMods[color]['n']?.n === 'Cavalry Charge') {
+        [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(d => { 
+            let nr = r + d[0], nc = c + d[1]; 
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && (!testGrid[nr][nc] || (testGrid[nr][nc] == testGrid[nr][nc].toUpperCase() ? 'W' : 'B') != color)) m.push({ r: nr, c: nc }); 
+        });
+        if (cl == 'n' && mods?.n == 'L-Slide' && !isAttackCheck) {
+            [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1], [-2, 0], [2, 0], [0, -2], [0, 2]].forEach(d => { 
+                let nr = r + d[0], nc = c + d[1]; 
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && (!testGrid[nr][nc] || (testGrid[nr][nc] == testGrid[nr][nc].toUpperCase() ? 'W' : 'B') != color)) m.push({ r: nr, c: nc }); 
+            });
+        }
+        if (cl == 'n' && mods?.n == 'Mount' && deadPieces[color].length > 0) { 
+            let ld = deadPieces[color][deadPieces[color].length - 1].toLowerCase(); 
+            if (ld !== 'n' && ld !== 'k') { 
+                testGrid[r][c] = color === 'W' ? ld.toUpperCase() : ld; 
+                m.push(...getMovesPseudoLegal(r, c, color, testGrid, true, isAttackCheck)); 
+                testGrid[r][c] = p; 
+            } 
+        }
     }
 
     let dirs = [];
@@ -796,23 +918,22 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
         while (true) {
             nr += d[0]; nc += d[1];
             if (nr < 0 || nr > 7 || nc < 0 || nc > 7) {
-                if (mods?.n == 'Wall Bounce' && !bounced) {
-                    nr -= d[0]; nc -= d[1];
-                    bouncePoint = { r: nr, c: nc };
+                if (cl == 'b' && mods?.n == 'Wall Bounce' && !bounced) {
+                    nr -= d[0]; nc -= d[1]; bouncePoint = { r: nr, c: nc };
                     if (nr + d[0] < 0 || nr + d[0] > 7) d[0] *= -1;
                     if (nc + d[1] < 0 || nc + d[1] > 7) d[1] *= -1;
-                    bounced = true;
-                    continue;
+                    bounced = true; continue;
                 } else break;
             }
             let t = testGrid[nr][nc];
-            let moveObj = { r: nr, c: nc };
-            if (bouncePoint) moveObj.bouncePoint = bouncePoint;
+            let moveObj = { r: nr, c: nc }; if (bouncePoint) moveObj.bouncePoint = bouncePoint;
 
             if (t) {
                 let isE = (t == t.toUpperCase() ? 'W' : 'B') != color;
                 if (isE) { m.push(moveObj); if (cl === 'q' && mods?.n === 'Annihilation') continue; }
+                else if (cl === 'r' && mods?.n === 'Ally Vault') { continue; } // Scavalca alleato
                 if (mods?.n === 'Vault' && !isE) continue;
+                if (cl === 'b' && mods?.n === 'Phasing') continue; // Passa attraverso tutto
                 if (cl !== 'q' || mods?.n !== 'Annihilation') break;
             } else m.push(moveObj);
         }
@@ -991,7 +1112,27 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         let targetIsZombie = targetWasZombieIdx !== -1;
         if (targetIsZombie) zombiePawns.splice(targetWasZombieIdx, 1);
 
-        if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
+        // --- ENERGY SHIELD (Rimbalzo) ---
+        let shieldIdx = pawnShields.findIndex(s => s.r === tr && s.c === tc);
+        if (target.toLowerCase() === 'p' && targetMod?.n === 'Energy Shield' && shieldIdx !== -1) {
+            pawnShields.splice(shieldIdx, 1); // Rompe scudo
+            isAttackerDead = true; // Non muore ma rimbalza
+            
+            // Cerca quadrato libero vicino al target per far atterrare l'attaccante
+            let empties = [];
+            for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
+                if(tr+i>=0 && tr+i<8 && tc+j>=0 && tc+j<8 && !grid[tr+i][tc+j]) empties.push({r:tr+i, c:tc+j});
+            }
+            if(empties.length > 0) {
+                let bounce = empties[Math.floor(getGameRandom() * empties.length)];
+                grid[bounce.r][bounce.c] = p; // L'attaccante atterra li
+                recentSpawns.push(bounce);
+                tr = bounce.r; tc = bounce.c; // Hack per farlo disegnare li
+                isAttackerDead = false; 
+            }
+            target = null; // Nessuna uccisione
+        }
+        else if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
             let attackerRooks = [];
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
                 let piece = grid[i][j];
@@ -1017,9 +1158,43 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 isAttackerDead = true;
             }
         }
+        
+        // --- PHOENIX ROOK ---
+        else if (target && target.toLowerCase() === 'r' && targetMod?.n === 'Phoenix Rook') {
+            let homeRank = enemyColor === 'W' ? 7 : 0;
+            let homeCol = tc < 4 ? 0 : 7;
+            let homeTarget = grid[homeRank][homeCol];
+            if (homeTarget && homeTarget.toLowerCase() !== 'k') {
+                diedThisTurn.push({ color: homeTarget === homeTarget.toUpperCase()?'W':'B', piece: homeTarget, r: homeRank, c: homeCol, isZombie: false });
+                pendingAnims.push({ type: 'capture', r: homeRank, c: homeCol, color: enemyColor });
+            }
+            grid[homeRank][homeCol] = enemyColor === 'W' ? 'R' : 'r';
+            recentSpawns.push({r: homeRank, c: homeCol});
+            target = null; // Annulla kill per stats, si è salvato
+        }
 
-        diedThisTurn.push({ color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie });
-        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor });
+        if (target) {
+            diedThisTurn.push({ color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie });
+            pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor });
+        }
+    }
+
+    // CAVALRY CHARGE (Vita Bonus Globale)
+    let globalMod = classMods[enemyColor]['n']?.n === 'Cavalry Charge';
+    if (globalMod && target && target.toLowerCase() !== 'k' && target.toLowerCase() !== 'n') {
+        let pieceID = tr+","+tc; // id temporaneo
+        if (!usedBonusLives.includes(pieceID)) {
+            usedBonusLives.push(pieceID);
+            // Teletrasporto per salvarsi
+            let empties = [];
+            for(let i=0; i<8; i++) for(let j=0; j<8; j++) if(!grid[i][j]) empties.push({r:i, c:j});
+            if(empties.length > 0) {
+                let spot = empties[Math.floor(getGameRandom()*empties.length)];
+                grid[spot.r][spot.c] = target;
+                recentSpawns.push(spot);
+                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc); // Rimuove dalla morte
+            }
+        }
     }
 
     if (isAttackerDead) {
@@ -1046,7 +1221,35 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     if (!isAttackerDead) {
         if (target && target.toLowerCase() === 'q' && getMod(tr, tc, enemyColor, 'q')?.n === 'Immortal' && originalQueens.includes(tr + "," + tc)) { let br = enemyColor === 'W' ? 7 : 0; if (!grid[br][3]) { grid[br][3] = target; let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens[idx] = br + ",3"; } else { let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens.splice(idx, 1); } }
         let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens[pIdx] = tr + "," + tc;
-        if (cl === 'p') { if ((pColor === 'W' && tr === 0) || (pColor === 'B' && tr === 7)) needsPromotion = true; }
+        
+        if (cl === 'p') { 
+            let promoRank = (mod?.n === 'Vanguard') ? (pColor === 'W' ? 4 : 3) : (pColor === 'W' ? 0 : 7);
+            if ((pColor === 'W' && tr <= promoRank) || (pColor === 'B' && tr >= promoRank)) needsPromotion = true; 
+        }
+
+        // TRAMPLE (Cavallo)
+        if (cl === 'n' && mod?.n === 'Trample') {
+            let dr = tr - fr, dc = tc - fc;
+            let er1 = fr + dr, ec1 = fc;
+            let er2 = fr, ec2 = fc + dc;
+            [ {r:er1, c:ec1}, {r:er2, c:ec2} ].forEach(pos => {
+                if(grid[pos.r]?.[pos.c] && grid[pos.r][pos.c].toLowerCase()!=='k' && (grid[pos.r][pos.c]===grid[pos.r][pos.c].toUpperCase()?'W':'B')!==pColor) {
+                    diedThisTurn.push({color:enemyColor, piece:grid[pos.r][pos.c], r:pos.r, c:pos.c, isZombie:false});
+                    grid[pos.r][pos.c] = ''; pendingAnims.push({type:'capture', r:pos.r, c:pos.c, color:enemyColor});
+                }
+            });
+        }
+        
+        // JUGGERNAUT (Torre)
+        if (cl === 'r' && mod?.n === 'Juggernaut') {
+            for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) {
+                let nr = tr+i, nc = tc+j;
+                if(nr>=0 && nr<8 && nc>=0 && nc<8 && grid[nr][nc] && grid[nr][nc].toLowerCase()!=='k' && !(nr===tr && nc===tc)) {
+                    diedThisTurn.push({color:(grid[nr][nc]===grid[nr][nc].toUpperCase()?'W':'B'), piece:grid[nr][nc], r:nr, c:nc, isZombie:false});
+                    grid[nr][nc] = ''; pendingAnims.push({type:'capture', r:nr, c:nc, color:enemyColor});
+                }
+            }
+        }
     }
 
     let finishMove = (promoPiece) => {
@@ -1096,6 +1299,23 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                         grid[kr][kc] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === kr && pos.c === kc); if (exZ !== -1) zombiePawns.splice(exZ, 1);
                         diedThisTurn.push({ color: enemyColor, piece: tK, r: kr, c: kc, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor });
                     } kr += dr; kc += dc;
+                }
+            }
+            if (cl === 'b' && mod?.n === 'Wide Beam') {
+                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc);
+                let cr = fr + dr, cc = fc + dc;
+                while (cr !== tr || cc !== tc) {
+                    let nr1 = cr + dc, nc1 = cc - dr;
+                    if(nr1>=0 && nr1<8 && nc1>=0 && nc1<8 && grid[nr1][nc1] && grid[nr1][nc1].toLowerCase()!=='k' && (grid[nr1][nc1]===grid[nr1][nc1].toUpperCase()?'W':'B')!==pColor) {
+                        diedThisTurn.push({color:enemyColor, piece:grid[nr1][nc1], r:nr1, c:nc1, isZombie:false});
+                        grid[nr1][nc1] = ''; pendingAnims.push({type:'capture', r:nr1, c:nc1, color:enemyColor});
+                    }
+                    let nr2 = cr - dc, nc2 = cc + dr;
+                    if(nr2>=0 && nr2<8 && nc2>=0 && nc2<8 && grid[nr2][nc2] && grid[nr2][nc2].toLowerCase()!=='k' && (grid[nr2][nc2]===grid[nr2][nc2].toUpperCase()?'W':'B')!==pColor) {
+                        diedThisTurn.push({color:enemyColor, piece:grid[nr2][nc2], r:nr2, c:nc2, isZombie:false});
+                        grid[nr2][nc2] = ''; pendingAnims.push({type:'capture', r:nr2, c:nc2, color:enemyColor});
+                    }
+                    cr += dr; cc += dc;
                 }
             }
             if (cl === 'r' && mod?.n === 'Factory' && !wasCloned) {
@@ -1164,6 +1384,17 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             }
         });
 
+        // STUN RAY (Alfieri stordiscono a fine turno)
+        stunnedPieces = [];
+        for(let i=0; i<8; i++) for(let j=0; j<8; j++) {
+            let pb = grid[i][j];
+            if(pb && pb.toLowerCase() === 'b' && getMod(i, j, pb===pb.toUpperCase()?'W':'B', 'b')?.n === 'Stun Ray') {
+                let bColor = pb===pb.toUpperCase()?'W':'B';
+                let moves = getMovesPseudoLegal(i, j, bColor, grid, false, true);
+                moves.forEach(m => { if(grid[m.r][m.c]) stunnedPieces.push({r: m.r, c: m.c}); });
+            }
+        }
+
         updateScores(); pendingAnims.forEach(a => { if (a.type === 'capture') createCaptureExplosion(a.r, a.c, a.color); });
 
         let gaveDrop = false; let overdriveTriggered = false;
@@ -1225,15 +1456,6 @@ function evaluateMove(fr, fc, tr, tc, special) {
     if (target) score += getPieceValue(target) * 10;
     if (special && special.isEnPassant) score += 10;
     if (special && special.isCastle) score += 20;
-
-    if (cl === 'q' && mod?.n === 'Annihilation') { let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; while (cr !== tr || cc !== tc) { if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') score += getPieceValue(grid[cr][cc]) * 10; cr += dr; cc += dc; } }
-    if (cl === 'n' && mod?.n === 'Explosive') { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { if (i === 0 && j === 0) continue; let nr = tr + i, nc = tc + j; if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') score += getPieceValue(grid[nr][nc]) * 10; } }
-    if (cl === 'b' && mod?.n === 'Chain Reaction') {
-        let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc);
-        let s1r = tr + dr, s1c = tc; if (s1r >= 0 && s1r < 8 && s1c >= 0 && s1c < 8) { let t1 = grid[s1r][s1c]; if (t1 && t1.toLowerCase() !== 'k' && (t1 === t1.toUpperCase() ? 'W' : 'B') !== pColor) score += getPieceValue(t1) * 10; }
-        let s2r = tr, s2c = tc + dc; if (s2r >= 0 && s2r < 8 && s2c >= 0 && s2c < 8) { let t2 = grid[s2r][s2c]; if (t2 && t2.toLowerCase() !== 'k' && (t2 === t2.toUpperCase() ? 'W' : 'B') !== pColor) score += getPieceValue(t2) * 10; }
-        let kr = tr + dr, kc = tc + dc; while (kr >= 0 && kr < 8 && kc >= 0 && kc < 8) { let tK = grid[kr][kc]; if (tK && tK.toLowerCase() !== 'k' && (tK === tK.toUpperCase() ? 'W' : 'B') !== pColor) score += getPieceValue(tK) * 10; kr += dr; kc += dc; }
-    }
 
     let isAttackedEnd = isUnderAttack(tr, tc, enemyColor, grid); let isDefendedEnd = isUnderAttack(tr, tc, pColor, grid);
     if (isAttackedEnd) { if (isDefendedEnd) score -= getPieceValue(p) * 2; else score -= getPieceValue(p) * 10; }
@@ -1333,7 +1555,7 @@ function clickCell(r, c) {
 }
 
 // ==========================================
-// 7. FUNZIONI DI UTILITÀ, ANIMAZIONI E GIOCO
+// 7. FUNZIONI DI UTILITÀ E FINE PARTITA
 // ==========================================
 function triggerEnd(winnerColor, title, desc) {
     gameOver = true;
@@ -1346,8 +1568,6 @@ function triggerEnd(winnerColor, title, desc) {
     let goScreen = document.getElementById('game-over-screen');
     if (goScreen) document.body.appendChild(goScreen);
 
-    // --- NUOVO: SCATTO DELLA FOTOGRAFIA ---
-    // Cloniamo il contenuto della scacchiera ESATTAMENTE in questo istante
     let snapshotHTML = "";
     let currentBoard = document.getElementById('board');
     if (currentBoard) {
@@ -1368,7 +1588,6 @@ function triggerEnd(winnerColor, title, desc) {
             playMoveSound('capture');
         }, 500);
 
-        // Passiamo la foto a showGameOver!
         setTimeout(() => { if (wrapper) wrapper.classList.remove('board-vibrate'); showGameOver(endTitle, titleColor, desc, snapshotHTML); }, 2500);
     } else {
         let bgm = document.getElementById('bg-music'); if (bgm) bgm.pause();
@@ -1376,7 +1595,6 @@ function triggerEnd(winnerColor, title, desc) {
     }
 }
 
-// Aggiunto il parametro snapshotHTML
 function showGameOver(title, color, desc, snapshotHTML = "") {
     let gameUi = document.getElementById('game-ui'); if (gameUi) gameUi.style.display = 'none';
     let goScreen = document.getElementById('game-over-screen');
@@ -1386,14 +1604,13 @@ function showGameOver(title, color, desc, snapshotHTML = "") {
         if (t) { t.innerText = title; t.style.color = color; t.style.textShadow = `0 0 20px ${color}`; t.classList.remove('glitch-anim'); void t.offsetWidth; t.classList.add('glitch-anim'); }
         let d = document.getElementById('go-desc'); if (d) d.innerText = desc;
         
-        // --- NUOVO: STAMPA DELLA FOTOGRAFIA ---
         let snapBoard = document.getElementById('go-snapshot-board');
         if (snapBoard && snapshotHTML) {
-            // Iniettiamo i cloni esatti delle celle nella mini-griglia
             snapBoard.innerHTML = snapshotHTML;
         }
     }
 }
+
 function updateTimersUI() {
     let container = document.getElementById('timers-container');
     if (!timerEnabled) { if (container) container.style.display = 'none'; return; }
@@ -1495,6 +1712,68 @@ function giveModTo(targetColor) {
 }
 
 function triggerInstantMods(color, mod) {
+    if (mod.n === 'Energy Shield') {
+        for(let r=0; r<8; r++) for(let c=0; c<8; c++) if(grid[r][c] && grid[r][c].toLowerCase()==='p' && (grid[r][c]===grid[r][c].toUpperCase()?'W':'B')===color) pawnShields.push({r,c});
+    }
+    
+    if (mod.n === 'Leap of Faith') {
+        let dir = color === 'W' ? -1 : 1;
+        let endRank = color === 'W' ? 1 : 6;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (grid[r][c] && grid[r][c].toLowerCase() === 'p' && (grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B') === color) {
+                    let targetR = r;
+                    while (targetR !== endRank && !grid[targetR + dir]?.[c]) targetR += dir;
+                    if (targetR !== r) { grid[targetR][c] = grid[r][c]; grid[r][c] = ''; recentSpawns.push({r: targetR, c}); }
+                }
+            }
+        }
+    }
+
+    if (mod.n === 'Vanguard') {
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (grid[r][c] && grid[r][c].toLowerCase() === 'p' && (grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B') === color) {
+                    if ((color === 'W' && r <= 4) || (color === 'B' && r >= 3)) {
+                        grid[r][c] = color === 'W' ? 'Q' : 'q';
+                        promotedPieces.push({r, c}); recentSpawns.push({r, c});
+                    }
+                }
+            }
+        }
+    }
+
+    if (mod.n === 'Wololo') {
+        let enemyColor = color === 'W' ? 'B' : 'W';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (grid[r][c] && grid[r][c].toLowerCase() === 'p' && (grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B') === enemyColor) {
+                    grid[r][c] = color === 'W' ? 'P' : 'p';
+                    recentSpawns.push({r, c});
+                }
+            }
+        }
+    }
+
+    if (mod.n === 'Air Superiority') {
+        let enemyColor = color === 'W' ? 'B' : 'W';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (grid[r][c] && grid[r][c].toLowerCase() === 'r' && (grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B') === enemyColor) {
+                    deadPieces[enemyColor].push(grid[r][c]); grid[r][c] = ''; createCaptureExplosion(r, c, enemyColor);
+                }
+            }
+        }
+        let empties = [];
+        for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (!grid[r][c]) empties.push({r,c});
+        empties = shuffleArray(empties);
+        for(let i=0; i<2 && i<empties.length; i++) {
+            grid[empties[i].r][empties[i].c] = color === 'W' ? 'R' : 'r';
+            recentSpawns.push({r: empties[i].r, c: empties[i].c});
+        }
+        updateScores();
+    }
+
     if (mod.n === 'Brainwash') {
         let enemyQ = color === 'W' ? 'q' : 'Q'; let myQ = color === 'W' ? 'Q' : 'q'; let qPos = null;
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (grid[r][c] === enemyQ) { qPos = { r, c }; grid[r][c] = ''; }
@@ -1534,8 +1813,7 @@ function triggerInstantMods(color, mod) {
             clonedPieces.push({ r: spot.r, c: spot.c });
             recentSpawns.push({ r: spot.r, c: spot.c });
         }
-        updateScores();
-        draw();
+        updateScores(); draw();
     }
 }
 
