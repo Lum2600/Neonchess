@@ -1200,7 +1200,6 @@ body.overdrive .play-classic-btn, body.overdrive .guide-btn { color: #ffffff !im
 
 body[data-team="B"] .board { transform: rotate(180deg) !important; }
 body[data-team="B"] .board .piece { --rot: 180deg; }
-body[data-team="B"] .coords-y span, body[data-team="B"] .coords-x span { transform: rotate(180deg) !important; display: inline-block; }
 
 body.overdrive .cell.h-m::after { background: #00f3ff !important; box-shadow: 0 0 15px #00f3ff, 0 0 5px #ffffff, 0 0 25px rgba(0, 243, 255, 0.5) !important; width: 30%; height: 30%; opacity: 1; }
 body.overdrive .cell.h-c { box-shadow: inset 0 0 25px #00f3ff, inset 0 0 10px rgba(255, 255, 255, 0.8) !important; border: 3px solid #00f3ff !important; }
@@ -1284,5 +1283,5 @@ body.playing-black .coords-y {
 /* Assicurazione finale: blocca qualsiasi rotazione residua sulle lettere */
 body.playing-black .coords-x span,
 body.playing-black .coords-y span {
-    rotate: 180deg !important   ;
+    transform: none !important;
 }
