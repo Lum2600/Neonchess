@@ -9,6 +9,22 @@ const io = new Server(server);
 app.use(express.static('public'));
 
 let waitingQueue = []; 
+// La griglia iniziale standard (Maiuscole = Bianco, Minuscole = Nero)
+const initialBoard = [
+    ['r','n','b','q','k','b','n','r'],
+    ['p','p','p','p','p','p','p','p'],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['P','P','P','P','P','P','P','P'],
+    ['R','N','B','Q','K','B','N','R']
+];
+
+// Funzione per dare una griglia nuova di zecca a ogni nuova partita
+function getNewBoard() {
+    return JSON.parse(JSON.stringify(initialBoard)); 
+}
 let activeRooms = {};  
 let rateLimits = {}; // Memoria per lo scudo Anti-Spam
 
@@ -65,7 +81,15 @@ io.on('connection', (socket) => {
 
             player1.join(roomCode);
             player2.join(roomCode);
-            activeRooms[roomCode] = { p1: player1.id, p2: player2.id, turn: 'W', isPrivate: false };
+            // Registriamo la stanza, i colori assegnati e chi deve muovere per primo
+            activeRooms[roomCode] = { 
+                p1: player1.id, 
+                p2: player2.id,
+                p1Color: 'W',
+                p2Color: 'B',
+                currentTurn: 'W', // Inizia sempre il Bianco
+                board: getNewBoard()
+            };
             
             player1.emit('assignTeam', 'W');
             player2.emit('assignTeam', 'B');
@@ -108,34 +132,67 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 3. PASSACARTE DELLE MOSSE E ANTI-CHEAT
     socket.on('sendMove', (data) => {
         const room = activeRooms[data.roomCode];
-        if (!room) return; // Se la stanza non c'è, ignora.
+        if (!room) return; // Se la stanza non esiste, ignora silenziosamente
 
-        // Identifichiamo chi sta cercando di muovere
-        const isPlayer1 = socket.id === room.p1; // P1 è il Bianco
-        const isPlayer2 = socket.id === room.p2; // P2 è il Nero
+        // 1. Identifica chi sta cercando di fare la mossa
+        const isPlayer1 = socket.id === room.p1;
+        const isPlayer2 = socket.id === room.p2;
+        const playerColor = isPlayer1 ? room.p1Color : (isPlayer2 ? room.p2Color : null);
 
-        // ANTI-CHEAT: Controllo del Turno Assoluto
-        // Se un giocatore prova a muovere quando non è il suo turno, il server lo blocca.
-        if ((isPlayer1 && room.turn !== 'W') || (isPlayer2 && room.turn !== 'B')) {
-            console.warn(`Hackeraggio sventato! ${socket.id} ha provato a muovere fuori turno.`);
-            return; // IGNORA LA MOSSA COMPLETAMENTE
-        }
+        // Se non sei un giocatore di questa stanza (es. spettatore o hacker), bloccato!
+        if (!playerColor) return;
 
-        // ANTI-CHEAT: Validazione Coordinate (Fuori dalla scacchiera)
-        const move = data.moveData;
-        if (move.fr < 0 || move.fr > 7 || move.fc < 0 || move.fc > 7 || 
-            move.tr < 0 || move.tr > 7 || move.tc < 0 || move.tc > 7) {
-            console.warn(`Hackeraggio sventato! Mossa fuori dalla scacchiera.`);
+        // 2. CONTROLLO TURNO (Anti-Spam / Anti-Teletrasporto)
+        if (room.currentTurn !== playerColor) {
+            console.log(`[CHEAT DETECTED] Il giocatore ${socket.id} ha provato a muovere fuori turno!`);
             return; 
         }
 
-        // Se la mossa è sicura, passiamo il turno all'avversario sul Server
-        room.turn = room.turn === 'W' ? 'B' : 'W';
+        // 3. CONTROLLO PROPRIETÀ PEZZO
+        if (data.moveData.color !== playerColor) {
+            console.log(`[CHEAT DETECTED] Tentativo di muovere i pezzi avversari!`);
+            return;
+        }
 
-        // Inoltra la mossa lecita all'avversario
+        // 4. CONTROLLO GEOMETRICO (Fuori dalla scacchiera)
+        const { fr, fc, tr, tc } = data.moveData;
+        if (fr < 0 || fr > 7 || fc < 0 || fc > 7 || tr < 0 || tr > 7 || tc < 0 || tc > 7) {
+            console.log(`[CHEAT DETECTED] Coordinate impossibili!`);
+            return;
+        }
+
+        // -----------------------------------------------------
+        // 5. CONTROLLO FISICO (C'è davvero una pedina lì?)
+        // -----------------------------------------------------
+        const board = room.board;
+        const piece = board[fr][fc];
+
+        if (!piece || piece === '') {
+            console.log(`[CHEAT DETECTED] ${socket.id} ha provato a muovere il vuoto!`);
+            return;
+        }
+
+        // 6. CONTROLLO IDENTITÀ PEZZO (È davvero la sua pedina?)
+        const pieceColor = (piece === piece.toUpperCase()) ? 'W' : 'B';
+        if (pieceColor !== playerColor) {
+            console.log(`[CHEAT DETECTED] ${socket.id} sta hackerando i pezzi avversari!`);
+            return;
+        }
+
+        // 7. AGGIORNAMENTO DELLA SCACCHIERA SUL SERVER
+        // Se la mossa è valida, il server muove il pezzo sulla sua griglia segreta
+        board[tr][tc] = piece;
+        board[fr][fc] = ''; 
+
+        // (Nota: per semplicità, non calcoliamo la logica delle esplosioni 
+        // e dei cloni sul server, ci fidiamo del risultato finale del client)
+
+        // Se la mossa passa tutti i controlli, il server aggiorna il turno...
+        room.currentTurn = (room.currentTurn === 'W') ? 'B' : 'W';
+
+        // ...e finalmente inoltra la mossa all'avversario!
         socket.to(data.roomCode).emit('receiveMove', data.moveData);
     });
 
