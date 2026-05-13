@@ -135,7 +135,7 @@ if (socket) {
 socket.on('matchFound', (data) => {
     console.log("Partita Trovata!", data);
 
-    // --- 1. NASCONDI TUTTI I MENU ---
+    // --- 1. FORZATURA CHIUSURA OVERLAY (Mettilo all'inizio assoluto!) ---
     const mpOverlay = document.getElementById('multiplayer-overlay');
     if (mpOverlay) {
         mpOverlay.classList.remove('show');
@@ -147,21 +147,26 @@ socket.on('matchFound', (data) => {
         startScreen.style.display = 'none';
     }
 
-    // --- 2. RESETTA IL MENU MULTIPLAYER PER LA PROSSIMA VOLTA ---
+    const gameUI = document.getElementById('game-ui');
+    if (gameUI) {
+        gameUI.classList.add('show');
+        gameUI.style.display = 'flex'; 
+    }
+
+    // --- 2. RESET DEL MENU PER LA PROSSIMA VOLTA ---
     const mpWaiting = document.getElementById('mp-waiting');
     const mpMenu = document.getElementById('mp-menu');
     if (mpWaiting) mpWaiting.style.display = 'none';
     if (mpMenu) mpMenu.style.display = 'block';
 
-    // --- 3. MOSTRA LA SCACCHIERA ---
-    const gameUI = document.getElementById('game-ui');
-    if (gameUI) {
-        gameUI.classList.add('show');
-        gameUI.style.display = 'flex'; // Assicura che usi il layout corretto
+    // Se hai una funzione closeMultiplayerMenu(), chiamiamola per sicurezza extra
+    if (typeof closeMultiplayerMenu === 'function') {
+        closeMultiplayerMenu();
     }
 
-    // (Qui sotto prosegue il tuo codice esistente per impostare 
-    // se sei Bianco o Nero, aggiornare i nomi, generare la griglia ecc...)
+
+    // --- QUI SOTTO LASCIA IL RESTO DEL TUO CODICE ESISTENTE ---
+    // (es. l'impostazione dei colori, della griglia, ecc.)
     // ...
 });
     socket.on('errorMsg', (msg) => { alert(msg); });
