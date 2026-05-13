@@ -1265,23 +1265,24 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
     100% { left: 120%; }
 }
 
-/* Raddrizza lettere e numeri quando si gioca come Nero */
-/* Raddrizza le coordinate (span) quando si gioca come Nero */
-/* 1. Capovolge l'intero blocco per invertire l'ordine (da ABC a HGF) */
-body.play-as-black .coords-x,
-body.play-as-black .coords-y {
-    transform: rotate(180deg) !important;
+/* =========================================================
+   PROSPETTIVA NERO: Inverte l'ordine senza ruotare il testo!
+   ========================================================= */
+
+/* Inverte le lettere da A->H a H->A */
+body.playing-black .coords-x {
+    display: flex !important;
+    flex-direction: row-reverse !important; 
 }
 
-/* 2. Contro-rotazione per rimettere in piedi le lettere e i numeri */
-body.play-as-black .coords-x span,
-body.play-as-black .coords-y span {
-    display: inline-block !important;
-    transform: rotate(180deg) !important;
+/* Inverte i numeri da 8->1 a 1->8 */
+body.playing-black .coords-y {
+    display: flex !important;
+    flex-direction: column-reverse !important; 
 }
 
-/* Arrotonda solo i 4 angoli estremi della griglia per non farli sbavare dal bordo */
-.cell:nth-child(1) { border-top-left-radius: 6px; }
-.cell:nth-child(8) { border-top-right-radius: 6px; }
-.cell:nth-child(57) { border-bottom-left-radius: 6px; }
-.cell:nth-child(64) { border-bottom-right-radius: 6px; }
+/* Assicurazione finale: blocca qualsiasi rotazione residua sulle lettere */
+body.playing-black .coords-x span,
+body.playing-black .coords-y span {
+    transform: none !important;
+}
