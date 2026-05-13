@@ -53,34 +53,45 @@ function closeMultiplayerMenu() {
 }
 
 function createRoom() {
-    if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
-    const username = document.getElementById('player-username').value.trim() || "GIOCATORE 1";
-    socket.emit('createRoom', username);
+    console.log("Tentativo creazione stanza...");
+    // Prende il nome utente, se è vuoto usa "GUEST"
+    const user = document.getElementById('player-username').value.trim() || "GUEST";
+    
+    // Invia al server la richiesta passando anche la modalità scelta
+    socket.emit('createRoom', { 
+        username: user, 
+        isClassic: isOnlineClassic 
+    });
 }
 
 function joinRoom() {
-    if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
-    const code = document.getElementById('join-code').value.toUpperCase();
-    const username = document.getElementById('player-username').value.trim() || "GIOCATORE 2";
-    if (code.length > 0) {
-        roomCode = code;
-        socket.emit('joinRoom', { code: code, username: username });
+    console.log("Tentativo ingresso stanza...");
+    const user = document.getElementById('player-username').value.trim() || "GUEST";
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    
+    if (!code) {
+        alert("Inserisci un codice stanza valido!");
+        return;
     }
+    socket.emit('joinRoom', { 
+        roomCode: code, 
+        username: user 
+    });
 }
 function findRandomMatch() {
-    if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
+    console.log("Ricerca partita casuale...");
+    const user = document.getElementById('player-username').value.trim() || "GUEST";
     
-    const username = document.getElementById('player-username').value.trim() || "GUEST";
+    // Avvia la ricerca, notificando al server la modalità (God Mode o Classic)
+    socket.emit('findMatch', { 
+        username: user,
+        isClassic: isOnlineClassic 
+    });
     
-    // Cambiamo la UI per mostrare il caricamento
+    // Mostriamo all'utente che stiamo cercando
     document.getElementById('mp-menu').style.display = 'none';
     document.getElementById('mp-waiting').style.display = 'block';
-    
-    // Mettiamo un bel messaggio per far capire che sta cercando
-    document.getElementById('display-room-code').innerHTML = "<span style='font-size: 0.5em;'>Ricerca avversario...</span>";
-    
-    // Invia la richiesta al server
-    socket.emit('findMatch', username);
+    document.getElementById('display-room-code').innerText = "RICERCA IN CORSO...";
 }
 
 if (socket) {

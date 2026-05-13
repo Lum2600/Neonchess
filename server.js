@@ -105,14 +105,25 @@ io.on('connection', (socket) => {
     });
 
     // 2. STANZE PRIVATE
-    socket.on('createRoom', () => {
-        const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase(); 
-        socket.join(roomCode);
-        socket.roomCode = roomCode;
-        activeRooms[roomCode] = { p1: socket.id, p2: null, turn: 'W', isPrivate: true };
+   socket.on('createRoom', (data) => {
+        // Generiamo un codice di 4 cifre
+        const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
         
-        socket.emit('roomCreated', roomCode); 
-        socket.emit('assignTeam', 'W');       
+        // Creiamo la stanza registrando l'Arbitro e la Scacchiera iniziale
+        activeRooms[roomCode] = {
+            p1: socket.id,
+            p2: null,
+            p1Color: 'W', // Chi crea è sempre il Bianco
+            currentTurn: 'W',
+            isClassic: data.isClassic, // Salva la modalità scelta dal client
+            board: getNewBoard() // LA COSA PIÙ IMPORTANTE: La griglia dell'arbitro!
+        };
+        
+        socket.join(roomCode);
+        
+        // Risponde al client col codice generato
+        socket.emit('roomCreated', roomCode);
+        console.log(`[ROOM] Stanza creata: ${roomCode} | Modalità Classic: ${data.isClassic}`);
     });
 
     socket.on('joinRoom', (code) => {
