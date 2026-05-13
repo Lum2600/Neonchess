@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="style.css">
 
     <!-- ricordati di cambiare le versioni dei file css e js ogni volta che fai modifiche, altrimenti i giocatori non vedranno gli aggiornamenti a causa della cache! -->
-    <link rel="stylesheet" href="style.css?v=2.6">
+    <link rel="stylesheet" href="style.css?v=2.7">
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ddff">
@@ -21,6 +21,16 @@
 </head>
 
 <body data-gfx="HI">
+    <div id="vs-screen" class="vs-screen">
+        <div class="vs-top">
+            <h2 id="vs-p1-text">GIOCATORE 1</h2>
+        </div>
+        <div class="vs-bottom">
+            <h2 id="vs-p2-text">GIOCATORE 2</h2>
+        </div>
+        <div class="vs-logo">VS</div>
+        <div class="vs-flash"></div>
+    </div>
     <div id="music-player" class="music-player">
         <div class="player-info" id="music-player-handle">
             <div id="song-title" class="song-title">In attesa...</div>
@@ -299,7 +309,7 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
 
-    <script src="game.js?v=3.1" defer></script>
+    <script src="game.js?v=3.2" defer></script>
 
 </body>
 

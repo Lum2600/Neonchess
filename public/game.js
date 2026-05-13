@@ -158,42 +158,53 @@ if (socket) {
         showModAlert("VS " + (myTeam === 'W' ? data.p2Name : data.p1Name), "mod-c1");
     });
     // Quando il server ci avvisa che l'avversario è stato trovato...
+    // --- L'EVENTO INIZIO PARTITA ---
     socket.on('matchFound', (data) => {
-        console.log("Partita Trovata!", data);
+        console.log("Evento matchFound!", data);
 
-        // --- 1. FORZATURA CHIUSURA OVERLAY (Mettilo all'inizio assoluto!) ---
-        const mpOverlay = document.getElementById('multiplayer-overlay');
-        if (mpOverlay) {
-            mpOverlay.classList.remove('show');
-            mpOverlay.style.display = 'none';
+        // Impostiamo silenziosamente il tuo team in background
+        myTeam = (data.white === socket.id) ? 'W' : 'B';
+        document.body.setAttribute('data-team', myTeam);
+
+        const vsScreen = document.getElementById('vs-screen');
+
+        if (vsScreen) {
+            // Personalizza le scritte sulle due barre (Azzurra in alto, Rossa in basso)
+            const topText = document.getElementById('vs-p1-text');
+            const botText = document.getElementById('vs-p2-text');
+
+            if (myTeam === 'W') {
+                topText.innerText = "TU (BIANCO)";
+                botText.innerText = "AVVERSARIO";
+            } else {
+                topText.innerText = "AVVERSARIO";
+                botText.innerText = "TU (NERO)";
+            }
+
+            // 1. Facciamo partire l'animazione di entrata!
+            vsScreen.classList.remove('exit');
+            vsScreen.classList.add('show', 'animate');
+
+            // 2. Teniamo lo schermo fermo per 2.2 secondi per goderci l'impatto
+            setTimeout(() => {
+                // 3. Facciamo scivolare via le barre
+                vsScreen.classList.remove('animate');
+                vsScreen.classList.add('exit');
+
+                // 4. Appena l'animazione di uscita finisce (0.4s), sveliamo la scacchiera!
+                setTimeout(() => {
+                    vsScreen.classList.remove('show', 'exit');
+                    killAllMenus(); // Qui nascondiamo definitivamente i vecchi menu
+                    if (typeof initBoard === 'function') initBoard();
+                }, 400);
+
+            }, 2200);
+
+        } else {
+            // Piano B di emergenza se manca l'HTML
+            killAllMenus();
+            if (typeof initBoard === 'function') initBoard();
         }
-
-        const startScreen = document.getElementById('start-screen');
-        if (startScreen) {
-            startScreen.style.display = 'none';
-        }
-
-        const gameUI = document.getElementById('game-ui');
-        if (gameUI) {
-            gameUI.classList.add('show');
-            gameUI.style.display = 'flex';
-        }
-
-        // --- 2. RESET DEL MENU PER LA PROSSIMA VOLTA ---
-        const mpWaiting = document.getElementById('mp-waiting');
-        const mpMenu = document.getElementById('mp-menu');
-        if (mpWaiting) mpWaiting.style.display = 'none';
-        if (mpMenu) mpMenu.style.display = 'block';
-
-        // Se hai una funzione closeMultiplayerMenu(), chiamiamola per sicurezza extra
-        if (typeof closeMultiplayerMenu === 'function') {
-            closeMultiplayerMenu();
-        }
-
-
-        // --- QUI SOTTO LASCIA IL RESTO DEL TUO CODICE ESISTENTE ---
-        // (es. l'impostazione dei colori, della griglia, ecc.)
-        // ...
     });
     socket.on('errorMsg', (msg) => { alert(msg); });
 
