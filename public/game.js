@@ -213,56 +213,49 @@ if (socket) {
             startGame(isClassicMatch, true);
         }
     }
-    const handleStartLogic = (data) => {
+  const handleStartLogic = (data) => {
     isMultiplayer = true;
     roomCode = data.roomCode;
 
-    // Imposta i nomi (usando i dati del server o "GUEST" come backup)
-    let p1N = data.p1Name || "GIOCATORE 1";
-    let p2N = data.p2Name || "GIOCATORE 2";
-    if (document.getElementById('name-w')) document.getElementById('name-w').innerText = p1N;
-    if (document.getElementById('name-b')) document.getElementById('name-b').innerText = p2N;
+    // Sincronizza i nomi dei giocatori
+    if (data.p1Name && document.getElementById('name-w')) {
+        document.getElementById('name-w').innerText = data.p1Name;
+    }
+    if (data.p2Name && document.getElementById('name-b')) {
+        document.getElementById('name-b').innerText = data.p2Name;
+    }
 
     const vsScreen = document.getElementById('vs-screen');
     if (vsScreen) {
-        const topText = document.getElementById('vs-p1-text');
-        const botText = document.getElementById('vs-p2-text');
-
-        // Personalizza le scritte in base al tuo team
-        if (myTeam === 'W') {
-            if (topText) topText.innerText = "TU (BIANCO)";
-            if (botText) botText.innerText = p2N + " (NERO)";
-        } else {
-            if (topText) topText.innerText = p1N + " (BIANCO)";
-            if (botText) botText.innerText = "TU (NERO)";
-        }
-
-        // FASE 1: Entrata barre
+        // Avvia l'animazione VS
         vsScreen.classList.remove('exit');
         vsScreen.classList.add('show', 'animate');
 
         setTimeout(() => {
-            // FASE 2: Uscita barre
+            // Fa scivolare via le barre
             vsScreen.classList.remove('animate');
             vsScreen.classList.add('exit');
 
             setTimeout(() => {
-                // FASE 3: Sveliamo la scacchiera
                 vsScreen.classList.remove('show', 'exit');
                 
-                killAllMenus(); // Spegniamo i menu iniziali
-                
-                // Lanciamo la funzione di avvio corretta
-                startGame(isClassicMode, true); 
+                // --- AZIONE CRUCIALE ---
+                killAllMenus(); 
+                // Chiama la tua funzione di avvio (già presente nel file)
+                startGame(isOnlineClassic, true); 
 
-            }, 400); // Tempo dell'animazione CSS di uscita
-        }, 2200); // Tempo di attesa al centro
+            }, 400); // Durata transizione CSS
+        }, 2200); // Tempo di sosta al centro
     } else {
-        // Backup se lo schermo VS non viene trovato
+        // Se l'HTML del VS manca, avvia comunque per non bloccare il gioco
         killAllMenus();
-        startGame(isClassicMode, true);
+        startGame(isOnlineClassic, true);
     }
 };
+
+// Colleghiamo i segnali del server alla nuova logica
+socket.on('gameStart', handleStartLogic);
+socket.on('matchFound', handleStartLogic);
 
 // Colleghiamo entrambi i segnali alla stessa logica
 socket.on('gameStart', handleStartLogic);
