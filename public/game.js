@@ -132,85 +132,88 @@ if (socket) {
     socket.on('assignTeam', (team) => {
         setTeam(team);
         opponentMode = 'HUMAN';
-        
-        // Controlliamo se i bottoni esistono prima di modificarli
-        let btnHum = document.getElementById('btn-opp-hum');
-        if (btnHum) btnHum.classList.add('active');
-        
-        let btnAi = document.getElementById('btn-opp-ai');
-        if (btnAi) btnAi.classList.remove('active');
+        document.getElementById('btn-opp-hum').classList.add('active');
+        document.getElementById('btn-opp-ai').classList.remove('active');
     });
 
-    socket.on('gameStart', (data) => {
+    // --- L'EVENTO INIZIO PARTITA UNIFICATO ---
+    function handleGameStart(data) {
+        console.log("Inizio Partita!", data);
         isMultiplayer = true;
 
-        // FIX: Salviamo il codice stanza generato dal server!
+        // 1. Imposta i nomi sulla barra laterale
+        let p1N = data.p1Name || "GUEST";
+        let p2N = data.p2Name || "GUEST";
+        let nameWEl = document.getElementById('name-w');
+        let nameBEl = document.getElementById('name-b');
+        if (nameWEl) nameWEl.innerText = p1N;
+        if (nameBEl) nameBEl.innerText = p2N;
+
+        // 2. Imposta il team se fornito dal Matchmaking Casuale
+        if (data.white) {
+            myTeam = (data.white === socket.id) ? 'W' : 'B';
+            document.body.setAttribute('data-team', myTeam);
+        }
+
+        // 3. Sincronizza il Seed per la generazione casuale
         roomCode = data.roomCode;
-
-        document.getElementById('name-w').innerText = data.p1Name;
-        document.getElementById('name-b').innerText = data.p2Name;
-
-        // Ora il seed matematico combacerà alla perfezione
-        let hash = 0; let str = roomCode;
+        let hash = 0; let str = roomCode || "RANDOM";
         for (let i = 0; i < str.length; i++) { hash = (hash << 5) - hash + str.charCodeAt(i); hash |= 0; }
         gameSeed = Math.abs(hash) + 12345;
 
-        startGame(false, true);
-
-        // Chiudiamo il menu e avvisiamo il giocatore
-        document.getElementById('mp-waiting').style.display = 'none';
+        // Pulisce i menu di attesa
+        let mpWait = document.getElementById('mp-waiting');
+        if (mpWait) mpWait.style.display = 'none';
         closeMultiplayerMenu();
-        showModAlert("VS " + (myTeam === 'W' ? data.p2Name : data.p1Name), "mod-c1");
-    });
-    // Quando il server ci avvisa che l'avversario è stato trovato...
-    // --- L'EVENTO INIZIO PARTITA ---
-    socket.on('matchFound', (data) => {
-        console.log("Evento matchFound!", data);
 
-        // Impostiamo silenziosamente il tuo team in background
-        myTeam = (data.white === socket.id) ? 'W' : 'B';
-        document.body.setAttribute('data-team', myTeam);
-
+        // 4. LO SHOW: ANIMAZIONE VS SCREEN
         const vsScreen = document.getElementById('vs-screen');
-
         if (vsScreen) {
-            // Personalizza le scritte sulle due barre (Azzurra in alto, Rossa in basso)
             const topText = document.getElementById('vs-p1-text');
             const botText = document.getElementById('vs-p2-text');
 
+            // Personalizza le scritte
             if (myTeam === 'W') {
                 topText.innerText = "TU (BIANCO)";
-                botText.innerText = "AVVERSARIO";
+                botText.innerText = p2N + " (NERO)";
             } else {
-                topText.innerText = "AVVERSARIO";
+                topText.innerText = p1N + " (BIANCO)";
                 botText.innerText = "TU (NERO)";
             }
 
-            // 1. Facciamo partire l'animazione di entrata!
+            // Entrata
             vsScreen.classList.remove('exit');
             vsScreen.classList.add('show', 'animate');
 
-            // 2. Teniamo lo schermo fermo per 2.2 secondi per goderci l'impatto
+            // Pausa per godersi l'impatto (2.2 secondi)
             setTimeout(() => {
-                // 3. Facciamo scivolare via le barre
+                // Uscita
                 vsScreen.classList.remove('animate');
                 vsScreen.classList.add('exit');
 
-                // 4. Appena l'animazione di uscita finisce (0.4s), sveliamo la scacchiera!
                 setTimeout(() => {
                     vsScreen.classList.remove('show', 'exit');
-                    killAllMenus(); // Qui nascondiamo definitivamente i vecchi menu
-                    if (typeof initBoard === 'function') initBoard();
+                    
+                    // SVELA FINALMENTE LA SCACCHIERA! (Passando la modalità Classic se scelta)
+                    let isClassicMatch = (data.mode === 'CLASSIC') || isOnlineClassic;
+                    startGame(isClassicMatch, true); 
+                    
                 }, 400);
 
             }, 2200);
 
         } else {
-            // Piano B di emergenza se manca l'HTML
-            killAllMenus();
-            if (typeof initBoard === 'function') initBoard();
+            // Piano B se manca l'HTML
+            let isClassicMatch = (data.mode === 'CLASSIC') || isOnlineClassic;
+            startGame(isClassicMatch, true);
         }
-    });
+    }
+
+    // Diciamo al socket di usare l'animazione per QUALSIASI tipo di partita!
+    socket.on('gameStart', handleGameStart);
+    socket.on('matchFound', handleGameStart);
+    // Quando il server ci avvisa che l'avversario è stato trovato...
+    
     socket.on('errorMsg', (msg) => { alert(msg); });
 
     socket.on('receiveMove', (data) => {
