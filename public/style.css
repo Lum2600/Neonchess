@@ -787,7 +787,8 @@ body[data-gfx="LO"] .game-over-screen.show { display: flex; animation: fadeInSca
     background: #000;
     box-sizing: border-box !important;
     margin: 0 !important;
-}
+    overflow: hidden !important;
+    border-radius: 6px;
 
 /* --- 4. LETTERE ORIZZONTALI --- */
 .coords-x {
@@ -1263,4 +1264,13 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
 @keyframes scan {
     0% { left: -60%; }
     100% { left: 120%; }
+}
+
+/* Raddrizza lettere e numeri quando si gioca come Nero */
+body.play-as-black .coords-x > *,
+body.play-as-black .coords-y > * {
+    transform: rotate(180deg) !important;
+    display: flex; /* Necessario affinché il transform funzioni sul testo */
+    align-items: center;
+    justify-content: center;
 }
