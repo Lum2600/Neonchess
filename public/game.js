@@ -35,13 +35,22 @@ function toggleMusic(turnOn) {
     }
 }
 // Funzione per chiudere il menu impostazioni durante la partita
-function closeSettings() {
-    document.body.classList.remove('settings-open');
+// Funzione per APRIRE le impostazioni
+function openSettings() {
+    const menu = document.getElementById('start-screen');
+    if (menu) {
+        menu.style.display = 'flex'; // Fa ricomparire il menu
+        document.body.classList.add('settings-open');
+    }
 }
 
-// (Assicurati che la tua funzione per APRIRE le impostazioni sia così:)
-function openSettings() {
-    document.body.classList.add('settings-open');
+// Funzione per CHIUDERE le impostazioni (Il tuo tasto RESUME)
+function closeSettings() {
+    const menu = document.getElementById('start-screen');
+    if (menu) {
+        menu.style.display = 'none'; // Nasconde fisicamente il menu
+        document.body.classList.remove('settings-open');
+    }
 }
 
 function toggleSfx(turnOn) {
