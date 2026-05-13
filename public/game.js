@@ -11,10 +11,11 @@ let sfxEnabled = true;
 let isOnlineClassic = false; // Memoria per la modalità Online scelta
 
 // --- GESTIONE AUDIO UI (ON / OFF) ---
+// --- GESTIONE AUDIO UI (ON / OFF) ---
 function toggleMusic(turnOn) {
     document.getElementById('btn-mus-on').classList.toggle('active', turnOn);
     document.getElementById('btn-mus-off').classList.toggle('active', !turnOn);
-
+    
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         if (turnOn) {
@@ -24,6 +25,13 @@ function toggleMusic(turnOn) {
             bgMusic.volume = 0;
             bgMusic.pause();
         }
+    }
+
+    // --- NUOVO: Mostra/Nascondi fisicamente il player ---
+    if (turnOn) {
+        document.body.classList.remove('music-off');
+    } else {
+        document.body.classList.add('music-off');
     }
 }
 

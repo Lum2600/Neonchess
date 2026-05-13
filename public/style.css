@@ -695,4 +695,15 @@ body[data-gfx="LO"] .game-over-screen.show { display: flex; animation: fadeInSca
 
 /* Miscellanea */
 body[data-team="B"] #arrow-svg { transform: rotate(180deg) !important; }
-.version-tag { position: fixed; bottom: 5px; right: 15px; color: rgba(255, 255
+.version-tag { position: fixed; bottom: 5px; right: 15px; color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; font-family: 'Inter'; z-index: 100; }
+/* --- REGOLA 1: Se la musica è OFF, il player sparisce su tutti gli schermi --- */
+body.music-off .music-player {
+    display: none !important;
+}
+
+/* --- REGOLA 2: Su telefono (sotto 900px) il player non esiste MAI --- */
+@media (max-width: 900px) {
+    .music-player {
+        display: none !important; 
+    }
+}
