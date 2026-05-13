@@ -8,10 +8,9 @@ let isRemoteMoveExecuting = false;
 
 // --- VARIABILI GLOBALI AGGIUNTIVE ---
 let sfxEnabled = true;
-let isOnlineClassic = false; // Memoria per la modalità Online scelta
+let isOnlineClassic = false;
 
-// --- GESTIONE AUDIO UI (ON / OFF) ---
-// --- GESTIONE AUDIO UI (ON / OFF) ---
+// --- GESTIONE AUDIO UI ---
 function toggleMusic(turnOn) {
     document.getElementById('btn-mus-on').classList.toggle('active', turnOn);
     document.getElementById('btn-mus-off').classList.toggle('active', !turnOn);
@@ -26,19 +25,12 @@ function toggleMusic(turnOn) {
             bgMusic.pause();
         }
     }
-
-    // --- NUOVO: Mostra/Nascondi fisicamente il player ---
-    if (turnOn) {
-        document.body.classList.remove('music-off');
-    } else {
-        document.body.classList.add('music-off');
-    }
+    if (turnOn) document.body.classList.remove('music-off');
+    else document.body.classList.add('music-off');
 }
 
-
-// Funzione per chiudere il menu impostazioni durante la partita
 function killAllMenus() {
-    const overlays = ['multiplayer-overlay', 'start-screen', 'mp-menu', 'mp-waiting', 'tutorial-overlay'];
+    const overlays = ['multiplayer-overlay', 'start-screen', 'mp-menu', 'mp-waiting'];
     overlays.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -46,26 +38,30 @@ function killAllMenus() {
             el.classList.remove('show');
         }
     });
+    
+    // Rimuoviamo solo la classe show per overlay speciali come tutorial
+    let tut = document.getElementById('tutorial-overlay');
+    if(tut) tut.classList.remove('show');
+
     const gameUI = document.getElementById('game-ui');
     if (gameUI) {
         gameUI.style.display = 'flex';
         gameUI.classList.add('show');
     }
 }
-// Funzione per APRIRE le impostazioni
+
 function openSettings() {
     const menu = document.getElementById('start-screen');
     if (menu) {
-        menu.style.display = 'flex'; // Fa ricomparire il menu
+        menu.style.display = 'flex'; 
         document.body.classList.add('settings-open');
     }
 }
 
-// Funzione per CHIUDERE le impostazioni (Il tuo tasto RESUME)
 function closeSettings() {
     const menu = document.getElementById('start-screen');
     if (menu) {
-        menu.style.display = 'none'; // Nasconde fisicamente il menu
+        menu.style.display = 'none'; 
         document.body.classList.remove('settings-open');
     }
 }
@@ -75,10 +71,6 @@ function toggleSfx(turnOn) {
     document.getElementById('btn-sfx-off').classList.toggle('active', !turnOn);
     sfxEnabled = turnOn;
 }
-
-// Quando il gioco deve riprodurre un effetto, verifica questa variabile!
-// Esempio: se hai una funzione playSound(), assicurati che inizi con: 
-// if (!sfxEnabled) return;
 
 // --- GESTIONE MODALITÀ MULTIPLAYER ---
 function setMpMode(isClassic) {
@@ -94,52 +86,45 @@ function closeMultiplayerMenu() {
     
     document.getElementById('mp-menu').style.display = 'block';
     document.getElementById('mp-waiting').style.display = 'none';
-    
-    // Rimosso location.reload() per evitare il reset durante l'animazione VS
     isMultiplayer = false; 
     roomCode = '';
 }
 
 function createRoom() {
-    console.log("Tentativo creazione stanza...");
-    // Prende il nome utente, se è vuoto usa "GUEST"
     const user = document.getElementById('player-username').value.trim() || "GUEST";
-
-    // Invia al server la richiesta passando anche la modalità scelta
-    socket.emit('createRoom', {
-        username: user,
-        isClassic: isOnlineClassic
-    });
+    socket.emit('createRoom', { username: user, isClassic: isOnlineClassic });
 }
 
 function joinRoom() {
-    console.log("Tentativo ingresso stanza...");
     const user = document.getElementById('player-username').value.trim() || "GUEST";
     const code = document.getElementById('join-code').value.trim().toUpperCase();
-
-    if (!code) {
-        alert("Inserisci un codice stanza valido!");
-        return;
-    }
-    socket.emit('joinRoom', {
-        roomCode: code,
-        username: user
-    });
+    if (!code) { alert("Inserisci un codice stanza valido!"); return; }
+    socket.emit('joinRoom', { roomCode: code, username: user });
 }
+
 function findRandomMatch() {
-    console.log("Ricerca partita casuale...");
-    const user = document.getElementById('player-username').value.trim() || "GUEST";
-
-    // Avvia la ricerca, notificando al server la modalità (God Mode o Classic)
-    socket.emit('findMatch', {
-        username: user,
-        isClassic: isOnlineClassic
-    });
-
-    // Mostriamo all'utente che stiamo cercando
     document.getElementById('mp-menu').style.display = 'none';
     document.getElementById('mp-waiting').style.display = 'block';
     document.getElementById('display-room-code').innerText = "RICERCA IN CORSO...";
+    const user = document.getElementById('player-username').value.trim() || "GUEST";
+    socket.emit('findMatch', { username: user, isClassic: isOnlineClassic });
+}
+
+function resignGame() {
+    if (gameOver) return;
+    const conf = confirm("Sei sicuro di voler abbandonare? La partita verrà data vinta all'avversario.");
+    if (!conf) return;
+
+    document.getElementById('start-screen').style.display = 'none';
+    document.body.classList.remove('settings-open');
+
+    let winnerTeam = (myTeam === 'W') ? 'B' : 'W';
+    
+    if (isMultiplayer && socket) {
+        socket.emit('playerResign', { roomCode: roomCode, team: myTeam });
+    }
+    
+    triggerEnd(winnerTeam, 'RESA', "Hai abbandonato la partita. Vittoria all'avversario.");
 }
 
 if (socket) {
@@ -155,137 +140,59 @@ if (socket) {
         setTeam(team);
         opponentMode = 'HUMAN';
 
-        // FIX: Protezione contro il crash a riga 135
         let btnHum = document.getElementById('btn-opp-hum');
         if (btnHum) btnHum.classList.add('active');
-
         let btnAi = document.getElementById('btn-opp-ai');
         if (btnAi) btnAi.classList.remove('active');
     });
 
-    // --- L'EVENTO INIZIO PARTITA UNIFICATO ---
-    function handleGameStart(data) {
+    // LOGICA UNIFICATA DI INIZIO PARTITA
+    const handleStartLogic = (data) => {
         console.log("Inizio Partita!", data);
         isMultiplayer = true;
+        roomCode = data.roomCode;
+        let syncedIsClassic = data.isClassic; // Prende la modalità dettata dal server
 
-        // 1. Imposta i nomi sulla barra laterale
         let p1N = data.p1Name || "GUEST";
         let p2N = data.p2Name || "GUEST";
-        let nameWEl = document.getElementById('name-w');
-        let nameBEl = document.getElementById('name-b');
-        if (nameWEl) nameWEl.innerText = p1N;
-        if (nameBEl) nameBEl.innerText = p2N;
+        if (document.getElementById('name-w')) document.getElementById('name-w').innerText = p1N;
+        if (document.getElementById('name-b')) document.getElementById('name-b').innerText = p2N;
 
-        // 2. Imposta il team se fornito dal Matchmaking Casuale
-        if (data.white) {
-            myTeam = (data.white === socket.id) ? 'W' : 'B';
-            document.body.setAttribute('data-team', myTeam);
-        }
+        if (data.seed) gameSeed = data.seed;
 
-        // 3. Sincronizza il Seed per la generazione casuale
-        roomCode = data.roomCode;
-        let hash = 0; let str = roomCode || "RANDOM";
-        for (let i = 0; i < str.length; i++) { hash = (hash << 5) - hash + str.charCodeAt(i); hash |= 0; }
-        gameSeed = Math.abs(hash) + 12345;
-
-        // Pulisce i menu di attesa
-        let mpWait = document.getElementById('mp-waiting');
-        if (mpWait) mpWait.style.display = 'none';
-        closeMultiplayerMenu();
-
-        // 4. LO SHOW: ANIMAZIONE VS SCREEN
         const vsScreen = document.getElementById('vs-screen');
         if (vsScreen) {
             const topText = document.getElementById('vs-p1-text');
             const botText = document.getElementById('vs-p2-text');
 
-            // Personalizza le scritte
             if (myTeam === 'W') {
-                topText.innerText = "TU (BIANCO)";
-                botText.innerText = p2N + " (NERO)";
+                if(topText) topText.innerText = "TU (BIANCO)";
+                if(botText) botText.innerText = p2N + " (NERO)";
             } else {
-                topText.innerText = p1N + " (BIANCO)";
-                botText.innerText = "TU (NERO)";
+                if(topText) topText.innerText = p1N + " (BIANCO)";
+                if(botText) botText.innerText = "TU (NERO)";
             }
 
-            // Entrata
             vsScreen.classList.remove('exit');
             vsScreen.classList.add('show', 'animate');
 
-            // Pausa per godersi l'impatto (2.2 secondi)
             setTimeout(() => {
-                // Uscita
                 vsScreen.classList.remove('animate');
                 vsScreen.classList.add('exit');
 
                 setTimeout(() => {
                     vsScreen.classList.remove('show', 'exit');
-
-                    // SVELA FINALMENTE LA SCACCHIERA! (Passando la modalità Classic se scelta)
-                    let isClassicMatch = (data.mode === 'CLASSIC') || isOnlineClassic;
-                    startGame(isClassicMatch, true);
-
+                    killAllMenus();
+                    startGame(syncedIsClassic, true);
                 }, 400);
-
             }, 2200);
-
         } else {
-            // Piano B se manca l'HTML
-            let isClassicMatch = (data.mode === 'CLASSIC') || isOnlineClassic;
-            startGame(isClassicMatch, true);
+            killAllMenus();
+            startGame(syncedIsClassic, true);
         }
-    }
-   const handleStartLogic = (data) => {
-    isMultiplayer = true;
-    roomCode = data.roomCode;
+    };
 
-    // Sincronizzazione nomi
-    if (data.p1Name && document.getElementById('name-w')) {
-        document.getElementById('name-w').innerText = data.p1Name;
-    }
-    if (data.p2Name && document.getElementById('name-b')) {
-        document.getElementById('name-b').innerText = data.p2Name;
-    }
-
-    const vsScreen = document.getElementById('vs-screen');
-    if (vsScreen) {
-        vsScreen.classList.remove('exit');
-        vsScreen.classList.add('show', 'animate');
-
-        setTimeout(() => {
-            vsScreen.classList.remove('animate');
-            vsScreen.classList.add('exit');
-
-            setTimeout(() => {
-                vsScreen.classList.remove('show', 'exit');
-                
-                // --- AZIONE RISOLUTIVA ---
-                killAllMenus(); 
-                startGame(false, true); 
-
-            }, 400); 
-        }, 2200); 
-    } else {
-        killAllMenus();
-        startGame(false, true);
-    }
-};
-
-socket.on('gameStart', handleStartLogic);
-socket.on('matchFound', handleStartLogic);
-
-    // Colleghiamo i segnali del server alla nuova logica
     socket.on('gameStart', handleStartLogic);
-    socket.on('matchFound', handleStartLogic);
-
-    // Colleghiamo entrambi i segnali alla stessa logica
-    socket.on('gameStart', handleStartLogic);
-    socket.on('matchFound', handleStartLogic);
-
-    // Diciamo al socket di usare l'animazione per QUALSIASI tipo di partita!
-    socket.on('gameStart', handleGameStart);
-    socket.on('matchFound', handleGameStart);
-    // Quando il server ci avvisa che l'avversario è stato trovato...
 
     socket.on('errorMsg', (msg) => { alert(msg); });
 
@@ -306,9 +213,12 @@ socket.on('matchFound', handleStartLogic);
         if (gameOver) return;
         triggerEnd(myTeam, 'DISCONNESSO', "L'avversario ha abbandonato la partita.");
     });
+    
+    socket.on('opponentResigned', () => {
+        if (gameOver) return;
+        triggerEnd(myTeam, 'VITTORIA', "L'avversario si è arreso! Hai vinto la partita.");
+    });
 }
-// Funzione universale per nascondere tutti i menu
-
 
 // ==========================================
 // 2. VARIABILI GLOBALI E DATABASE
@@ -331,7 +241,6 @@ const glyphs = {
     'R': '♜\uFE0E', 'N': '♞\uFE0E', 'B': '♝\uFE0E', 'Q': '♛\uFE0E', 'K': '♚\uFE0E', 'P': '♙\uFE0E'
 };
 
-// MODIFICHE AL DATABASE AGGIORNATE
 const db = {
     'p': [{ n: "King Soul", t: "common", d: "Si muove come il Re." }, { n: "Front Bite", t: "rare", d: "Può mangiare anche frontalmente." }, { n: "Necromancy", t: "epic", d: "Resuscita le tue pedine morte come pedoni. Se muoiono ancora, muoiono per sempre." }, { n: "Mass Infection", t: "legend", d: "Fine turno: infetta i pedoni nemici adiacenti convertendoli in alleati." }],
     'n': [{ n: "L-Slide", t: "common", d: "Può fermarsi lungo il percorso a L. Da scacco solo sulla casella finale." }, { n: "Mount", t: "rare", d: "Acquisisce movimenti dell'ultimo morto." }, { n: "Explosive", t: "epic", d: "Atterrare polverizza l'area." }, { n: "Ghost Rider", t: "legend", d: "Il cavallo può muoversi due volte di fila." }],
@@ -368,7 +277,6 @@ let recentSpawns = [];
 let isCheckingLogic = false;
 let arrowStartCell = null;
 
-// GESTIONE GHOST RIDER & NECROMANCY ZOMBIE
 let ghostRiderActive = null;
 let zombiePawns = [];
 
@@ -540,7 +448,6 @@ function setTeam(team) {
     myTeam = team;
     document.body.setAttribute('data-team', team);
 
-    // Controlli di sicurezza: modifichiamo i bottoni SOLO se esistono nella pagina
     const btnW = document.getElementById('btn-team-w');
     const btnB = document.getElementById('btn-team-b');
 
@@ -560,52 +467,49 @@ function setGraphics(lvl) {
 function setTimer(enabled) { timerEnabled = enabled; document.getElementById('btn-timer-on').classList.toggle('active', enabled); document.getElementById('btn-timer-off').classList.toggle('active', !enabled); document.getElementById('time-select-row').style.display = enabled ? 'flex' : 'none'; tryStartMusic(); }
 function setTimeVal(mins, btnElement) { timeLimitMinutes = mins; document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); tryStartMusic(); }
 
-function openTutorial() { document.getElementById('tutorial-overlay').classList.add('show'); }
-function closeTutorial() { document.getElementById('tutorial-overlay').classList.remove('show'); }
-
-function openSettings() {
-    clearArrows();
-    document.getElementById('start-screen').style.display = 'flex';
-    document.body.classList.add('settings-open');
-    let devBtn = document.getElementById('dev-mode-btn');
-    if (devBtn) devBtn.style.display = 'inline-block';
+function openTutorial() { 
+    let el = document.getElementById('tutorial-overlay');
+    if(el) {
+        el.style.display = ''; // Ripristina il flex via CSS
+        el.classList.add('show'); 
+    }
+}
+function closeTutorial() { 
+    let el = document.getElementById('tutorial-overlay');
+    if(el) el.classList.remove('show'); 
 }
 
 function promptDev() {
     const password = prompt("Inserisci la password di accesso al sistema:");
     if (!password) return;
-
-    // Non controlliamo qui se è giusta! La spediamo e basta.
     socket.emit('tryDevMode', password);
 }
 
-socket.on('devAuthResponse', (data) => {
-    if (data.success) {
-        alert("Accesso Sviluppatore Garantito. Comandi sbloccati.");
-        document.body.classList.add('dev-authenticated');
-        // Qui puoi mostrare l'overlay delle mod che avevi nascosto
-    } else {
-        alert("Accesso Negato: Password Errata.");
-    }
-});
+if(socket) {
+    socket.on('devAuthResponse', (data) => {
+        if (data.success) {
+            alert("Accesso Sviluppatore Garantito. Comandi sbloccati.");
+            document.body.classList.add('dev-authenticated');
+        } else {
+            alert("Accesso Negato: Password Errata.");
+        }
+    });
+
+    socket.on('admin_verified', (data) => {
+        if (data.success) {
+            console.log("Accesso garantito. Sei identificato come Amministratore.");
+            document.body.classList.add('is-admin');
+        } else {
+            alert("Password errata. Accesso negato.");
+        }
+    });
+}
+
 function identificaAdmin() {
     const password = prompt("Inserisci Password Amministratore:");
     if (!password) return;
-
-    // Spediamo la chiave all'arbitro
     socket.emit('auth_admin', password);
 }
-
-// Ascoltiamo il verdetto del server
-socket.on('admin_verified', (data) => {
-    if (data.success) {
-        console.log("Accesso garantito. Sei identificato come Amministratore.");
-        // Mostriamo visivamente i controlli dev
-        document.body.classList.add('is-admin');
-    } else {
-        alert("Password errata. Accesso negato.");
-    }
-});
 
 function openDev() {
     document.getElementById('dev-overlay').classList.add('show');
@@ -754,7 +658,7 @@ function startGame(classic = false, fromMultiplayer = false) {
         isClassicMode = classic;
         init();
         gameHasStarted = true;
-        // Controlli di sicurezza: modifichiamo gli elementi solo se esistono!
+        
         let mainBtn = document.getElementById('main-play-btn');
         if (mainBtn) mainBtn.innerText = "RESUME";
 
@@ -840,7 +744,7 @@ function draw() {
         for (let c = 0; c < 8; c++) {
             let cl = `cell ${(r + c) % 2 == 0 ? 'l' : 'd'}`;
             if (selected && selected.r == r && selected.c == c) cl += ' sel';
-            if (ghostRiderActive && ghostRiderActive.r == r && ghostRiderActive.c == c) cl += ' sel'; // Evidenzia il cavallo del Ghost Rider
+            if (ghostRiderActive && ghostRiderActive.r == r && ghostRiderActive.c == c) cl += ' sel'; 
             if (lastMove && lastMove.to.r == r && lastMove.to.c == c) cl += ' last-move';
             if (hints && hints.find(h => h.r == r && h.c == c)) cl += grid[r][c] ? ' h-c' : ' h-m';
             if (inCheck && chK && chK.r === r && chK.c === c) cl += ' check';
@@ -865,7 +769,6 @@ function draw() {
     }
 }
 
-// FIX: Aggiunto isAttackCheck per gestire il Cavallo "L-Slide" che da scacco solo nella casella finale!
 function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, isAttackCheck = false) {
     let p = testGrid[r][c]; if (!p) return []; let cl = p.toLowerCase(); let mods = ignoreMods || isPromoted(r, c) ? null : classMods[color][cl]; let m = []; let dir = color == 'W' ? -1 : 1;
 
@@ -1013,7 +916,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
     let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
     let pendingAnims = []; let isAttackerDead = false;
-    let diedThisTurn = []; // FIX NECROMANZIA: Registra tutte le morti di questo turno
+    let diedThisTurn = []; 
 
     let isCapture = target || (special && special.isEnPassant);
     if (isCapture) playMoveSound('capture'); else playMoveSound('move');
@@ -1040,7 +943,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     let wasCloned = wasClonedIdx !== -1;
     if (wasCloned) clonedPieces.splice(wasClonedIdx, 1);
 
-    // FIX NECROMANZIA: Traccia il movimento della pedina se era uno Zombie
     let wasZombieIdx = zombiePawns.findIndex(pos => pos.r === fr && pos.c === fc);
     let wasZombie = wasZombieIdx !== -1;
     if (wasZombie) zombiePawns.splice(wasZombieIdx, 1);
@@ -1057,7 +959,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 let ptMod = getMod(cr, cc, enemyColor, passedTarget.toLowerCase());
                 grid[cr][cc] = '';
 
-                // Voodoo logic passing over
                 if (passedTarget.toLowerCase() === 'r' && ptMod?.n === 'Voodoo Death' && cl !== 'k') {
                     let attackerRooks = [];
                     for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (grid[i][j] && grid[i][j].toLowerCase() === 'r' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) attackerRooks.push({ r: i, c: j });
@@ -1090,7 +991,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         let targetIsZombie = targetWasZombieIdx !== -1;
         if (targetIsZombie) zombiePawns.splice(targetWasZombieIdx, 1);
 
-        // FIX VOODOO: Sacrifica la torre prima dell'attaccante
         if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
             let attackerRooks = [];
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
@@ -1099,7 +999,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                     attackerRooks.push({ r: i, c: j });
                 }
             }
-            if (cl === 'r') attackerRooks.push({ r: fr, c: fc }); // Se attacca con una torre, è vulnerabile pure lei
+            if (cl === 'r') attackerRooks.push({ r: fr, c: fc }); 
 
             if (attackerRooks.length > 0) {
                 let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
@@ -1207,7 +1107,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             }
         }
 
-        // FIX MASS INFECTION: Infetta SOLO i pedoni!
         if (classMods[pColor]['p']?.n === 'Mass Infection') {
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
                 if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) {
@@ -1239,15 +1138,13 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         promotedPieces = promotedPieces.filter(pos => grid[pos.r][pos.c] !== '');
         clonedPieces = clonedPieces.filter(pos => grid[pos.r][pos.c] !== '');
 
-        // FIX NECROMANZIA: Elabora chi è morto e fallo risorgere
         diedThisTurn.forEach(d => {
-            if (d.isZombie) return; // Muore per sempre
+            if (d.isZombie) return; 
 
             if (classMods[d.color]['p']?.n === 'Necromancy') {
                 let empties = [];
                 for (let i = 0; i < 8; i++) {
                     for (let j = 0; j < 8; j++) {
-                        // Se la cella è vuota E il radar dice che non dà scacco...
                         if (!grid[i][j] && !wouldPawnGiveCheck(i, j, d.color)) {
                             empties.push({ r: i, c: j });
                         }
@@ -1260,10 +1157,10 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                     clonedPieces.push({ r: spot.r, c: spot.c });
                     recentSpawns.push({ r: spot.r, c: spot.c });
                 } else {
-                    deadPieces[d.color].push(d.piece); // Niente spazio, finisce nel cimitero
+                    deadPieces[d.color].push(d.piece); 
                 }
             } else {
-                deadPieces[d.color].push(d.piece); // Cimitero normale
+                deadPieces[d.color].push(d.piece); 
             }
         });
 
@@ -1292,7 +1189,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
 
         let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
 
-        // FIX GHOST RIDER: Gestione del doppio turno
         let isGhostRiderFirstMove = (cl === 'n' && mod?.n === 'Ghost Rider' && !ghostRiderActive && !isAttackerDead);
 
         if (isGhostRiderFirstMove) {
@@ -1355,7 +1251,6 @@ function evaluateMove(fr, fc, tr, tc, special) {
 function playAI() {
     if (gameOver) return;
 
-    // FIX GHOST RIDER AI:
     if (ghostRiderActive) {
         let moves = getLegalMoves(ghostRiderActive.r, ghostRiderActive.c);
         let bestMove = null; let bestScore = -Infinity;
@@ -1411,7 +1306,6 @@ function clickCell(r, c) {
 
     let p = grid[r][c]; let col = p ? (p == p.toUpperCase() ? 'W' : 'B') : null;
 
-    // FIX GHOST RIDER: Blocca il giocatore per fargli muovere solo il cavallo attivo o skippare
     if (ghostRiderActive) {
         if (col === turno && r === ghostRiderActive.r && c === ghostRiderActive.c) {
             selected = { r, c }; hints = getLegalMoves(r, c); draw();
@@ -1447,7 +1341,7 @@ function triggerEnd(winnerColor, title, desc) {
 
     let endTitle = "PATTA"; let titleColor = "var(--t2)";
     if (winnerColor) { if (winnerColor === myTeam) { endTitle = "VITTORIA"; titleColor = "var(--t1)"; } else { endTitle = "SCONFITTA"; titleColor = "var(--t4)"; } }
-    else if (title === 'DISCONNESSO') { endTitle = "ABBANDONO"; }
+    else if (title === 'DISCONNESSO' || title === 'RESA') { endTitle = "ABBANDONO"; }
 
     let goScreen = document.getElementById('game-over-screen');
     if (goScreen) document.body.appendChild(goScreen);
@@ -1482,29 +1376,6 @@ function showGameOver(title, color, desc) {
         if (t) { t.innerText = title; t.style.color = color; t.style.textShadow = `0 0 20px ${color}`; t.classList.remove('glitch-anim'); void t.offsetWidth; t.classList.add('glitch-anim'); }
         let d = document.getElementById('go-desc'); if (d) d.innerText = desc;
     }
-}
-
-function createPixelDisintegration(wrapper) {
-    if (gfxLevel === 'LO') return;
-    const rect = wrapper.getBoundingClientRect(); const colors = ['#ffffff'];
-    let progress = 0; let startTime = Date.now(); const duration = 1500;
-    function animate() {
-        let elapsed = Date.now() - startTime; progress = Math.min(elapsed / duration, 1);
-        wrapper.style.clipPath = `inset(0 0 ${progress * 100}% 0)`;
-        if (progress < 1) {
-            let currentY = rect.bottom - (progress * rect.height);
-            for (let i = 0; i < 4; i++) {
-                let cube = document.createElement('div'); cube.className = 'pixel-cube';
-                cube.style.left = (rect.left + Math.random() * rect.width) + 'px'; cube.style.top = currentY + 'px';
-                cube.style.background = colors[Math.floor(Math.random() * colors.length)]; cube.style.boxShadow = `0 0 10px ${cube.style.background}`;
-                let angle = -Math.PI / 2 + (Math.random() - 0.5); let distance = Math.random() * 150 + 50;
-                cube.style.setProperty('--dx', `${Math.cos(angle) * distance}px`); cube.style.setProperty('--dy', `${Math.sin(angle) * distance}px`); cube.style.setProperty('--rot', `${Math.random() * 360}deg`);
-                document.body.appendChild(cube); setTimeout(() => cube.remove(), 1200);
-            }
-            requestAnimationFrame(animate);
-        } else { wrapper.style.display = 'none'; }
-    }
-    animate();
 }
 
 function updateTimersUI() {
@@ -1635,7 +1506,6 @@ function triggerInstantMods(color, mod) {
         }
         updateScores();
     }
-    // FIX NECROMANZIA INSTANT: Al momento dello sblocco, risorge l'esercito!
     if (mod.n === 'Necromancy') {
         let emptiesForNecro = [];
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (!grid[r][c]) emptiesForNecro.push({ r, c });
@@ -1669,7 +1539,6 @@ function isInCheck(color, testGrid = grid) {
     return attack;
 }
 
-// Sostituisci interamente simulateMoveDestruction
 function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
     let p = testGrid[fr][fc]; if (!p) return; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
     let enemyColor = pColor === 'W' ? 'B' : 'W'; let target = testGrid[tr][tc];
@@ -1682,7 +1551,6 @@ function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
 
     let isAttackerDead = false;
 
-    // FIX VOODOO: Il re (k) è immune anche nelle simulazioni per scappare dallo scacco!
     if (target && target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death' && cl !== 'k') isAttackerDead = true;
 
     if (isAttackerDead) { testGrid[tr][tc] = ''; }
@@ -1834,27 +1702,10 @@ function clearArrows() {
     }
 }
 
-function findRandomMatch() {
-    if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
-
-    // Mostriamo un caricamento all'utente
-    document.getElementById('mp-menu').style.display = 'none';
-    document.getElementById('mp-waiting').style.display = 'block';
-    document.getElementById('mp-waiting').innerHTML = "<h3>RICERCA AVVERSARIO IN CORSO...</h3><div class='loader'></div>";
-
-    const username = document.getElementById('player-username').value.trim() || "GUEST";
-
-    // Invia il segnale al server per mettersi in coda
-    socket.emit('findMatch', username);
-}
-
-
-// Controlla se spawnare un pedone in (spawnR, spawnC) darebbe scacco al re nemico
 function wouldPawnGiveCheck(spawnR, spawnC, pawnTeam) {
     let enemyKingChar = (pawnTeam === 'W') ? 'k' : 'K';
     let kingR = -1, kingC = -1;
 
-    // Usiamo grid invece di board
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             if (grid[r][c] === enemyKingChar) {

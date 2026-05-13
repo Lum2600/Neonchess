@@ -9,11 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@400;600&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css">
-
-    <!-- ricordati di cambiare le versioni dei file css e js ogni volta che fai modifiche, altrimenti i giocatori non vedranno gli aggiornamenti a causa della cache! -->
-    <link rel="stylesheet" href="style.css?v=5.7">
-
+    <link rel="stylesheet" href="style.css?v=8.0">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ddff">
 
@@ -85,6 +81,12 @@
                     <button class="opt-btn active" id="btn-sfx-on" onclick="toggleSfx(true)">ON</button>
                     <button class="opt-btn" id="btn-sfx-off" onclick="toggleSfx(false)">OFF</button>
                 </div>
+            </div>
+
+            <div id="resign-row" style="display:none; justify-content: center; margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
+                <button class="opt-btn" 
+                        style="border-color: var(--t4); color: var(--t4); font-weight: bold; width: 100%; padding: 10px; font-size: 1rem;" 
+                        onclick="resignGame()">🏳️ ABBANDONA PARTITA</button>
             </div>
         </div>
 
@@ -295,7 +297,7 @@
     </div>
 
 
-    <div class="version-tag">v0.7</div>
+    <div class="version-tag">v0.8</div>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -309,7 +311,7 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
 
-    <script src="game.js?v=7.5" defer></script>
+    <script src="game.js?v=8.0" defer></script>
 
 </body>
 
