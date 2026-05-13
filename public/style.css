@@ -1452,3 +1452,68 @@ body.playing-black .coords-y-right {
     flex: 1;
     text-align: center;
 }
+/* --- 1. IL CONTENITORE: Griglia perfetta 3x3 --- */
+.board-wrapper {
+    display: grid !important;
+    /* 3 Colonne: Numeri sx (25px) | Scacchiera (1fr) | Numeri dx (25px) */
+    grid-template-columns: 25px 1fr 25px !important; 
+    /* 3 Righe: Lettere su (25px) | Scacchiera (1fr) | Lettere giù (25px) */
+    grid-template-rows: 25px 1fr 25px !important;         
+    
+    padding: 15px !important; /* Più spazio per non sembrare schiacciato */
+    background: rgba(10, 15, 26, 0.9);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 680px; /* INGRANDITO! (Prima era 600) */
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+/* --- 2. LA SCACCHIERA (Va al centro, Riga 2, Colonna 2) --- */
+.board {
+    grid-column: 2;
+    grid-row: 2; /* Spostata nella riga centrale */
+    width: 100% !important;
+    aspect-ratio: 1 / 1;
+    border: 2px solid var(--t2) !important;
+    border-radius: 4px;
+    overflow: hidden !important;
+    margin: 0 !important;
+    transform: none !important; 
+}
+
+/* --- 3. NUMERI VERTICALI (Riga 2) --- */
+.coords-y { grid-column: 1; grid-row: 2; }
+.coords-y-right { grid-column: 3; grid-row: 2; }
+
+.coords-y, .coords-y-right {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: 0.7rem;
+    padding: 0 5px;
+}
+
+/* --- 4. LETTERE ORIZZONTALI (Riga 1 e Riga 3) --- */
+.coords-x-top { grid-column: 2; grid-row: 1; padding: 0 0 5px 0; } /* Spazio sotto */
+.coords-x { grid-column: 2; grid-row: 3; padding: 5px 0 0 0; } /* Spazio sopra */
+
+.coords-x, .coords-x-top {
+    display: flex !important;
+    justify-content: space-around;
+    align-items: center;
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: 0.7rem;
+    width: 100% !important;
+    transform: none !important;
+}
+
+.coords-x span, .coords-x-top span {
+    flex: 1;
+    text-align: center;
+}
