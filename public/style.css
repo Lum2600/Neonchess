@@ -610,13 +610,20 @@ input[type="range"] { accent-color: var(--t2); }
     width: fit-content;
 }
 .coords-y-right{
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding-right: 5px;
+grid-column: 4;
+  grid-row: 1;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  color: var(--t2);
+  font-family: 'Orbitron';
+  font-size: clamp(0.6rem, 2vw, 0.8rem);
+  margin: 0 !important;
+  padding: 0 !important;
+  border-top: 2px solid transparent !important;
+  border-bottom: 2px solid transparent !important;
+  transform: translate(-6px, 0px) !important;
 }
 
 body[data-gfx="HI"] .board-wrapper:not(.zoom-finish):not(.board-overdrive-jump) {
@@ -1300,3 +1307,81 @@ body.playing-black .coords-y span {
     transform: none !important;
 }
 
+/* --- 1. IL CONTENITORE: Griglia perfetta 3x2 --- */
+.board-wrapper {
+    display: grid !important;
+    grid-template-columns: 15px 1fr 15px !important; /* Coord Sx | Scacchiera | Coord Dx */
+    grid-template-rows: 1fr 20px !important;         /* Scacchiera | Coord Basso */
+    gap: 6px; /* Spazio naturale, niente più translate! */
+    padding: 15px !important;
+    position: relative;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px; /* Evita che diventi gigantesca su PC */
+    box-sizing: border-box;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+    margin: 0 auto;
+    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), filter 2.5s ease;
+}
+
+/* --- 2. LA SCACCHIERA --- */
+.board {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100% !important;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-rows: repeat(8, minmax(0, 1fr));
+    border: 2px solid var(--t2) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important; 
+    background: #000;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transform: none !important; 
+}
+
+/* --- 3. COORDINATE Y (Numeri verticali) --- */
+.coords-y { grid-column: 1; grid-row: 1; }
+.coords-y-right { grid-column: 3; grid-row: 1; }
+
+.coords-y, .coords-y-right {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: clamp(0.6rem, 2vw, 0.8rem);
+    margin: 0 !important;
+    transform: none !important; /* Via le vecchie traslazioni manuali */
+}
+
+/* --- 4. COORDINATE X (Lettere orizzontali) --- */
+.coords-x {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex !important;
+    justify-content: space-around;
+    width: 100% !important;
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: clamp(0.6rem, 2vw, 0.8rem);
+    margin: 0 !important;
+    transform: none !important; /* Via le vecchie traslazioni manuali */
+}
+.coords-x span {
+    flex: 1;
+    text-align: center;
+    display: block;
+}
+
+body.playing-black .coords-y,
+body.playing-black .coords-y-right {
+    display: flex !important;
+    flex-direction: column-reverse !important; 
+}
