@@ -1267,10 +1267,17 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
 
 /* Raddrizza lettere e numeri quando si gioca come Nero */
 /* Raddrizza le coordinate (span) quando si gioca come Nero */
+/* 1. Capovolge l'intero blocco per invertire l'ordine (da ABC a HGF) */
+body.play-as-black .coords-x,
+body.play-as-black .coords-y {
+    transform: rotate(180deg) !important;
+}
+
+/* 2. Contro-rotazione per rimettere in piedi le lettere e i numeri */
 body.play-as-black .coords-x span,
 body.play-as-black .coords-y span {
-    display: inline-block !important; /* Trasforma il testo in un blocco ruotabile */
-    transform: rotate(180deg) !important; /* Raddrizza la lettera */
+    display: inline-block !important;
+    transform: rotate(180deg) !important;
 }
 
 /* Arrotonda solo i 4 angoli estremi della griglia per non farli sbavare dal bordo */
