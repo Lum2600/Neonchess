@@ -775,6 +775,7 @@ body[data-gfx="LO"] .game-over-screen.show { display: flex; animation: fadeInSca
 }
 
 /* --- 3. LA SCACCHIERA --- */
+/* --- 3. LA SCACCHIERA --- */
 .board {
     grid-column: 2; 
     grid-row: 1;    
@@ -783,12 +784,15 @@ body[data-gfx="LO"] .game-over-screen.show { display: flex; animation: fadeInSca
     grid-template-columns: repeat(8, minmax(0, 1fr));
     grid-template-rows: repeat(8, minmax(0, 1fr));
     aspect-ratio: 1 / 1;
-    border: 2px solid var(--t2) !important;
+    border: 2px solid var(--t2) !important; /* Il tuo bordo azzurro neon */
     background: #000;
     box-sizing: border-box !important;
     margin: 0 !important;
+    
+    /* LA MAGIA: Diamo gli angoli tondi al bordo azzurro e tagliamo le sbavature interne! */
+    border-radius: 6px !important;
+    overflow: hidden !important; 
 }
-
 /* --- 4. LETTERE ORIZZONTALI --- */
 .coords-x {
     grid-column: 2; 
@@ -1286,15 +1290,3 @@ body.playing-black .coords-y span {
     transform: none !important;
 }
 
-/* Arrotonda solo i 4 angoli estremi della griglia per farli combaciare col bordo neon */
-/* Nota: Cambia "6px" se il tuo bordo azzurro è più o meno curvo! */
-
-.cell:nth-child(1) { border-top-left-radius: 6px; }      /* A8 (in alto a sx) */
-.cell:nth-child(8) { border-top-right-radius: 6px; }     /* H8 (in alto a dx) */
-.cell:nth-child(57) { border-bottom-left-radius: 6px; }  /* A1 (in basso a sx) */
-.cell:nth-child(64) { border-bottom-right-radius: 6px; } /* H1 (in basso a dx) */
-
-/* Assicuriamoci che i quadratini non siano più grandi del contenitore */
-.board {
-    box-sizing: border-box;
-}
