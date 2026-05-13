@@ -6,6 +6,44 @@ let isMultiplayer = false;
 let roomCode = '';
 let isRemoteMoveExecuting = false;
 
+// --- VARIABILI GLOBALI AGGIUNTIVE ---
+let sfxEnabled = true;
+let isOnlineClassic = false; // Memoria per la modalità Online scelta
+
+// --- GESTIONE AUDIO UI (ON / OFF) ---
+function toggleMusic(turnOn) {
+    document.getElementById('btn-mus-on').classList.toggle('active', turnOn);
+    document.getElementById('btn-mus-off').classList.toggle('active', !turnOn);
+    
+    const bgMusic = document.getElementById('bg-music');
+    if (bgMusic) {
+        if (turnOn) {
+            bgMusic.volume = 0.4;
+            bgMusic.play().catch(e => console.log("Autoplay bloccato dal browser"));
+        } else {
+            bgMusic.volume = 0;
+            bgMusic.pause();
+        }
+    }
+}
+
+function toggleSfx(turnOn) {
+    document.getElementById('btn-sfx-on').classList.toggle('active', turnOn);
+    document.getElementById('btn-sfx-off').classList.toggle('active', !turnOn);
+    sfxEnabled = turnOn;
+}
+
+// Quando il gioco deve riprodurre un effetto, verifica questa variabile!
+// Esempio: se hai una funzione playSound(), assicurati che inizi con: 
+// if (!sfxEnabled) return;
+
+// --- GESTIONE MODALITÀ MULTIPLAYER ---
+function setMpMode(isClassic) {
+    isOnlineClassic = isClassic;
+    document.getElementById('btn-mp-god').classList.toggle('active', !isClassic);
+    document.getElementById('btn-mp-classic').classList.toggle('active', isClassic);
+}
+
 function openMultiplayerMenu() { document.getElementById('multiplayer-overlay').classList.add('show'); }
 function closeMultiplayerMenu() {
     document.getElementById('multiplayer-overlay').classList.remove('show');

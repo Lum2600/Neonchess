@@ -50,17 +50,8 @@
     <audio id="bg-music"></audio>
     <div id="start-screen" class="start-screen">
         <h1 class="start-title">NEON CHESS</h1>
-        <div class="options-box">
-            <div class="opt-row"><span>OPPONENT:</span>
-                <div><button class="opt-btn active" id="btn-opp-hum"
-                        onclick="setOpponent('HUMAN')">HUMAN</button><button class="opt-btn" id="btn-opp-ai"
-                        onclick="setOpponent('AI')">AI (B)</button></div>
-            </div>
-            <div class="opt-row" id="team-selector-row"><span>TEAM:</span>
-                <div><button class="opt-btn active" id="btn-team-w" onclick="setTeam('W')">WHITE</button><button
-                        class="opt-btn" id="btn-team-b" onclick="setTeam('B')">BLACK</button></div>
-            </div>
-
+        
+        <div class="options-box" style="width: 320px;">
             <div class="opt-row">
                 <span>GRAPHICS:</span>
                 <div style="display:flex; gap: 5px;">
@@ -70,48 +61,35 @@
                 </div>
             </div>
 
-            <div class="opt-row"><span>TIMER:</span>
-                <div><button class="opt-btn" id="btn-timer-on" onclick="setTimer(true)">ON</button><button
-                        class="opt-btn active" id="btn-timer-off" onclick="setTimer(false)">OFF</button></div>
-            </div>
-            <div class="opt-row" id="time-select-row"
-                style="display:none; justify-content: space-between; gap: 5px; margin-top: -10px;"><button
-                    class="opt-btn time-btn active" onclick="setTimeVal(5, this)">5M</button><button
-                    class="opt-btn time-btn" onclick="setTimeVal(10, this)">10M</button><button class="opt-btn time-btn"
-                    onclick="setTimeVal(30, this)">30M</button><button class="opt-btn time-btn"
-                    onclick="setTimeVal(60, this)">60M</button></div>
-
-            <div class="opt-row" style="flex-direction: column; align-items: flex-start; gap: 5px;"><span>SFX
-                    VOL:</span>
-                <div class="slider-container" style="width: 100%;"><span>🔈</span><input type="range" id="sfx-slider"
-                        min="0" max="1" step="0.1" value="0.5" style="flex:1;"
-                        oninput="updateSfxVolume(this.value)"><span>🔊</span></div>
+            <div class="opt-row">
+                <span>MUSIC:</span>
+                <div style="display:flex; gap: 5px;">
+                    <button class="opt-btn active" id="btn-mus-on" onclick="toggleMusic(true)">ON</button>
+                    <button class="opt-btn" id="btn-mus-off" onclick="toggleMusic(false)">OFF</button>
+                </div>
             </div>
 
-            <div class="opt-row" id="resign-row"
-                style="display:none; justify-content: center; margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
-                <button class="opt-btn"
-                    style="border-color: var(--t4); color: var(--t4); font-weight: bold; width: 100%; padding: 10px; font-size: 1rem;"
-                    onclick="location.reload()">⚠️ RESA / RICOMINCIA</button>
+            <div class="opt-row">
+                <span>SFX:</span>
+                <div style="display:flex; gap: 5px;">
+                    <button class="opt-btn active" id="btn-sfx-on" onclick="toggleSfx(true)">ON</button>
+                    <button class="opt-btn" id="btn-sfx-off" onclick="toggleSfx(false)">OFF</button>
+                </div>
             </div>
         </div>
 
-        <div style="display:flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
-            <button class="play-btn" id="main-play-btn" onclick="startGame(false, false)">PLAY GOD MODE</button>
-            <button class="play-btn" style="background:var(--t2); box-shadow:0 0 20px var(--t2); color:black;"
-                onclick="openMultiplayerMenu()">MULTIPLAYER</button>
-            <button class="play-classic-btn" id="classic-play-btn" onclick="startGame(true, false)">PLAY
-                CLASSIC</button>
+        <div style="display:flex; flex-direction: column; gap: 15px; width: 320px; margin-top: 10px;">
+            <button class="play-btn" onclick="startGame(false, false)">🎮 GIOCA LOCALE</button>
+            <button class="play-btn" style="background:var(--t2); box-shadow:0 0 20px var(--t2); color:black;" onclick="openMultiplayerMenu()">🌐 GIOCA ONLINE</button>
         </div>
 
-        <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+        <div style="display:flex; gap: 10px; justify-content: center; margin-top: 10px;">
             <button class="guide-btn" onclick="openTutorial()">COME SI GIOCA?</button>
-            <button id="dev-mode-btn" class="guide-btn" style="border-color:var(--t3); color:var(--t3);"
-                onclick="promptDev()">🛠 DEV MODE</button>
+            <button id="dev-mode-btn" class="guide-btn" style="border-color:var(--t3); color:var(--t3);" onclick="promptDev()">🛠 DEV MODE</button>
         </div>
     </div>
 
-    <div id="multiplayer-overlay" class="tutorial-overlay" style="z-index: 600;">
+   <div id="multiplayer-overlay" class="tutorial-overlay" style="z-index: 600;">
         <div class="tutorial-content" style="max-width: 400px; text-align: center;">
             <h2 style="color:var(--t2); border-bottom-color:var(--t2);">MULTIPLAYER ONLINE</h2>
 
@@ -119,16 +97,23 @@
                 <input type="text" id="player-username" placeholder="IL TUO USERNAME" maxlength="12"
                     style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:rgba(0,0,0,0.5); color:var(--t1); border:1px solid var(--t1); border-radius:6px; margin-bottom:20px;">
 
-                <p>Crea una stanza e invita un amico, oppure inserisci un codice per entrare.</p>
-                <button class="play-btn" style="width:100%; margin-bottom: 20px;" onclick="createRoom()">CREA STANZA
-                    (BIANCO)</button>
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <span style="display:block; font-family:'Orbitron'; margin-bottom:10px; color:var(--t2);">MODALITÀ DI GIOCO:</span>
+                    <div style="display:flex; justify-content:center; gap: 10px;">
+                        <button class="opt-btn active" id="btn-mp-god" onclick="setMpMode(false)" style="padding: 10px; font-size: 0.9rem;">⚡ GOD MODE</button>
+                        <button class="opt-btn" id="btn-mp-classic" onclick="setMpMode(true)" style="padding: 10px; font-size: 0.9rem;">♟️ CLASSIC</button>
+                    </div>
+                </div>
+
+                <p>Crea una stanza o inserisci un codice per entrare.</p>
+                <button class="play-btn" style="width:100%; margin-bottom: 10px;" onclick="createRoom()">CREA STANZA</button>
+                
+                <div style="display:flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+                    <input type="text" id="join-code" placeholder="CODICE" maxlength="4" style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:60%; background:var(--panel); color:white; border:1px solid var(--t2); border-radius:6px;">
+                    <button class="play-classic-btn" style="padding: 10px 20px;" onclick="joinRoom()">ENTRA</button>
+                </div>
 
                 <div style="border-top: 1px solid var(--glass-border); margin: 20px 0;"></div>
-
-                <input type="text" id="join-code" placeholder="CODICE STANZA" maxlength="4"
-                    style="padding:10px; font-size:1.2rem; font-family:'Orbitron'; text-align:center; text-transform:uppercase; width:80%; background:var(--panel); color:white; border:1px solid var(--t2); border-radius:6px; margin-bottom:10px;">
-                <button class="play-classic-btn" style="width:100%; margin-bottom: 25px;" onclick="joinRoom()">ENTRA
-                    (NERO)</button>
 
                 <button class="btn-matchmaking" onclick="findRandomMatch()">
                     🌍 CERCA PARTITA CASUALE
@@ -136,14 +121,12 @@
             </div>
 
             <div id="mp-waiting" style="display:none;">
-                <h3 style="color:var(--white);">CODICE STANZA: <span id="display-room-code"
-                        style="color:var(--t1); font-size:2rem; display:block; margin-top:10px;"></span></h3>
+                <h3 style="color:var(--white);">CODICE STANZA: <span id="display-room-code" style="color:var(--t1); font-size:2rem; display:block; margin-top:10px;"></span></h3>
                 <p>Invia questo codice al tuo avversario. In attesa del collegamento...</p>
                 <div class="loader"></div>
             </div>
 
-            <button class="close-tut-btn" style="background:var(--t4); margin-top:20px;"
-                onclick="closeMultiplayerMenu()">ANNULLA / ESCI</button>
+            <button class="close-tut-btn" style="background:var(--t4); margin-top:20px;" onclick="closeMultiplayerMenu()">ANNULLA / ESCI</button>
         </div>
     </div>
 
@@ -256,7 +239,7 @@
 
             <div style="width: 100%;">
                 <div class="board-wrapper" id="main-board-wrapper">
-                    <div class="coords-x-top">
+                    <div class="coords-x-top">id="start-screen
                         <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span>
                     </div>
                     <div class="coords-y">
