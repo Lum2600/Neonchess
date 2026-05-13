@@ -129,11 +129,16 @@ if (socket) {
         isMultiplayer = true;
     });
 
-    socket.on('assignTeam', (team) => {
+   socket.on('assignTeam', (team) => {
         setTeam(team);
         opponentMode = 'HUMAN';
-        document.getElementById('btn-opp-hum').classList.add('active');
-        document.getElementById('btn-opp-ai').classList.remove('active');
+        
+        // FIX: Protezione contro il crash a riga 135
+        let btnHum = document.getElementById('btn-opp-hum');
+        if (btnHum) btnHum.classList.add('active');
+        
+        let btnAi = document.getElementById('btn-opp-ai');
+        if (btnAi) btnAi.classList.remove('active');
     });
 
     // --- L'EVENTO INIZIO PARTITA UNIFICATO ---
