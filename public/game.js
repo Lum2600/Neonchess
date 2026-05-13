@@ -14,7 +14,7 @@ let isOnlineClassic = false; // Memoria per la modalità Online scelta
 function toggleMusic(turnOn) {
     document.getElementById('btn-mus-on').classList.toggle('active', turnOn);
     document.getElementById('btn-mus-off').classList.toggle('active', !turnOn);
-    
+
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         if (turnOn) {
@@ -56,11 +56,11 @@ function createRoom() {
     console.log("Tentativo creazione stanza...");
     // Prende il nome utente, se è vuoto usa "GUEST"
     const user = document.getElementById('player-username').value.trim() || "GUEST";
-    
+
     // Invia al server la richiesta passando anche la modalità scelta
-    socket.emit('createRoom', { 
-        username: user, 
-        isClassic: isOnlineClassic 
+    socket.emit('createRoom', {
+        username: user,
+        isClassic: isOnlineClassic
     });
 }
 
@@ -68,26 +68,26 @@ function joinRoom() {
     console.log("Tentativo ingresso stanza...");
     const user = document.getElementById('player-username').value.trim() || "GUEST";
     const code = document.getElementById('join-code').value.trim().toUpperCase();
-    
+
     if (!code) {
         alert("Inserisci un codice stanza valido!");
         return;
     }
-    socket.emit('joinRoom', { 
-        roomCode: code, 
-        username: user 
+    socket.emit('joinRoom', {
+        roomCode: code,
+        username: user
     });
 }
 function findRandomMatch() {
     console.log("Ricerca partita casuale...");
     const user = document.getElementById('player-username').value.trim() || "GUEST";
-    
+
     // Avvia la ricerca, notificando al server la modalità (God Mode o Classic)
-    socket.emit('findMatch', { 
+    socket.emit('findMatch', {
         username: user,
-        isClassic: isOnlineClassic 
+        isClassic: isOnlineClassic
     });
-    
+
     // Mostriamo all'utente che stiamo cercando
     document.getElementById('mp-menu').style.display = 'none';
     document.getElementById('mp-waiting').style.display = 'block';
@@ -112,63 +112,63 @@ if (socket) {
 
     socket.on('gameStart', (data) => {
         isMultiplayer = true;
-        
+
         // FIX: Salviamo il codice stanza generato dal server!
-        roomCode = data.roomCode; 
-        
+        roomCode = data.roomCode;
+
         document.getElementById('name-w').innerText = data.p1Name;
         document.getElementById('name-b').innerText = data.p2Name;
-        
+
         // Ora il seed matematico combacerà alla perfezione
         let hash = 0; let str = roomCode;
         for (let i = 0; i < str.length; i++) { hash = (hash << 5) - hash + str.charCodeAt(i); hash |= 0; }
         gameSeed = Math.abs(hash) + 12345;
 
         startGame(false, true);
-        
+
         // Chiudiamo il menu e avvisiamo il giocatore
         document.getElementById('mp-waiting').style.display = 'none';
         closeMultiplayerMenu();
         showModAlert("VS " + (myTeam === 'W' ? data.p2Name : data.p1Name), "mod-c1");
     });
     // Quando il server ci avvisa che l'avversario è stato trovato...
-socket.on('matchFound', (data) => {
-    console.log("Partita Trovata!", data);
+    socket.on('matchFound', (data) => {
+        console.log("Partita Trovata!", data);
 
-    // --- 1. FORZATURA CHIUSURA OVERLAY (Mettilo all'inizio assoluto!) ---
-    const mpOverlay = document.getElementById('multiplayer-overlay');
-    if (mpOverlay) {
-        mpOverlay.classList.remove('show');
-        mpOverlay.style.display = 'none';
-    }
-    
-    const startScreen = document.getElementById('start-screen');
-    if (startScreen) {
-        startScreen.style.display = 'none';
-    }
+        // --- 1. FORZATURA CHIUSURA OVERLAY (Mettilo all'inizio assoluto!) ---
+        const mpOverlay = document.getElementById('multiplayer-overlay');
+        if (mpOverlay) {
+            mpOverlay.classList.remove('show');
+            mpOverlay.style.display = 'none';
+        }
 
-    const gameUI = document.getElementById('game-ui');
-    if (gameUI) {
-        gameUI.classList.add('show');
-        gameUI.style.display = 'flex'; 
-    }
+        const startScreen = document.getElementById('start-screen');
+        if (startScreen) {
+            startScreen.style.display = 'none';
+        }
 
-    // --- 2. RESET DEL MENU PER LA PROSSIMA VOLTA ---
-    const mpWaiting = document.getElementById('mp-waiting');
-    const mpMenu = document.getElementById('mp-menu');
-    if (mpWaiting) mpWaiting.style.display = 'none';
-    if (mpMenu) mpMenu.style.display = 'block';
+        const gameUI = document.getElementById('game-ui');
+        if (gameUI) {
+            gameUI.classList.add('show');
+            gameUI.style.display = 'flex';
+        }
 
-    // Se hai una funzione closeMultiplayerMenu(), chiamiamola per sicurezza extra
-    if (typeof closeMultiplayerMenu === 'function') {
-        closeMultiplayerMenu();
-    }
+        // --- 2. RESET DEL MENU PER LA PROSSIMA VOLTA ---
+        const mpWaiting = document.getElementById('mp-waiting');
+        const mpMenu = document.getElementById('mp-menu');
+        if (mpWaiting) mpWaiting.style.display = 'none';
+        if (mpMenu) mpMenu.style.display = 'block';
+
+        // Se hai una funzione closeMultiplayerMenu(), chiamiamola per sicurezza extra
+        if (typeof closeMultiplayerMenu === 'function') {
+            closeMultiplayerMenu();
+        }
 
 
-    // --- QUI SOTTO LASCIA IL RESTO DEL TUO CODICE ESISTENTE ---
-    // (es. l'impostazione dei colori, della griglia, ecc.)
-    // ...
-});
+        // --- QUI SOTTO LASCIA IL RESTO DEL TUO CODICE ESISTENTE ---
+        // (es. l'impostazione dei colori, della griglia, ecc.)
+        // ...
+    });
     socket.on('errorMsg', (msg) => { alert(msg); });
 
     socket.on('receiveMove', (data) => {
@@ -206,9 +206,9 @@ const playlist = [
 ];
 let currentSongIndex = -1;
 
-const glyphs = { 
-    'r': '♜\uFE0E', 'n': '♞\uFE0E', 'b': '♝\uFE0E', 'q': '♛\uFE0E', 'k': '♚\uFE0E', 'p': '♟\uFE0E', 
-    'R': '♜\uFE0E', 'N': '♞\uFE0E', 'B': '♝\uFE0E', 'Q': '♛\uFE0E', 'K': '♚\uFE0E', 'P': '♙\uFE0E' 
+const glyphs = {
+    'r': '♜\uFE0E', 'n': '♞\uFE0E', 'b': '♝\uFE0E', 'q': '♛\uFE0E', 'k': '♚\uFE0E', 'p': '♟\uFE0E',
+    'R': '♜\uFE0E', 'N': '♞\uFE0E', 'B': '♝\uFE0E', 'Q': '♛\uFE0E', 'K': '♚\uFE0E', 'P': '♙\uFE0E'
 };
 
 // MODIFICHE AL DATABASE AGGIORNATE
@@ -232,12 +232,12 @@ let gameSeed = Math.floor(Math.random() * 1000000);
 let isClassicMode = false;
 let currentMoveSequence = "";
 
-let classMods = { 'W': {}, 'B': {} }; 
+let classMods = { 'W': {}, 'B': {} };
 let deadPieces = { 'W': [], 'B': [] };
 let castlingRights = { 'W': { k: true, r1: true, r8: true }, 'B': { k: true, r1: true, r8: true } };
 let lastMove = null; let turno = 'W'; let grid = []; let selected = null; let hints = [];
 let nextThresholdIndex = 0; const thresholds = [2, 5, 8, 15];
-let halfMoveClock = 0; let positionHistory = {}; let gameOver = false; let isAnimating = false; 
+let halfMoveClock = 0; let positionHistory = {}; let gameOver = false; let isAnimating = false;
 let originalQueens = []; let timeLeftW = 0; let timeLeftB = 0; let timerInterval = null; let lastTime = 0;
 let initialPositions = {};
 
@@ -250,21 +250,21 @@ let arrowStartCell = null;
 
 // GESTIONE GHOST RIDER & NECROMANCY ZOMBIE
 let ghostRiderActive = null;
-let zombiePawns = []; 
+let zombiePawns = [];
 
 // ==========================================
 // 3. AUDIO PLAYER E CONTROLLI
 // ==========================================
 function playNextSong() {
     let music = document.getElementById('bg-music');
-    if(!music) return;
+    if (!music) return;
     let nextIndex;
     do { nextIndex = Math.floor(Math.random() * playlist.length); } while (nextIndex === currentSongIndex);
 
     currentSongIndex = nextIndex;
     music.src = playlist[currentSongIndex];
     let volSlider = document.getElementById('vol-slider');
-    if(volSlider) music.volume = volSlider.value;
+    if (volSlider) music.volume = volSlider.value;
 
     music.playbackRate = 1.0; music.preservesPitch = true;
 
@@ -333,8 +333,8 @@ function tryStartMusic() {
 }
 document.body.addEventListener('click', tryStartMusic, { once: true });
 
-function updateVolume(val) { let m = document.getElementById('bg-music'); if(m) m.volume = val; let s = document.getElementById('vol-slider'); if(s) s.value = val; tryStartMusic(); }
-function updateSfxVolume(val) { sfxVolume = parseFloat(val); let s = document.getElementById('sfx-slider'); if(s) s.value = val; if (audioCtx.state === 'suspended') audioCtx.resume(); }
+function updateVolume(val) { let m = document.getElementById('bg-music'); if (m) m.volume = val; let s = document.getElementById('vol-slider'); if (s) s.value = val; tryStartMusic(); }
+function updateSfxVolume(val) { sfxVolume = parseFloat(val); let s = document.getElementById('sfx-slider'); if (s) s.value = val; if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
 function playMoveSound(type = 'move') {
     if (sfxVolume <= 0) return;
@@ -408,20 +408,24 @@ function shuffleArray(array) {
 }
 
 function setOpponent(mode) {
-    opponentMode = mode; 
-    document.getElementById('btn-opp-hum').classList.toggle('active', mode === 'HUMAN'); 
+    opponentMode = mode;
+    document.getElementById('btn-opp-hum').classList.toggle('active', mode === 'HUMAN');
     document.getElementById('btn-opp-ai').classList.toggle('active', mode === 'AI');
     if (mode === 'AI') { setTeam('W'); document.getElementById('team-selector-row').style.opacity = '0.3'; document.getElementById('team-selector-row').style.pointerEvents = 'none'; }
     else { document.getElementById('team-selector-row').style.opacity = '1'; document.getElementById('team-selector-row').style.pointerEvents = 'auto'; }
     tryStartMusic();
 }
 
-function setTeam(t) {
-    myTeam = t;
-    document.getElementById('btn-team-w').classList.toggle('active', t === 'W');
-    document.getElementById('btn-team-b').classList.toggle('active', t === 'B');
-    document.body.setAttribute('data-team', t);
-    tryStartMusic();
+function setTeam(team) {
+    myTeam = team;
+    document.body.setAttribute('data-team', team);
+
+    // Controlli di sicurezza: modifichiamo i bottoni SOLO se esistono nella pagina
+    const btnW = document.getElementById('btn-team-w');
+    const btnB = document.getElementById('btn-team-b');
+
+    if (btnW) btnW.classList.toggle('active', team === 'W');
+    if (btnB) btnB.classList.toggle('active', team === 'B');
 }
 
 function setGraphics(lvl) {
@@ -487,7 +491,7 @@ function openDev() {
     document.getElementById('dev-overlay').classList.add('show');
     buildDevPanel('W', 'dev-w-mods');
     buildDevPanel('B', 'dev-b-mods');
-    
+
     let devOverlay = document.getElementById('dev-overlay');
     if (!document.getElementById('dev-tier-controls')) {
         let devControls = document.createElement('div');
@@ -501,7 +505,7 @@ function openDev() {
         devControls.style.gap = '10px';
         devControls.style.justifyContent = 'center';
         devControls.style.flexWrap = 'wrap';
-        
+
         devControls.innerHTML = `
             <div style="width: 100%; color: var(--t4); font-family: 'Orbitron'; margin-bottom: 5px; font-size: 0.9rem;">FORCE GRAPHICS TIER:</div>
             <button class="opt-btn" onclick="setDevTier(0)">BASE</button>
@@ -510,7 +514,7 @@ function openDev() {
             <button class="opt-btn" style="color:var(--t3); border-color:var(--t3);" onclick="setDevTier(3)">T3</button>
             <button class="opt-btn" style="color:var(--t4); border-color:var(--t4);" onclick="setDevTier(4)">OD (T4)</button>
         `;
-        
+
         let container = devOverlay.querySelector('.options-box') || devOverlay;
         container.appendChild(devControls);
     }
@@ -523,8 +527,8 @@ function setDevTier(level) {
     if (level >= 2) document.body.classList.add('mod-level-2');
     if (level >= 3) document.body.classList.add('mod-level-3');
     if (level >= 4) document.body.classList.add('overdrive');
-    
-    let progress = level / 4; 
+
+    let progress = level / 4;
     document.documentElement.style.setProperty('--od-mix', `${progress * 100}%`);
     updateKillsCounter(); closeDev();
 }
@@ -567,7 +571,7 @@ function refreshModPanels() {
     ['W', 'B'].forEach(color => {
         let listId = color === 'W' ? 'w-mods-list' : 'b-mods-list';
         let list = document.getElementById(listId);
-        if(!list) return;
+        if (!list) return;
         list.innerHTML = '';
         ['p', 'n', 'b', 'r', 'q', 'k'].forEach(pc => {
             if (classMods[color][pc]) {
@@ -605,7 +609,7 @@ function skipTurn(isRemote = false) {
     turno = (turno === 'W') ? 'B' : 'W';
     draw();
     checkGameState();
-    
+
     if (isMultiplayer && !isRemote) {
         socket.emit('sendMove', { roomCode: roomCode, moveData: { isSkip: true } });
     }
@@ -622,23 +626,29 @@ function startGame(classic = false, fromMultiplayer = false) {
 
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-ui').classList.add('show');
-    document.body.classList.remove('settings-open'); 
-    document.body.classList.add('game-started'); 
+    document.body.classList.remove('settings-open');
+    document.body.classList.add('game-started');
     tryStartMusic();
 
     if (!gameHasStarted) {
         isClassicMode = classic;
         init();
         gameHasStarted = true;
-        document.getElementById('main-play-btn').innerText = "RESUME";
-        let cbtn = document.getElementById('classic-play-btn'); if(cbtn) cbtn.style.display = 'none';
-        document.getElementById('resign-row').style.display = 'flex';
+        // Controlli di sicurezza: modifichiamo gli elementi solo se esistono!
+        let mainBtn = document.getElementById('main-play-btn');
+        if (mainBtn) mainBtn.innerText = "RESUME";
+
+        let cbtn = document.getElementById('classic-play-btn');
+        if (cbtn) cbtn.style.display = 'none';
+
+        let resignRow = document.getElementById('resign-row');
+        if (resignRow) resignRow.style.display = 'flex';
 
         if (isClassicMode) {
             document.body.classList.add('classic-mode');
             document.querySelector('.header').innerText = "NEON CHESS: CLASSIC";
             let kc = document.getElementById('kills-counter');
-            if(kc) {
+            if (kc) {
                 kc.innerText = "CLASSIC MODE ACTIVE";
                 kc.className = 'kills-counter impatience-1';
                 kc.style.borderColor = 'var(--t1)'; kc.style.color = 'var(--t1)'; kc.style.textShadow = '0 0 10px var(--t1)';
@@ -673,7 +683,7 @@ function init() {
     halfMoveClock = 0; positionHistory = {}; currentMoveSequence = ""; gameOver = false;
     originalQueens = ["0,3", "7,3"]; nextThresholdIndex = 0;
     classMods = { 'W': {}, 'B': {} }; deadPieces = { 'W': [], 'B': [] };
-    
+
     recentModdedClasses = []; promotedPieces = []; clonedPieces = []; recentSpawns = [];
     zombiePawns = []; ghostRiderActive = null;
     document.getElementById('skip-turn-btn').style.display = 'none';
@@ -683,10 +693,10 @@ function init() {
 
     document.body.classList.remove('mod-level-1', 'mod-level-2', 'mod-level-3', 'overdrive', 'human-vs-human');
     let wL = document.getElementById('w-mods-list'), bL = document.getElementById('b-mods-list');
-    if(wL) wL.innerHTML = ''; if(bL) bL.innerHTML = '';
+    if (wL) wL.innerHTML = ''; if (bL) bL.innerHTML = '';
 
     let bgm = document.getElementById('bg-music');
-    if(bgm) { bgm.playbackRate = 1.0; bgm.preservesPitch = true; }
+    if (bgm) { bgm.playbackRate = 1.0; bgm.preservesPitch = true; }
 
     timeLeftW = timeLimitMinutes * 60 * 1000; timeLeftB = timeLimitMinutes * 60 * 1000;
     lastTime = Date.now();
@@ -699,32 +709,32 @@ function init() {
 // 6. LOGICA DELLA SCACCHIERA E MOSSE
 // ==========================================
 function draw() {
-    let b = document.getElementById('board'); 
+    let b = document.getElementById('board');
     if (!b) return;
     b.innerHTML = '';
-    
-    let playerToCheck = turno; 
+
+    let playerToCheck = turno;
     let chK = findKing(playerToCheck); let inCheck = isInCheck(playerToCheck);
 
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             let cl = `cell ${(r + c) % 2 == 0 ? 'l' : 'd'}`;
-            if (selected && selected.r == r && selected.c == c) cl += ' sel'; 
+            if (selected && selected.r == r && selected.c == c) cl += ' sel';
             if (ghostRiderActive && ghostRiderActive.r == r && ghostRiderActive.c == c) cl += ' sel'; // Evidenzia il cavallo del Ghost Rider
-            if (lastMove && lastMove.to.r == r && lastMove.to.c == c) cl += ' last-move'; 
-            if (hints && hints.find(h => h.r == r && h.c == c)) cl += grid[r][c] ? ' h-c' : ' h-m'; 
+            if (lastMove && lastMove.to.r == r && lastMove.to.c == c) cl += ' last-move';
+            if (hints && hints.find(h => h.r == r && h.c == c)) cl += grid[r][c] ? ' h-c' : ' h-m';
             if (inCheck && chK && chK.r === r && chK.c === c) cl += ' check';
 
             let pHTML = '';
             if (grid[r][c]) {
                 let color = grid[r][c] == grid[r][c].toUpperCase() ? 'W' : 'B'; let pc = grid[r][c].toLowerCase();
                 let mod = getMod(r, c, color, pc); let aClass = mod ? `aura-${mod.t}` : '';
-                
-                let animClass = ''; 
+
+                let animClass = '';
                 if (recentModdedClasses && recentModdedClasses.some(x => x.color === color && x.cl === pc && !isPromoted(r, c))) animClass = 'mod-receive-anim';
-                
-                let isPromo = isPromoted(r, c); 
-                let isClone = clonedPieces && clonedPieces.some(s => s.r === r && s.c === c); 
+
+                let isPromo = isPromoted(r, c);
+                let isClone = clonedPieces && clonedPieces.some(s => s.r === r && s.c === c);
                 let spawnClass = (gfxLevel !== 'LO' && recentSpawns && (recentSpawns.some(s => s.r === r && s.c === c) || isPromo)) ? 'spawn-anim' : '';
                 let cloneTag = isPromo ? '<span class="clone-tag" style="color:var(--t2); border-color:var(--t2);">[P]</span>' : (isClone ? '<span class="clone-tag">[C]</span>' : '');
 
@@ -757,30 +767,30 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
     let dirs = [];
     if (cl == 'b' || cl == 'q' || (cl == 'k' && mods?.n == 'Emperor')) dirs.push([-1, -1], [-1, 1], [1, -1], [1, 1]);
     if (cl == 'r' || cl == 'q' || (cl == 'k' && mods?.n == 'Emperor')) dirs.push([-1, 0], [1, 0], [0, -1], [0, 1]);
-    
+
     dirs.forEach(d_orig => {
         let d = [...d_orig]; let nr = r, nc = c; let bounced = false; let bouncePoint = null;
         while (true) {
             nr += d[0]; nc += d[1];
-            if (nr < 0 || nr > 7 || nc < 0 || nc > 7) { 
-                if (mods?.n == 'Wall Bounce' && !bounced) { 
-                    nr -= d[0]; nc -= d[1]; 
-                    bouncePoint = { r: nr, c: nc }; 
-                    if (nr + d[0] < 0 || nr + d[0] > 7) d[0] *= -1; 
-                    if (nc + d[1] < 0 || nc + d[1] > 7) d[1] *= -1; 
-                    bounced = true; 
-                    continue; 
-                } else break; 
+            if (nr < 0 || nr > 7 || nc < 0 || nc > 7) {
+                if (mods?.n == 'Wall Bounce' && !bounced) {
+                    nr -= d[0]; nc -= d[1];
+                    bouncePoint = { r: nr, c: nc };
+                    if (nr + d[0] < 0 || nr + d[0] > 7) d[0] *= -1;
+                    if (nc + d[1] < 0 || nc + d[1] > 7) d[1] *= -1;
+                    bounced = true;
+                    continue;
+                } else break;
             }
             let t = testGrid[nr][nc];
             let moveObj = { r: nr, c: nc };
-            if (bouncePoint) moveObj.bouncePoint = bouncePoint; 
-            
-            if (t) { 
-                let isE = (t == t.toUpperCase() ? 'W' : 'B') != color; 
-                if (isE) { m.push(moveObj); if (cl === 'q' && mods?.n === 'Annihilation') continue; } 
-                if (mods?.n === 'Vault' && !isE) continue; 
-                if (cl !== 'q' || mods?.n !== 'Annihilation') break; 
+            if (bouncePoint) moveObj.bouncePoint = bouncePoint;
+
+            if (t) {
+                let isE = (t == t.toUpperCase() ? 'W' : 'B') != color;
+                if (isE) { m.push(moveObj); if (cl === 'q' && mods?.n === 'Annihilation') continue; }
+                if (mods?.n === 'Vault' && !isE) continue;
+                if (cl !== 'q' || mods?.n !== 'Annihilation') break;
             } else m.push(moveObj);
         }
     });
@@ -807,12 +817,12 @@ function getLegalMoves(r, c) {
         let backup = grid.map(row => [...row]); simulateMoveDestruction(backup, r, c, m.r, m.c, pColor, m);
         if (!isInCheck(pColor, backup)) legalMoves.push(m);
     }
-    
+
     if (p.toLowerCase() === 'k' && !isInCheck(pColor)) {
         let row = pColor === 'W' ? 7 : 0;
-        let expectedRook = pColor === 'W' ? 'R' : 'r'; 
-        
-        if (castlingRights[pColor].k && r === row && c === 4) { 
+        let expectedRook = pColor === 'W' ? 'R' : 'r';
+
+        if (castlingRights[pColor].k && r === row && c === 4) {
             if (castlingRights[pColor].r8 && grid[row][7] === expectedRook && !grid[row][5] && !grid[row][6] && !isUnderAttack(row, 5, enemyColor) && !isUnderAttack(row, 6, enemyColor)) {
                 legalMoves.push({ r: row, c: 6, isCastle: 'K' });
             }
@@ -869,7 +879,7 @@ function animateMovement(fr, fc, tr, tc, pColor, callback, bouncePoint = null) {
                 piece.style.transform = `translate(${dX}px, ${dY}px) scale(1.3) rotate(var(--rot, 0deg))`;
                 setTimeout(() => { isAnimating = false; callback(); }, 200);
             }, 200);
-            return; 
+            return;
         }
     }
 
@@ -893,7 +903,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
             let wrapper = document.getElementById('main-board-wrapper');
             if (wrapper) {
                 wrapper.classList.remove('board-elastic-anim');
-                void wrapper.offsetWidth; 
+                void wrapper.offsetWidth;
                 wrapper.classList.add('board-elastic-anim');
                 setTimeout(() => wrapper.classList.remove('board-elastic-anim'), 500);
             }
@@ -905,7 +915,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     let wasPromotedIdx = promotedPieces.findIndex(pos => pos.r === fr && pos.c === fc);
     let wasPromoted = wasPromotedIdx !== -1;
     if (wasPromoted) promotedPieces.splice(wasPromotedIdx, 1);
-    
+
     let wasClonedIdx = clonedPieces.findIndex(pos => pos.r === fr && pos.c === fc);
     let wasCloned = wasClonedIdx !== -1;
     if (wasCloned) clonedPieces.splice(wasClonedIdx, 1);
@@ -919,18 +929,18 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     promotedPieces = promotedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
     if (special && special.isEnPassant) { clonedPieces = clonedPieces.filter(pos => pos.r !== fr || pos.c !== tc); promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== tc); }
 
-    if (cl === 'q' && mod?.n === 'Annihilation') { 
-        let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc; 
-        while (cr !== tr || cc !== tc) { 
-            if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') { 
-                let passedTarget = grid[cr][cc]; 
+    if (cl === 'q' && mod?.n === 'Annihilation') {
+        let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc;
+        while (cr !== tr || cc !== tc) {
+            if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') {
+                let passedTarget = grid[cr][cc];
                 let ptMod = getMod(cr, cc, enemyColor, passedTarget.toLowerCase());
-                grid[cr][cc] = ''; 
-                
+                grid[cr][cc] = '';
+
                 // Voodoo logic passing over
                 if (passedTarget.toLowerCase() === 'r' && ptMod?.n === 'Voodoo Death' && cl !== 'k') {
                     let attackerRooks = [];
-                    for(let i=0; i<8; i++) for(let j=0; j<8; j++) if(grid[i][j] && grid[i][j].toLowerCase() === 'r' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) attackerRooks.push({r:i, c:j});
+                    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (grid[i][j] && grid[i][j].toLowerCase() === 'r' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) attackerRooks.push({ r: i, c: j });
                     if (attackerRooks.length > 0) {
                         let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
                         if (sacrificedRook.r === fr && sacrificedRook.c === fc) isAttackerDead = true;
@@ -939,22 +949,22 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                             grid[sacrificedRook.r][sacrificedRook.c] = '';
                             let rookZombieIdx = zombiePawns.findIndex(pos => pos.r === sacrificedRook.r && pos.c === sacrificedRook.c);
                             if (rookZombieIdx !== -1) zombiePawns.splice(rookZombieIdx, 1);
-                            diedThisTurn.push({color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1});
+                            diedThisTurn.push({ color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1 });
                             pendingAnims.push({ type: 'capture', r: sacrificedRook.r, c: sacrificedRook.c, color: pColor });
                         }
                     } else isAttackerDead = true;
                 }
-                
+
                 let ezIdx = zombiePawns.findIndex(pos => pos.r === cr && pos.c === cc);
                 if (ezIdx !== -1) zombiePawns.splice(ezIdx, 1);
-                diedThisTurn.push({color: enemyColor, piece: passedTarget, r: cr, c: cc, isZombie: ezIdx !== -1});
-                pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor }); 
-            } 
-            cr += dr; cc += dc; 
-        } 
+                diedThisTurn.push({ color: enemyColor, piece: passedTarget, r: cr, c: cc, isZombie: ezIdx !== -1 });
+                pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor });
+            }
+            cr += dr; cc += dc;
+        }
     }
-    
-    if (target) { 
+
+    if (target) {
         let targetMod = getMod(tr, tc, enemyColor, target.toLowerCase());
         let targetWasZombieIdx = zombiePawns.findIndex(pos => pos.r === tr && pos.c === tc);
         let targetIsZombie = targetWasZombieIdx !== -1;
@@ -963,13 +973,13 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         // FIX VOODOO: Sacrifica la torre prima dell'attaccante
         if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
             let attackerRooks = [];
-            for(let i=0; i<8; i++) for(let j=0; j<8; j++) {
+            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
                 let piece = grid[i][j];
-                if(piece && piece.toLowerCase() === 'r' && (piece === piece.toUpperCase() ? 'W' : 'B') === pColor && !(i===fr && j===fc)) {
-                    attackerRooks.push({r:i, c:j});
+                if (piece && piece.toLowerCase() === 'r' && (piece === piece.toUpperCase() ? 'W' : 'B') === pColor && !(i === fr && j === fc)) {
+                    attackerRooks.push({ r: i, c: j });
                 }
             }
-            if (cl === 'r') attackerRooks.push({r:fr, c:fc}); // Se attacca con una torre, è vulnerabile pure lei
+            if (cl === 'r') attackerRooks.push({ r: fr, c: fc }); // Se attacca con una torre, è vulnerabile pure lei
 
             if (attackerRooks.length > 0) {
                 let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
@@ -980,33 +990,33 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                     grid[sacrificedRook.r][sacrificedRook.c] = '';
                     let rookZombieIdx = zombiePawns.findIndex(pos => pos.r === sacrificedRook.r && pos.c === sacrificedRook.c);
                     if (rookZombieIdx !== -1) zombiePawns.splice(rookZombieIdx, 1);
-                    diedThisTurn.push({color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1});
+                    diedThisTurn.push({ color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1 });
                     pendingAnims.push({ type: 'capture', r: sacrificedRook.r, c: sacrificedRook.c, color: pColor });
                 }
             } else if (cl !== 'k') {
                 isAttackerDead = true;
             }
         }
-        
-        diedThisTurn.push({color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie});
-        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor }); 
+
+        diedThisTurn.push({ color: enemyColor, piece: target, r: tr, c: tc, isZombie: targetIsZombie });
+        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: enemyColor });
     }
 
-    if (isAttackerDead) { 
-        diedThisTurn.push({color: pColor, piece: p, r: fr, c: fc, isZombie: wasZombie});
-        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor }); 
-        let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens.splice(pIdx, 1); 
+    if (isAttackerDead) {
+        diedThisTurn.push({ color: pColor, piece: p, r: fr, c: fc, isZombie: wasZombie });
+        pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor });
+        let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens.splice(pIdx, 1);
     }
 
-    if (special && special.isEnPassant) { 
-        grid[fr][tc] = ''; 
+    if (special && special.isEnPassant) {
+        grid[fr][tc] = '';
         let epZombieIdx = zombiePawns.findIndex(pos => pos.r === fr && pos.c === tc);
         let epZombie = epZombieIdx !== -1;
         if (epZombie) zombiePawns.splice(epZombieIdx, 1);
-        diedThisTurn.push({color: enemyColor, piece: pColor === 'W' ? 'p' : 'P', r: fr, c: tc, isZombie: epZombie});
-        pendingAnims.push({ type: 'capture', r: fr, c: tc, color: enemyColor }); 
+        diedThisTurn.push({ color: enemyColor, piece: pColor === 'W' ? 'p' : 'P', r: fr, c: tc, isZombie: epZombie });
+        pendingAnims.push({ type: 'capture', r: fr, c: tc, color: enemyColor });
     }
-    
+
     if (special && special.isCastle) { if (special.isCastle === 'K') { grid[fr][tc - 1] = grid[fr][tc + 1]; grid[fr][tc + 1] = ''; } if (special.isCastle === 'Q') { grid[fr][tc + 1] = grid[fr][tc - 2]; grid[fr][tc - 2] = ''; } }
 
     grid[tr][tc] = isAttackerDead ? '' : p; grid[fr][fc] = '';
@@ -1020,72 +1030,72 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     }
 
     let finishMove = (promoPiece) => {
-        let startingSeed = gameSeed; 
-        if (isRemote && remoteSeed !== null) gameSeed = remoteSeed; 
+        let startingSeed = gameSeed;
+        if (isRemote && remoteSeed !== null) gameSeed = remoteSeed;
 
         if (needsPromotion && promoPiece) { grid[tr][tc] = pColor === 'W' ? promoPiece.toUpperCase() : promoPiece.toLowerCase(); recentSpawns.push({ r: tr, c: tc }); promotedPieces.push({ r: tr, c: tc }); cl = promoPiece.toLowerCase(); mod = getMod(tr, tc, pColor, cl); }
         else if (wasPromoted && !isAttackerDead) promotedPieces.push({ r: tr, c: tc });
-        
+
         if (wasCloned && !isAttackerDead) clonedPieces.push({ r: tr, c: tc });
         if (wasZombie && !isAttackerDead) zombiePawns.push({ r: tr, c: tc });
 
         if (!isAttackerDead) {
-            if (cl === 'n' && mod?.n === 'Explosive') { 
-                for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { 
-                    if (i === 0 && j === 0) continue; let nr = tr + i, nc = tc + j; 
-                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') { 
+            if (cl === 'n' && mod?.n === 'Explosive') {
+                for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+                    if (i === 0 && j === 0) continue; let nr = tr + i, nc = tc + j;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') {
                         let tExplode = grid[nr][nc]; grid[nr][nc] = '';
                         let exZombieIdx = zombiePawns.findIndex(pos => pos.r === nr && pos.c === nc);
                         if (exZombieIdx !== -1) zombiePawns.splice(exZombieIdx, 1);
-                        diedThisTurn.push({color: enemyColor, piece: tExplode, r: nr, c: nc, isZombie: exZombieIdx !== -1});
-                        pendingAnims.push({ type: 'capture', r: nr, c: nc, color: enemyColor }); 
-                    } 
-                } 
+                        diedThisTurn.push({ color: enemyColor, piece: tExplode, r: nr, c: nc, isZombie: exZombieIdx !== -1 });
+                        pendingAnims.push({ type: 'capture', r: nr, c: nc, color: enemyColor });
+                    }
+                }
             }
             if (cl === 'b' && mod?.n === 'Chain Reaction') {
-                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let s1r = tr + dr, s1c = tc; 
-                if (s1r >= 0 && s1r < 8 && s1c >= 0 && s1c < 8) { 
-                    let t1 = grid[s1r][s1c]; 
-                    if (t1 && t1.toLowerCase() !== 'k' && (t1 === t1.toUpperCase() ? 'W' : 'B') !== pColor) { 
+                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let s1r = tr + dr, s1c = tc;
+                if (s1r >= 0 && s1r < 8 && s1c >= 0 && s1c < 8) {
+                    let t1 = grid[s1r][s1c];
+                    if (t1 && t1.toLowerCase() !== 'k' && (t1 === t1.toUpperCase() ? 'W' : 'B') !== pColor) {
                         grid[s1r][s1c] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === s1r && pos.c === s1c); if (exZ !== -1) zombiePawns.splice(exZ, 1);
-                        diedThisTurn.push({color: enemyColor, piece: t1, r: s1r, c: s1c, isZombie: exZ !== -1}); pendingAnims.push({ type: 'capture', r: s1r, c: s1c, color: enemyColor }); 
-                    } 
+                        diedThisTurn.push({ color: enemyColor, piece: t1, r: s1r, c: s1c, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: s1r, c: s1c, color: enemyColor });
+                    }
                 }
-                let s2r = tr, s2c = tc + dc; 
-                if (s2r >= 0 && s2r < 8 && s2c >= 0 && s2c < 8) { 
-                    let t2 = grid[s2r][s2c]; 
-                    if (t2 && t2.toLowerCase() !== 'k' && (t2 === t2.toUpperCase() ? 'W' : 'B') !== pColor) { 
+                let s2r = tr, s2c = tc + dc;
+                if (s2r >= 0 && s2r < 8 && s2c >= 0 && s2c < 8) {
+                    let t2 = grid[s2r][s2c];
+                    if (t2 && t2.toLowerCase() !== 'k' && (t2 === t2.toUpperCase() ? 'W' : 'B') !== pColor) {
                         grid[s2r][s2c] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === s2r && pos.c === s2c); if (exZ !== -1) zombiePawns.splice(exZ, 1);
-                        diedThisTurn.push({color: enemyColor, piece: t2, r: s2r, c: s2c, isZombie: exZ !== -1}); pendingAnims.push({ type: 'capture', r: s2r, c: s2c, color: enemyColor }); 
-                    } 
+                        diedThisTurn.push({ color: enemyColor, piece: t2, r: s2r, c: s2c, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: s2r, c: s2c, color: enemyColor });
+                    }
                 }
-                let kr = tr + dr, kc = tc + dc; 
-                while (kr >= 0 && kr < 8 && kc >= 0 && kc < 8) { 
-                    let tK = grid[kr][kc]; 
-                    if (tK && tK.toLowerCase() !== 'k' && (tK === tK.toUpperCase() ? 'W' : 'B') !== pColor) { 
+                let kr = tr + dr, kc = tc + dc;
+                while (kr >= 0 && kr < 8 && kc >= 0 && kc < 8) {
+                    let tK = grid[kr][kc];
+                    if (tK && tK.toLowerCase() !== 'k' && (tK === tK.toUpperCase() ? 'W' : 'B') !== pColor) {
                         grid[kr][kc] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === kr && pos.c === kc); if (exZ !== -1) zombiePawns.splice(exZ, 1);
-                        diedThisTurn.push({color: enemyColor, piece: tK, r: kr, c: kc, isZombie: exZ !== -1}); pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor }); 
-                    } kr += dr; kc += dc; 
+                        diedThisTurn.push({ color: enemyColor, piece: tK, r: kr, c: kc, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor });
+                    } kr += dr; kc += dc;
                 }
             }
-            if (cl === 'r' && mod?.n === 'Factory' && !wasCloned) { 
-                if (fr >= 0 && fr < 8 && fc >= 0 && fc < 8 && !grid[fr][fc]) { 
-                    grid[fr][fc] = pColor === 'W' ? 'R' : 'r'; 
-                    recentSpawns.push({ r: fr, c: fc }); 
-                    clonedPieces.push({ r: fr, c: fc }); 
-                } 
+            if (cl === 'r' && mod?.n === 'Factory' && !wasCloned) {
+                if (fr >= 0 && fr < 8 && fc >= 0 && fc < 8 && !grid[fr][fc]) {
+                    grid[fr][fc] = pColor === 'W' ? 'R' : 'r';
+                    recentSpawns.push({ r: fr, c: fc });
+                    clonedPieces.push({ r: fr, c: fc });
+                }
             }
         }
 
         // FIX MASS INFECTION: Infetta SOLO i pedoni!
-        if (classMods[pColor]['p']?.n === 'Mass Infection') { 
-            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { 
-                if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) { 
-                    [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => { 
-                        let nr = i + d[0], nc = j + d[1]; 
-                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc]) { 
-                            let t = grid[nr][nc]; 
-                            if ((t === t.toUpperCase() ? 'W' : 'B') !== pColor && t.toLowerCase() !== 'k') { 
+        if (classMods[pColor]['p']?.n === 'Mass Infection') {
+            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+                if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) {
+                    [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => {
+                        let nr = i + d[0], nc = j + d[1];
+                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc]) {
+                            let t = grid[nr][nc];
+                            if ((t === t.toUpperCase() ? 'W' : 'B') !== pColor && t.toLowerCase() !== 'k') {
                                 if (t.toLowerCase() === 'p') {
                                     grid[nr][nc] = pColor === 'W' ? 'P' : 'p';
                                     clonedPieces.push({ r: nr, c: nc }); recentSpawns.push({ r: nr, c: nc });
@@ -1093,22 +1103,22 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                                     if (ezIdx !== -1) zombiePawns.splice(ezIdx, 1);
                                 } else {
                                     let isLastRank = (enemyColor === 'W' && nr === 0) || (enemyColor === 'B' && nr === 7);
-                                    if (isLastRank) { grid[nr][nc] = enemyColor === 'W' ? 'Q' : 'q'; promotedPieces.push({ r: nr, c: nc }); } 
+                                    if (isLastRank) { grid[nr][nc] = enemyColor === 'W' ? 'Q' : 'q'; promotedPieces.push({ r: nr, c: nc }); }
                                     else { grid[nr][nc] = enemyColor === 'W' ? 'P' : 'p'; clonedPieces.push({ r: nr, c: nc }); }
-                                    recentSpawns.push({ r: nr, c: nc }); 
+                                    recentSpawns.push({ r: nr, c: nc });
                                 }
-                            } 
-                        } 
-                    }); 
-                } 
-            } 
+                            }
+                        }
+                    });
+                }
+            }
         }
 
         updateCastlingRights(p, fr, fc); lastMove = { piece: p, from: { r: fr, c: fc }, to: { r: tr, c: tc } };
-        
+
         promotedPieces = promotedPieces.filter(pos => grid[pos.r][pos.c] !== '');
         clonedPieces = clonedPieces.filter(pos => grid[pos.r][pos.c] !== '');
-        
+
         // FIX NECROMANZIA: Elabora chi è morto e fallo risorgere
         diedThisTurn.forEach(d => {
             if (d.isZombie) return; // Muore per sempre
@@ -1119,9 +1129,9 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 if (empties.length > 0) {
                     let spot = empties[Math.floor(getGameRandom() * empties.length)];
                     grid[spot.r][spot.c] = d.color === 'W' ? 'P' : 'p';
-                    zombiePawns.push({r: spot.r, c: spot.c});
-                    clonedPieces.push({r: spot.r, c: spot.c});
-                    recentSpawns.push({r: spot.r, c: spot.c});
+                    zombiePawns.push({ r: spot.r, c: spot.c });
+                    clonedPieces.push({ r: spot.r, c: spot.c });
+                    recentSpawns.push({ r: spot.r, c: spot.c });
                 } else {
                     deadPieces[d.color].push(d.piece); // Niente spazio, finisce nel cimitero
                 }
@@ -1142,31 +1152,31 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 else if (nextThresholdIndex === 1) { unlockedTierText = "TIER 2 UNLOCKED"; unlockedColor = "mod-c2"; document.body.classList.add('mod-level-2'); }
                 else if (nextThresholdIndex === 2) { unlockedTierText = "EPIC TIER UNLOCKED"; unlockedColor = "mod-c3"; document.body.classList.add('mod-level-3'); }
                 nextThresholdIndex++; gaveDrop = true;
-                
-                playNextSong(); 
-                
-                if (nextThresholdIndex >= thresholds.length) { triggerOverdrive(); overdriveTriggered = true; unlockedTierText = "";  }
+
+                playNextSong();
+
+                if (nextThresholdIndex >= thresholds.length) { triggerOverdrive(); overdriveTriggered = true; unlockedTierText = ""; }
             }
             if (unlockedTierText !== "") showModAlert(unlockedTierText, unlockedColor);
         }
 
-        updateKillsCounter(); 
+        updateKillsCounter();
         if (target || cl === 'p') halfMoveClock = 0; else halfMoveClock++;
-        
+
         let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
-        
+
         // FIX GHOST RIDER: Gestione del doppio turno
         let isGhostRiderFirstMove = (cl === 'n' && mod?.n === 'Ghost Rider' && !ghostRiderActive && !isAttackerDead);
 
         if (isGhostRiderFirstMove) {
-            ghostRiderActive = {r: tr, c: tc};
+            ghostRiderActive = { r: tr, c: tc };
             document.getElementById('skip-turn-btn').style.display = 'block';
         } else {
             ghostRiderActive = null;
             document.getElementById('skip-turn-btn').style.display = 'none';
             turno = (turno === 'W') ? 'B' : 'W';
         }
-        
+
         draw();
         checkGameState();
 
@@ -1217,7 +1227,7 @@ function evaluateMove(fr, fc, tr, tc, special) {
 
 function playAI() {
     if (gameOver) return;
-    
+
     // FIX GHOST RIDER AI:
     if (ghostRiderActive) {
         let moves = getLegalMoves(ghostRiderActive.r, ghostRiderActive.c);
@@ -1226,7 +1236,7 @@ function playAI() {
             let score = evaluateMove(ghostRiderActive.r, ghostRiderActive.c, m.r, m.c, m);
             if (score > bestScore) { bestScore = score; bestMove = { fr: ghostRiderActive.r, fc: ghostRiderActive.c, tr: m.r, tc: m.c, special: m }; }
         });
-        if (bestMove && bestScore > 0.5) { 
+        if (bestMove && bestScore > 0.5) {
             document.querySelectorAll('.cell').forEach(el => el.classList.remove('h-c', 'h-m', 'sel'));
             animateMovement(bestMove.fr, bestMove.fc, bestMove.tr, bestMove.tc, 'B', () => { executeMove(bestMove.fr, bestMove.fc, bestMove.tr, bestMove.tc, bestMove.special); }, bestMove.special ? bestMove.special.bouncePoint : null);
         } else {
@@ -1289,7 +1299,7 @@ function clickCell(r, c) {
         return;
     }
 
-    recentSpawns = []; 
+    recentSpawns = [];
     if (selected) {
         let m = hints.find(h => h.r == r && h.c == c);
         if (m) {
@@ -1309,19 +1319,19 @@ function triggerEnd(winnerColor, title, desc) {
     clearInterval(timerInterval);
 
     let endTitle = "PATTA"; let titleColor = "var(--t2)";
-    if (winnerColor) { if (winnerColor === myTeam) { endTitle = "VITTORIA"; titleColor = "var(--t1)"; } else { endTitle = "SCONFITTA"; titleColor = "var(--t4)"; } } 
+    if (winnerColor) { if (winnerColor === myTeam) { endTitle = "VITTORIA"; titleColor = "var(--t1)"; } else { endTitle = "SCONFITTA"; titleColor = "var(--t4)"; } }
     else if (title === 'DISCONNESSO') { endTitle = "ABBANDONO"; }
 
     let goScreen = document.getElementById('game-over-screen');
-    if(goScreen) document.body.appendChild(goScreen);
+    if (goScreen) document.body.appendChild(goScreen);
 
     if (gfxLevel !== 'LO') {
         let wrapper = document.getElementById('main-board-wrapper');
         let bgm = document.getElementById('bg-music');
         if (bgm) { let fade = setInterval(() => { if (bgm.volume > 0.1) bgm.volume -= 0.1; else { bgm.pause(); clearInterval(fade); } }, 100); }
 
-        if(wrapper) { wrapper.classList.remove('zoom-finish', 'crash-finish', 'board-overdrive-jump'); wrapper.classList.add('board-vibrate'); }
-        playMoveSound('check'); 
+        if (wrapper) { wrapper.classList.remove('zoom-finish', 'crash-finish', 'board-overdrive-jump'); wrapper.classList.add('board-vibrate'); }
+        playMoveSound('check');
 
         setTimeout(() => {
             let pieces = document.querySelectorAll('.piece');
@@ -1329,7 +1339,7 @@ function triggerEnd(winnerColor, title, desc) {
             playMoveSound('capture');
         }, 500);
 
-        setTimeout(() => { if(wrapper) wrapper.classList.remove('board-vibrate'); showGameOver(endTitle, titleColor, desc); }, 2500);
+        setTimeout(() => { if (wrapper) wrapper.classList.remove('board-vibrate'); showGameOver(endTitle, titleColor, desc); }, 2500);
     } else {
         let bgm = document.getElementById('bg-music'); if (bgm) bgm.pause();
         setTimeout(() => showGameOver(endTitle, titleColor, desc), 500);
@@ -1339,11 +1349,11 @@ function triggerEnd(winnerColor, title, desc) {
 function showGameOver(title, color, desc) {
     let gameUi = document.getElementById('game-ui'); if (gameUi) gameUi.style.display = 'none';
     let goScreen = document.getElementById('game-over-screen');
-    if(goScreen) {
+    if (goScreen) {
         goScreen.classList.add('show');
         let t = document.getElementById('go-title');
-        if(t) { t.innerText = title; t.style.color = color; t.style.textShadow = `0 0 20px ${color}`; t.classList.remove('glitch-anim'); void t.offsetWidth; t.classList.add('glitch-anim'); }
-        let d = document.getElementById('go-desc'); if(d) d.innerText = desc;
+        if (t) { t.innerText = title; t.style.color = color; t.style.textShadow = `0 0 20px ${color}`; t.classList.remove('glitch-anim'); void t.offsetWidth; t.classList.add('glitch-anim'); }
+        let d = document.getElementById('go-desc'); if (d) d.innerText = desc;
     }
 }
 
@@ -1372,12 +1382,12 @@ function createPixelDisintegration(wrapper) {
 
 function updateTimersUI() {
     let container = document.getElementById('timers-container');
-    if (!timerEnabled) { if(container) container.style.display = 'none'; return; }
-    if(container) container.style.display = 'flex';
+    if (!timerEnabled) { if (container) container.style.display = 'none'; return; }
+    if (container) container.style.display = 'flex';
     let fmt = (ms) => { let totalTenths = Math.floor(ms / 100); let mins = Math.floor(totalTenths / 600); let secs = Math.floor((totalTenths % 600) / 10); let tenths = totalTenths % 10; return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${tenths}`; };
     let wT = document.getElementById('w-timer'), bT = document.getElementById('b-timer');
-    if(wT) { wT.innerText = fmt(timeLeftW); wT.style.opacity = turno === 'W' ? '1' : '0.5'; wT.style.textShadow = turno === 'W' ? '0 0 10px var(--white)' : 'none'; }
-    if(bT) { bT.innerText = fmt(timeLeftB); bT.style.opacity = turno === 'B' ? '1' : '0.5'; bT.style.textShadow = turno === 'B' ? '0 0 10px var(--black)' : 'none'; }
+    if (wT) { wT.innerText = fmt(timeLeftW); wT.style.opacity = turno === 'W' ? '1' : '0.5'; wT.style.textShadow = turno === 'W' ? '0 0 10px var(--white)' : 'none'; }
+    if (bT) { bT.innerText = fmt(timeLeftB); bT.style.opacity = turno === 'B' ? '1' : '0.5'; bT.style.textShadow = turno === 'B' ? '0 0 10px var(--black)' : 'none'; }
 }
 
 function getPositionKey() { return JSON.stringify(grid) + turno + JSON.stringify(castlingRights) + JSON.stringify(classMods); }
@@ -1386,28 +1396,28 @@ function triggerOverdrive() {
     if (document.body.classList.contains('overdrive')) return;
     isAnimating = true;
     let alertEl = document.getElementById('overdrive-alert');
-    if(alertEl) alertEl.classList.add('show');
+    if (alertEl) alertEl.classList.add('show');
     playMoveSound('check');
 
     if (gfxLevel !== 'LO') {
         let wipe = document.createElement('div'); wipe.className = 'laser-wipe'; document.body.appendChild(wipe);
         setTimeout(() => {
             document.body.classList.add('overdrive');
-            if (gfxLevel === 'HI') { let w = document.getElementById('main-board-wrapper'); if(w) w.classList.add('board-overdrive-jump'); }
+            if (gfxLevel === 'HI') { let w = document.getElementById('main-board-wrapper'); if (w) w.classList.add('board-overdrive-jump'); }
         }, 1300);
         setTimeout(() => {
-            if(alertEl) alertEl.classList.remove('show'); wipe.remove(); 
-            let w = document.getElementById('main-board-wrapper'); if(w) w.classList.remove('board-overdrive-jump');
+            if (alertEl) alertEl.classList.remove('show'); wipe.remove();
+            let w = document.getElementById('main-board-wrapper'); if (w) w.classList.remove('board-overdrive-jump');
             isAnimating = false; if (opponentMode === 'AI' && turno === 'B' && !gameOver) setTimeout(playAI, 800);
         }, 3000);
     } else {
         document.body.classList.add('overdrive');
-        setTimeout(() => { if(alertEl) alertEl.classList.remove('show'); isAnimating = false; if (opponentMode === 'AI' && turno === 'B' && !gameOver) setTimeout(playAI, 800); }, 2000);
+        setTimeout(() => { if (alertEl) alertEl.classList.remove('show'); isAnimating = false; if (opponentMode === 'AI' && turno === 'B' && !gameOver) setTimeout(playAI, 800); }, 2000);
     }
 }
 
 function showModAlert(text, colorClass) {
-    let alertEl = document.getElementById('mod-alert'); if(!alertEl) return;
+    let alertEl = document.getElementById('mod-alert'); if (!alertEl) return;
     alertEl.innerText = text; alertEl.classList.remove('show', 'mod-c1', 'mod-c2', 'mod-c3');
     void alertEl.offsetWidth; alertEl.classList.add('show', colorClass); playMoveSound('check');
     if (gfxLevel !== 'LO') { let flash = document.createElement('div'); flash.className = 'screen-flash'; document.body.appendChild(flash); setTimeout(() => flash.remove(), 600); }
@@ -1463,7 +1473,7 @@ function giveModTo(targetColor) {
 
     classMods[targetColor][targetClass] = mod;
     let icon = glyphs[targetClass === 'p' ? (targetColor === 'W' ? 'P' : 'p') : (targetColor === 'W' ? targetClass.toUpperCase() : targetClass)];
-    if(list) list.innerHTML += `<div class="card c-${mod.t} mod-card-${targetClass}"><div class="card-header"><div class="card-title">${icon} ${mod.n}</div><div class="badge">${mod.t}</div></div><div class="card-desc">${mod.d}</div></div>`;
+    if (list) list.innerHTML += `<div class="card c-${mod.t} mod-card-${targetClass}"><div class="card-header"><div class="card-title">${icon} ${mod.n}</div><div class="badge">${mod.t}</div></div><div class="card-desc">${mod.d}</div></div>`;
 
     recentModdedClasses.push({ color: targetColor, cl: targetClass });
     setTimeout(() => { recentModdedClasses = recentModdedClasses.filter(x => !(x.color === targetColor && x.cl === targetClass)); draw(); }, 1200);
@@ -1479,8 +1489,8 @@ function triggerInstantMods(color, mod) {
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) { let backup = grid.map(row => [...row]); backup[i][j] = myQ; if (!isInCheck(enemyColor, backup)) empties.push({ r: i, c: j }); }
             if (empties.length === 0) for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j });
             if (empties.length > 0) {
-                let spot = empties[Math.floor(getGameRandom() * empties.length)]; grid[spot.r][spot.c] = myQ; 
-                recentSpawns.push({ r: spot.r, c: spot.c }); clonedPieces.push({ r: spot.r, c: spot.c }); 
+                let spot = empties[Math.floor(getGameRandom() * empties.length)]; grid[spot.r][spot.c] = myQ;
+                recentSpawns.push({ r: spot.r, c: spot.c }); clonedPieces.push({ r: spot.r, c: spot.c });
                 if (isPromoted(qPos.r, qPos.c)) { promotedPieces = promotedPieces.filter(p => p.r !== qPos.r || p.c !== qPos.c); promotedPieces.push({ r: spot.r, c: spot.c }); }
                 let idx = originalQueens.indexOf(qPos.r + "," + qPos.c); if (idx !== -1) originalQueens.splice(idx, 1);
             }
@@ -1491,25 +1501,25 @@ function triggerInstantMods(color, mod) {
         for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (!grid[r][c]) { if (color === 'W' && r >= 4) myHalf.push({ r, c }); else if (color === 'B' && r <= 3) myHalf.push({ r, c }); else enemyHalf.push({ r, c }); }
         myHalf = shuffleArray(myHalf); enemyHalf = shuffleArray(enemyHalf);
         let emptiesForPop = enemyHalf.concat(myHalf);
-        while (deadPieces[color].length > 0 && emptiesForPop.length > 0) { 
-            let p = deadPieces[color].pop(); let pos = emptiesForPop.pop(); 
-            grid[pos.r][pos.c] = color === 'W' ? p.toUpperCase() : p.toLowerCase(); 
-            recentSpawns.push({ r: pos.r, c: pos.c }); clonedPieces.push({ r: pos.r, c: pos.c }); 
+        while (deadPieces[color].length > 0 && emptiesForPop.length > 0) {
+            let p = deadPieces[color].pop(); let pos = emptiesForPop.pop();
+            grid[pos.r][pos.c] = color === 'W' ? p.toUpperCase() : p.toLowerCase();
+            recentSpawns.push({ r: pos.r, c: pos.c }); clonedPieces.push({ r: pos.r, c: pos.c });
         }
         updateScores();
     }
     // FIX NECROMANZIA INSTANT: Al momento dello sblocco, risorge l'esercito!
     if (mod.n === 'Necromancy') {
         let emptiesForNecro = [];
-        for (let r=0; r<8; r++) for(let c=0; c<8; c++) if (!grid[r][c]) emptiesForNecro.push({r,c});
+        for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (!grid[r][c]) emptiesForNecro.push({ r, c });
         emptiesForNecro = shuffleArray(emptiesForNecro);
-        while(deadPieces[color].length > 0 && emptiesForNecro.length > 0) {
+        while (deadPieces[color].length > 0 && emptiesForNecro.length > 0) {
             deadPieces[color].pop();
             let spot = emptiesForNecro.pop();
             grid[spot.r][spot.c] = color === 'W' ? 'P' : 'p';
-            zombiePawns.push({r: spot.r, c: spot.c});
-            clonedPieces.push({r: spot.r, c: spot.c});
-            recentSpawns.push({r: spot.r, c: spot.c});
+            zombiePawns.push({ r: spot.r, c: spot.c });
+            clonedPieces.push({ r: spot.r, c: spot.c });
+            recentSpawns.push({ r: spot.r, c: spot.c });
         }
         updateScores();
         draw();
@@ -1522,14 +1532,14 @@ function isUnderAttack(tR, tC, aColor, testGrid = grid) {
     for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { let p = testGrid[r][c]; if (p && (p === p.toUpperCase() ? 'W' : 'B') === aColor) { if (getMovesPseudoLegal(r, c, aColor, testGrid, false, true).some(m => m.r === tR && m.c === tC)) return true; } } return false;
 }
 
-function isInCheck(color, testGrid = grid) { 
-    if (isCheckingLogic) return false; 
-    let kPos = findKing(color, testGrid); 
-    if (!kPos) return false; 
-    isCheckingLogic = true; 
-    let attack = isUnderAttack(kPos.r, kPos.c, color === 'W' ? 'B' : 'W', testGrid); 
-    isCheckingLogic = false; 
-    return attack; 
+function isInCheck(color, testGrid = grid) {
+    if (isCheckingLogic) return false;
+    let kPos = findKing(color, testGrid);
+    if (!kPos) return false;
+    isCheckingLogic = true;
+    let attack = isUnderAttack(kPos.r, kPos.c, color === 'W' ? 'B' : 'W', testGrid);
+    isCheckingLogic = false;
+    return attack;
 }
 
 // Sostituisci interamente simulateMoveDestruction
@@ -1544,7 +1554,7 @@ function simulateMoveDestruction(testGrid, fr, fc, tr, tc, pColor, special) {
     testGrid[tr][tc] = p; testGrid[fr][fc] = '';
 
     let isAttackerDead = false;
-    
+
     // FIX VOODOO: Il re (k) è immune anche nelle simulazioni per scappare dallo scacco!
     if (target && target.toLowerCase() === 'r' && getMod(tr, tc, enemyColor, 'r')?.n === 'Voodoo Death' && cl !== 'k') isAttackerDead = true;
 
@@ -1577,15 +1587,15 @@ function checkGameState() {
 }
 
 function updateCastlingRights(p, r, c) { let col = p === p.toUpperCase() ? 'W' : 'B'; if (p.toLowerCase() === 'k') castlingRights[col].k = false; if (p.toLowerCase() === 'r') { if (c === 0) castlingRights[col].r1 = false; if (c === 7) castlingRights[col].r8 = false; } }
-function updateTurnDisplay() { let td = document.getElementById('turn-display'); if(!td)return; td.innerText = turno === 'W' ? "TURN: WHITE" : "TURN: BLACK"; td.style.color = turno === 'W' ? "var(--white)" : "var(--black)"; td.style.textShadow = `0 0 10px ${turno === 'W' ? "var(--white)" : "var(--black)"}`; }
+function updateTurnDisplay() { let td = document.getElementById('turn-display'); if (!td) return; td.innerText = turno === 'W' ? "TURN: WHITE" : "TURN: BLACK"; td.style.color = turno === 'W' ? "var(--white)" : "var(--black)"; td.style.textShadow = `0 0 10px ${turno === 'W' ? "var(--white)" : "var(--black)"}`; }
 
 function updateScores() {
     let wScore = 0; let bScore = 0; const vals = { 'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0 };
     for (let r = 0; r < 8; r++) { for (let c = 0; c < 8; c++) { let p = grid[r][c]; if (p) { let val = vals[p.toLowerCase()] || 0; if (p === p.toUpperCase()) wScore += val; else bScore += val; } } }
 
     let wAdv = wScore > bScore ? `+${wScore - bScore}` : ''; let bAdv = bScore > wScore ? `+${bScore - wScore}` : '';
-    let wc = document.getElementById('w-captures'); if(wc) wc.innerHTML = deadPieces['B'].map(p => `<span class="piece B" style="margin-right:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('') + (wAdv ? `<span style="font-size:0.8rem; margin-left:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--white); opacity:0.8;">${wAdv}</span>` : '');
-    let bc = document.getElementById('b-captures'); if(bc) bc.innerHTML = (bAdv ? `<span style="font-size:0.8rem; margin-right:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--black); opacity:0.8;">${bAdv}</span>` : '') + deadPieces['W'].map(p => `<span class="piece W" style="margin-left:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('');
+    let wc = document.getElementById('w-captures'); if (wc) wc.innerHTML = deadPieces['B'].map(p => `<span class="piece B" style="margin-right:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('') + (wAdv ? `<span style="font-size:0.8rem; margin-left:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--white); opacity:0.8;">${wAdv}</span>` : '');
+    let bc = document.getElementById('b-captures'); if (bc) bc.innerHTML = (bAdv ? `<span style="font-size:0.8rem; margin-right:12px; font-family:'Inter', sans-serif; font-weight:bold; color:var(--black); opacity:0.8;">${bAdv}</span>` : '') + deadPieces['W'].map(p => `<span class="piece W" style="margin-left:-8px; font-size:0.85em;">${glyphs[p]}</span>`).join('');
 }
 
 function createCaptureExplosion(r, c, color) {
@@ -1604,7 +1614,7 @@ function createCaptureExplosion(r, c, color) {
 // 8. SISTEMA FRECCE STRATEGICHE (TASTO DESTRO)
 // ==========================================
 let boardWrapper = document.getElementById('main-board-wrapper');
-if(boardWrapper) {
+if (boardWrapper) {
     boardWrapper.addEventListener('contextmenu', e => e.preventDefault());
 }
 
@@ -1614,7 +1624,7 @@ window.addEventListener('mousedown', e => {
     if (!e.target.closest('.board-wrapper')) return;
 
     let boardEl = document.getElementById('board');
-    if(!boardEl) return;
+    if (!boardEl) return;
     const rect = boardEl.getBoundingClientRect(); const cellSize = rect.width / 8;
     let c = Math.floor((e.clientX - rect.left) / cellSize); let r = Math.floor((e.clientY - rect.top) / cellSize);
     if (r < 0 || r > 7 || c < 0 || c > 7) return;
@@ -1624,7 +1634,7 @@ window.addEventListener('mousedown', e => {
 });
 
 window.addEventListener('mouseup', e => {
-    if (e.button !== 2) return; 
+    if (e.button !== 2) return;
     if (!arrowStartCell) return;
 
     let boardEl = document.getElementById('board');
@@ -1655,7 +1665,7 @@ function drawArrow(r1, c1, r2, c2) {
 
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-        marker.setAttribute('id', 'arrowhead'); marker.setAttribute('viewBox', '0 0 10 10'); 
+        marker.setAttribute('id', 'arrowhead'); marker.setAttribute('viewBox', '0 0 10 10');
         marker.setAttribute('markerWidth', '5'); marker.setAttribute('markerHeight', '5');
         marker.setAttribute('refX', '5'); marker.setAttribute('refY', '5'); marker.setAttribute('orient', 'auto');
 
@@ -1670,22 +1680,22 @@ function drawArrow(r1, c1, r2, c2) {
 
     let graphic;
     if (isKnightMove) {
-        let cx = x1; let cy = y2; 
+        let cx = x1; let cy = y2;
         graphic = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         graphic.setAttribute('d', `M ${x1} ${y1} L ${cx} ${cy} L ${x2} ${y2}`);
-        graphic.setAttribute('fill', 'none'); graphic.setAttribute('stroke-linejoin', 'round'); 
+        graphic.setAttribute('fill', 'none'); graphic.setAttribute('stroke-linejoin', 'round');
     } else {
         graphic = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         graphic.setAttribute('x1', x1); graphic.setAttribute('y1', y1); graphic.setAttribute('x2', x2); graphic.setAttribute('y2', y2);
     }
 
     graphic.setAttribute('stroke', 'rgba(0, 243, 255, 0.9)'); graphic.setAttribute('stroke-width', '1.2');
-    graphic.setAttribute('marker-end', 'url(#arrowhead)'); graphic.setAttribute('stroke-linecap', 'butt'); 
+    graphic.setAttribute('marker-end', 'url(#arrowhead)'); graphic.setAttribute('stroke-linecap', 'butt');
 
     let startCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     startCircle.setAttribute('cx', x1); startCircle.setAttribute('cy', y1);
     startCircle.setAttribute('r', '0.6'); startCircle.setAttribute('fill', 'rgba(0, 243, 255, 0.9)');
-    
+
     svg.appendChild(startCircle); svg.appendChild(graphic);
 }
 
@@ -1699,14 +1709,14 @@ function clearArrows() {
 
 function findRandomMatch() {
     if (!socket) return alert("Errore: Server Multiplayer non rilevato.");
-    
+
     // Mostriamo un caricamento all'utente
     document.getElementById('mp-menu').style.display = 'none';
     document.getElementById('mp-waiting').style.display = 'block';
     document.getElementById('mp-waiting').innerHTML = "<h3>RICERCA AVVERSARIO IN CORSO...</h3><div class='loader'></div>";
-    
+
     const username = document.getElementById('player-username').value.trim() || "GUEST";
-    
+
     // Invia il segnale al server per mettersi in coda
     socket.emit('findMatch', username);
 }
