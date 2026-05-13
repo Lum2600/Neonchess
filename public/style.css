@@ -787,8 +787,7 @@ body[data-gfx="LO"] .game-over-screen.show { display: flex; animation: fadeInSca
     background: #000;
     box-sizing: border-box !important;
     margin: 0 !important;
-    overflow: hidden !important;
-    border-radius: 6px;
+}
 
 /* --- 4. LETTERE ORIZZONTALI --- */
 .coords-x {
@@ -1266,3 +1265,14 @@ body.overdrive #promotion-overlay .play-btn:hover { background: rgba(0, 243, 255
     100% { left: 120%; }
 }
 
+/* Raddrizza le coordinate per il Nero senza rompere la griglia */
+body.play-as-black .coords-x > *,
+body.play-as-black .coords-y > * {
+    transform: rotate(180deg);
+}
+
+/* Arrotonda solo i 4 angoli estremi della griglia per non farli sbavare dal bordo */
+.cell:nth-child(1) { border-top-left-radius: 6px; }
+.cell:nth-child(8) { border-top-right-radius: 6px; }
+.cell:nth-child(57) { border-bottom-left-radius: 6px; }
+.cell:nth-child(64) { border-bottom-right-radius: 6px; }
