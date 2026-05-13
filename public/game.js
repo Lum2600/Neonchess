@@ -1346,6 +1346,14 @@ function triggerEnd(winnerColor, title, desc) {
     let goScreen = document.getElementById('game-over-screen');
     if (goScreen) document.body.appendChild(goScreen);
 
+    // --- NUOVO: SCATTO DELLA FOTOGRAFIA ---
+    // Cloniamo il contenuto della scacchiera ESATTAMENTE in questo istante
+    let snapshotHTML = "";
+    let currentBoard = document.getElementById('board');
+    if (currentBoard) {
+        snapshotHTML = currentBoard.innerHTML;
+    }
+
     if (gfxLevel !== 'LO') {
         let wrapper = document.getElementById('main-board-wrapper');
         let bgm = document.getElementById('bg-music');
@@ -1360,14 +1368,16 @@ function triggerEnd(winnerColor, title, desc) {
             playMoveSound('capture');
         }, 500);
 
-        setTimeout(() => { if (wrapper) wrapper.classList.remove('board-vibrate'); showGameOver(endTitle, titleColor, desc); }, 2500);
+        // Passiamo la foto a showGameOver!
+        setTimeout(() => { if (wrapper) wrapper.classList.remove('board-vibrate'); showGameOver(endTitle, titleColor, desc, snapshotHTML); }, 2500);
     } else {
         let bgm = document.getElementById('bg-music'); if (bgm) bgm.pause();
-        setTimeout(() => showGameOver(endTitle, titleColor, desc), 500);
+        setTimeout(() => showGameOver(endTitle, titleColor, desc, snapshotHTML), 500);
     }
 }
 
-function showGameOver(title, color, desc) {
+// Aggiunto il parametro snapshotHTML
+function showGameOver(title, color, desc, snapshotHTML = "") {
     let gameUi = document.getElementById('game-ui'); if (gameUi) gameUi.style.display = 'none';
     let goScreen = document.getElementById('game-over-screen');
     if (goScreen) {
@@ -1375,9 +1385,15 @@ function showGameOver(title, color, desc) {
         let t = document.getElementById('go-title');
         if (t) { t.innerText = title; t.style.color = color; t.style.textShadow = `0 0 20px ${color}`; t.classList.remove('glitch-anim'); void t.offsetWidth; t.classList.add('glitch-anim'); }
         let d = document.getElementById('go-desc'); if (d) d.innerText = desc;
+        
+        // --- NUOVO: STAMPA DELLA FOTOGRAFIA ---
+        let snapBoard = document.getElementById('go-snapshot-board');
+        if (snapBoard && snapshotHTML) {
+            // Iniettiamo i cloni esatti delle celle nella mini-griglia
+            snapBoard.innerHTML = snapshotHTML;
+        }
     }
 }
-
 function updateTimersUI() {
     let container = document.getElementById('timers-container');
     if (!timerEnabled) { if (container) container.style.display = 'none'; return; }
