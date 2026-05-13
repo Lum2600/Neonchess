@@ -1385,3 +1385,70 @@ body.playing-black .coords-y-right {
     display: flex !important;
     flex-direction: column-reverse !important; 
 }
+
+
+/* 1. IL CONTENITORE: Definiamo tre colonne e due righe precise */
+.board-wrapper {
+    display: grid !important;
+    /* Colonna 1: Numeri (25px) | Colonna 2: Scacchiera (1fr) | Colonna 3: Numeri (25px) */
+    grid-template-columns: 25px 1fr 25px !important; 
+    /* Riga 1: Scacchiera (1fr) | Riga 2: Lettere (25px) */
+    grid-template-rows: 1fr 25px !important;         
+    
+    padding: 10px !important; /* Padding interno del wrapper */
+    background: rgba(10, 15, 26, 0.9);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+/* 2. LA SCACCHIERA: Deve stare esattamente al centro della griglia */
+.board {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100% !important;
+    aspect-ratio: 1 / 1;
+    border: 2px solid var(--t2) !important;
+    border-radius: 4px;
+    overflow: hidden !important;
+    margin: 0 !important;
+    transform: none !important; /* ELIMINA i vecchi spostamenti */
+}
+
+/* 3. COORDINATE Y (Numeri): Aggiungiamo padding laterale */
+.coords-y { grid-column: 1; grid-row: 1; }
+.coords-y-right { grid-column: 3; grid-row: 1; }
+
+.coords-y, .coords-y-right {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: 0.7rem;
+    padding: 0 5px; /* PADDING RICHIESTO (Orizzontale) */
+}
+
+/* 4. COORDINATE X (Lettere): Aggiungiamo padding verticale */
+.coords-x {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex !important;
+    justify-content: space-around;
+    align-items: center;
+    color: var(--t2);
+    font-family: 'Orbitron';
+    font-size: 0.7rem;
+    padding: 5px 0; /* PADDING RICHIESTO (Verticale) */
+    width: 100% !important;
+    transform: none !important; /* ELIMINA il vecchio translate(25px, -25px) */
+}
+
+.coords-x span {
+    flex: 1;
+    text-align: center;
+}
