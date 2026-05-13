@@ -15,7 +15,7 @@ let isOnlineClassic = false; // Memoria per la modalità Online scelta
 function toggleMusic(turnOn) {
     document.getElementById('btn-mus-on').classList.toggle('active', turnOn);
     document.getElementById('btn-mus-off').classList.toggle('active', !turnOn);
-    
+
     const bgMusic = document.getElementById('bg-music');
     if (bgMusic) {
         if (turnOn) {
@@ -1151,7 +1151,14 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
 
             if (classMods[d.color]['p']?.n === 'Necromancy') {
                 let empties = [];
-                for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j });
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        // Se la cella è vuota E il radar dice che non dà scacco...
+                        if (!grid[i][j] && !wouldPawnGiveCheck(i, j, d.color)) {
+                            empties.push({ r: i, c: j });
+                        }
+                    }
+                }
                 if (empties.length > 0) {
                     let spot = empties[Math.floor(getGameRandom() * empties.length)];
                     grid[spot.r][spot.c] = d.color === 'W' ? 'P' : 'p';
@@ -1745,4 +1752,37 @@ function findRandomMatch() {
 
     // Invia il segnale al server per mettersi in coda
     socket.emit('findMatch', username);
+}
+
+
+// Controlla se spawnare un pedone in (spawnR, spawnC) darebbe scacco al re nemico
+function wouldPawnGiveCheck(spawnR, spawnC, pawnTeam) {
+    // 1. Identifica il Re nemico (Maiuscolo = Bianco, Minuscolo = Nero)
+    let enemyKingChar = (pawnTeam === 'W') ? 'k' : 'K';
+    let kingR = -1, kingC = -1;
+
+    // 2. Trova le coordinate del Re nemico sulla scacchiera
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (board[r][c] === enemyKingChar) {
+                kingR = r;
+                kingC = c;
+                break;
+            }
+        }
+    }
+
+    if (kingR === -1) return false; // Se non c'è il re (strano), nessun problema
+
+    // 3. Calcola la direzione di attacco del pedone
+    // Il Bianco (W) attacca verso l'alto (riga - 1)
+    // Il Nero (B) attacca verso il basso (riga + 1)
+    let dir = (pawnTeam === 'W') ? -1 : 1;
+
+    // 4. Se il Re nemico si trova nelle due caselle diagonali davanti al pedone, è SCACCO!
+    if (kingR === spawnR + dir && (kingC === spawnC - 1 || kingC === spawnC + 1)) {
+        return true;
+    }
+
+    return false; // Cella sicura
 }
