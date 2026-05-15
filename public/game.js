@@ -1014,28 +1014,43 @@ function animateMovement(fr, fc, tr, tc, pColor, callback, bouncePoint = null) {
 }
 
 function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePromoPiece = null, remoteSeed = null) {
+    // --- FIX SINCRONIZZAZIONE: Allineiamo i cervelli PRIMA di qualsiasi calcolo! ---
+    if (isRemote && remoteSeed !== null) gameSeed = remoteSeed;
+    let startingSeed = gameSeed;
+
     let p = grid[fr][fc]; let pColor = p === p.toUpperCase() ? 'W' : 'B'; let enemyColor = pColor === 'W' ? 'B' : 'W';
     let target = grid[tr][tc]; let cl = p.toLowerCase(); let mod = getMod(fr, fc, pColor, cl);
-    let pendingAnims = []; let isAttackerDead = false; let diedThisTurn = [];
+    let pendingAnims = []; let isAttackerDead = false;
+    let diedThisTurn = [];
 
     let isCapture = target || (special && special.isEnPassant);
     if (isCapture) playMoveSound('capture'); else playMoveSound('move');
 
-    if (cl === 'b' && mod?.n === 'Wall Bounce' && Math.abs(tr - fr) !== Math.abs(tc - fc)) {
-        let wrapper = document.getElementById('main-board-wrapper');
-        if (wrapper) { wrapper.classList.remove('board-elastic-anim'); void wrapper.offsetWidth; wrapper.classList.add('board-elastic-anim'); setTimeout(() => wrapper.classList.remove('board-elastic-anim'), 500); }
+    if (cl === 'b' && mod?.n === 'Wall Bounce') {
+        if (Math.abs(tr - fr) !== Math.abs(tc - fc)) {
+            let wrapper = document.getElementById('main-board-wrapper');
+            if (wrapper) {
+                wrapper.classList.remove('board-elastic-anim');
+                void wrapper.offsetWidth;
+                wrapper.classList.add('board-elastic-anim');
+                setTimeout(() => wrapper.classList.remove('board-elastic-anim'), 500);
+            }
+        }
     }
 
     currentMoveSequence += (currentMoveSequence ? "-" : "") + fr + "" + fc + "" + tr + "" + tc;
-    
-    let wasPromoted = promotedPieces.some(pos => pos.r === fr && pos.c === fc);
-    if (wasPromoted) promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
 
-    let wasCloned = clonedPieces.some(pos => pos.r === fr && pos.c === fc);
-    if (wasCloned) clonedPieces = clonedPieces.filter(pos => pos.r !== fr || pos.c !== fc);
+    let wasPromotedIdx = promotedPieces.findIndex(pos => pos.r === fr && pos.c === fc);
+    let wasPromoted = wasPromotedIdx !== -1;
+    if (wasPromoted) promotedPieces.splice(wasPromotedIdx, 1);
 
-    let wasZombie = zombiePawns.some(pos => pos.r === fr && pos.c === fc);
-    if (wasZombie) zombiePawns = zombiePawns.filter(pos => pos.r !== fr || pos.c !== fc);
+    let wasClonedIdx = clonedPieces.findIndex(pos => pos.r === fr && pos.c === fc);
+    let wasCloned = wasClonedIdx !== -1;
+    if (wasCloned) clonedPieces.splice(wasClonedIdx, 1);
+
+    let wasZombieIdx = zombiePawns.findIndex(pos => pos.r === fr && pos.c === fc);
+    let wasZombie = wasZombieIdx !== -1;
+    if (wasZombie) zombiePawns.splice(wasZombieIdx, 1);
 
     clonedPieces = clonedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
     promotedPieces = promotedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
@@ -1045,23 +1060,31 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc;
         while (cr !== tr || cc !== tc) {
             if (grid[cr][cc] && grid[cr][cc].toLowerCase() !== 'k') {
-                let ptMod = getMod(cr, cc, enemyColor, grid[cr][cc].toLowerCase());
-                if (grid[cr][cc].toLowerCase() === 'r' && ptMod?.n === 'Voodoo Death' && cl !== 'k') {
+                let passedTarget = grid[cr][cc];
+                let ptMod = getMod(cr, cc, enemyColor, passedTarget.toLowerCase());
+                grid[cr][cc] = '';
+
+                if (passedTarget.toLowerCase() === 'r' && ptMod?.n === 'Voodoo Death' && cl !== 'k') {
                     let attackerRooks = [];
                     for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (grid[i][j] && grid[i][j].toLowerCase() === 'r' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) attackerRooks.push({ r: i, c: j });
                     if (attackerRooks.length > 0) {
-                        let sRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
-                        if (sRook.r === fr && sRook.c === fc) isAttackerDead = true;
+                        let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
+                        if (sacrificedRook.r === fr && sacrificedRook.c === fc) isAttackerDead = true;
                         else {
-                            diedThisTurn.push({ color: pColor, piece: grid[sRook.r][sRook.c], r: sRook.r, c: sRook.c, isZombie: zombiePawns.some(z => z.r === sRook.r && z.c === sRook.c) });
-                            grid[sRook.r][sRook.c] = ''; pendingAnims.push({ type: 'capture', r: sRook.r, c: sRook.c, color: pColor });
-                            zombiePawns = zombiePawns.filter(z => z.r !== sRook.r || z.c !== sRook.c);
+                            let rPiece = grid[sacrificedRook.r][sacrificedRook.c];
+                            grid[sacrificedRook.r][sacrificedRook.c] = '';
+                            let rookZombieIdx = zombiePawns.findIndex(pos => pos.r === sacrificedRook.r && pos.c === sacrificedRook.c);
+                            if (rookZombieIdx !== -1) zombiePawns.splice(rookZombieIdx, 1);
+                            diedThisTurn.push({ color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1 });
+                            pendingAnims.push({ type: 'capture', r: sacrificedRook.r, c: sacrificedRook.c, color: pColor });
                         }
                     } else isAttackerDead = true;
                 }
-                diedThisTurn.push({ color: enemyColor, piece: grid[cr][cc], r: cr, c: cc, isZombie: zombiePawns.some(z => z.r === cr && z.c === cc) });
-                grid[cr][cc] = ''; pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor });
-                zombiePawns = zombiePawns.filter(z => z.r !== cr || z.c !== cc);
+
+                let ezIdx = zombiePawns.findIndex(pos => pos.r === cr && pos.c === cc);
+                if (ezIdx !== -1) zombiePawns.splice(ezIdx, 1);
+                diedThisTurn.push({ color: enemyColor, piece: passedTarget, r: cr, c: cc, isZombie: ezIdx !== -1 });
+                pendingAnims.push({ type: 'capture', r: cr, c: cc, color: enemyColor });
             }
             cr += dr; cc += dc;
         }
@@ -1069,44 +1092,69 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
 
     if (target) {
         let targetMod = getMod(tr, tc, enemyColor, target.toLowerCase());
-        let targetIsZombie = zombiePawns.some(pos => pos.r === tr && pos.c === tc);
-        zombiePawns = zombiePawns.filter(pos => pos.r !== tr || pos.c !== tc);
+        let targetWasZombieIdx = zombiePawns.findIndex(pos => pos.r === tr && pos.c === tc);
+        let targetIsZombie = targetWasZombieIdx !== -1;
+        if (targetIsZombie) zombiePawns.splice(targetWasZombieIdx, 1);
 
         let shieldIdx = pawnShields.findIndex(s => s.r === tr && s.c === tc);
         if (target.toLowerCase() === 'p' && targetMod?.n === 'Energy Shield' && shieldIdx !== -1) {
             pawnShields.splice(shieldIdx, 1);
             if (targetIsZombie) zombiePawns.push({ r: tr, c: tc });
 
-            let bounceR = tr - Math.sign(tr - fr);
-            let bounceC = tc - Math.sign(tc - fc);
+            let dr = Math.sign(tr - fr);
+            let dc = Math.sign(tc - fc);
 
-            if (bounceR < 0 || bounceR > 7 || bounceC < 0 || bounceC > 7 || grid[bounceR][bounceC] || (tr === fr && tc === fc)) {
-                bounceR = fr; bounceC = fc;
+            let bounceR = tr - dr;
+            let bounceC = tc - dc;
+
+            if (bounceR < 0 || bounceR > 7 || bounceC < 0 || bounceC > 7 || grid[bounceR][bounceC] || (dr === 0 && dc === 0)) {
+                bounceR = fr;
+                bounceC = fc;
             }
-            tr = bounceR; tc = bounceC; target = null; isAttackerDead = false;
+
+            tr = bounceR;
+            tc = bounceC;
+
+            target = null;
+            isAttackerDead = false;
         }
         else if (target.toLowerCase() === 'r' && targetMod?.n === 'Voodoo Death') {
             let attackerRooks = [];
-            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (grid[i][j] && grid[i][j].toLowerCase() === 'r' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor && !(i === fr && j === fc)) attackerRooks.push({ r: i, c: j });
+            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+                let piece = grid[i][j];
+                if (piece && piece.toLowerCase() === 'r' && (piece === piece.toUpperCase() ? 'W' : 'B') === pColor && !(i === fr && j === fc)) {
+                    attackerRooks.push({ r: i, c: j });
+                }
+            }
             if (cl === 'r') attackerRooks.push({ r: fr, c: fc });
 
             if (attackerRooks.length > 0) {
-                let sRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
-                if (sRook.r === fr && sRook.c === fc) isAttackerDead = true;
-                else {
-                    diedThisTurn.push({ color: pColor, piece: grid[sRook.r][sRook.c], r: sRook.r, c: sRook.c, isZombie: zombiePawns.some(z => z.r === sRook.r && z.c === sRook.c) });
-                    grid[sRook.r][sRook.c] = ''; pendingAnims.push({ type: 'capture', r: sRook.r, c: sRook.c, color: pColor });
-                    zombiePawns = zombiePawns.filter(z => z.r !== sRook.r || z.c !== sRook.c);
+                let sacrificedRook = attackerRooks[Math.floor(getGameRandom() * attackerRooks.length)];
+                if (sacrificedRook.r === fr && sacrificedRook.c === fc) {
+                    isAttackerDead = true;
+                } else {
+                    let rPiece = grid[sacrificedRook.r][sacrificedRook.c];
+                    grid[sacrificedRook.r][sacrificedRook.c] = '';
+                    let rookZombieIdx = zombiePawns.findIndex(pos => pos.r === sacrificedRook.r && pos.c === sacrificedRook.c);
+                    if (rookZombieIdx !== -1) zombiePawns.splice(rookZombieIdx, 1);
+                    diedThisTurn.push({ color: pColor, piece: rPiece, r: sacrificedRook.r, c: sacrificedRook.c, isZombie: rookZombieIdx !== -1 });
+                    pendingAnims.push({ type: 'capture', r: sacrificedRook.r, c: sacrificedRook.c, color: pColor });
                 }
-            } else if (cl !== 'k') isAttackerDead = true;
+            } else if (cl !== 'k') {
+                isAttackerDead = true;
+            }
         }
         else if (target.toLowerCase() === 'r' && targetMod?.n === 'Phoenix Rook') {
-            let hR = enemyColor === 'W' ? 7 : 0; let hC = tc < 4 ? 0 : 7; let hTarget = grid[hR][hC];
-            if (hTarget && hTarget.toLowerCase() !== 'k') {
-                diedThisTurn.push({ color: hTarget === hTarget.toUpperCase() ? 'W' : 'B', piece: hTarget, r: hR, c: hC, isZombie: false });
-                pendingAnims.push({ type: 'capture', r: hR, c: hC, color: enemyColor });
+            let homeRank = enemyColor === 'W' ? 7 : 0;
+            let homeCol = tc < 4 ? 0 : 7;
+            let homeTarget = grid[homeRank][homeCol];
+            if (homeTarget && homeTarget.toLowerCase() !== 'k') {
+                diedThisTurn.push({ color: homeTarget === homeTarget.toUpperCase() ? 'W' : 'B', piece: homeTarget, r: homeRank, c: homeCol, isZombie: false });
+                pendingAnims.push({ type: 'capture', r: homeRank, c: homeCol, color: enemyColor });
             }
-            grid[hR][hC] = enemyColor === 'W' ? 'R' : 'r'; recentSpawns.push({ r: hR, c: hC }); target = null;
+            grid[homeRank][homeCol] = enemyColor === 'W' ? 'R' : 'r';
+            recentSpawns.push({ r: homeRank, c: homeCol });
+            target = null;
         }
 
         if (target) {
@@ -1115,15 +1163,18 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         }
     }
 
-    if (classMods[enemyColor]['n']?.n === 'Cavalry Charge' && target && target.toLowerCase() !== 'k' && target.toLowerCase() !== 'n') {
-        if (!usedBonusLives.includes(tr + "," + tc)) {
-            usedBonusLives.push(tr + "," + tc);
+    let globalMod = classMods[enemyColor]['n']?.n === 'Cavalry Charge';
+    if (globalMod && target && target.toLowerCase() !== 'k' && target.toLowerCase() !== 'n') {
+        let pieceID = tr + "," + tc;
+        if (!usedBonusLives.includes(pieceID)) {
+            usedBonusLives.push(pieceID);
             let empties = [];
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j });
             if (empties.length > 0) {
                 let spot = empties[Math.floor(getGameRandom() * empties.length)];
-                grid[spot.r][spot.c] = target; recentSpawns.push(spot);
-                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc);
+                grid[spot.r][spot.c] = target;
+                recentSpawns.push(spot);
+                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc); 
             }
         }
     }
@@ -1131,13 +1182,14 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     if (isAttackerDead) {
         diedThisTurn.push({ color: pColor, piece: p, r: fr, c: fc, isZombie: wasZombie });
         pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor });
-        originalQueens = originalQueens.filter(q => q !== fr + "," + fc);
+        let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens.splice(pIdx, 1);
     }
 
     if (special && special.isEnPassant) {
         grid[fr][tc] = '';
-        let epZombie = zombiePawns.some(z => z.r === fr && z.c === tc);
-        zombiePawns = zombiePawns.filter(z => z.r !== fr || z.c !== tc);
+        let epZombieIdx = zombiePawns.findIndex(pos => pos.r === fr && pos.c === tc);
+        let epZombie = epZombieIdx !== -1;
+        if (epZombie) zombiePawns.splice(epZombieIdx, 1);
         diedThisTurn.push({ color: enemyColor, piece: pColor === 'W' ? 'p' : 'P', r: fr, c: tc, isZombie: epZombie });
         pendingAnims.push({ type: 'capture', r: fr, c: tc, color: enemyColor });
     }
@@ -1145,19 +1197,23 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     if (special && special.isCastle) { if (special.isCastle === 'K') { grid[fr][tc - 1] = grid[fr][tc + 1]; grid[fr][tc + 1] = ''; } if (special.isCastle === 'Q') { grid[fr][tc + 1] = grid[fr][tc - 2]; grid[fr][tc - 2] = ''; } }
 
     grid[tr][tc] = isAttackerDead ? '' : p; grid[fr][fc] = '';
+
     let needsPromotion = false;
 
     if (!isAttackerDead) {
-        if (target && target.toLowerCase() === 'q' && getMod(tr, tc, enemyColor, 'q')?.n === 'Immortal' && originalQueens.includes(tr + "," + tc)) { let br = enemyColor === 'W' ? 7 : 0; if (!grid[br][3]) { grid[br][3] = target; let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens[idx] = br + ",3"; } else { originalQueens = originalQueens.filter(q => q !== tr + "," + tc); } }
+        if (target && target.toLowerCase() === 'q' && getMod(tr, tc, enemyColor, 'q')?.n === 'Immortal' && originalQueens.includes(tr + "," + tc)) { let br = enemyColor === 'W' ? 7 : 0; if (!grid[br][3]) { grid[br][3] = target; let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens[idx] = br + ",3"; } else { let idx = originalQueens.indexOf(tr + "," + tc); if (idx !== -1) originalQueens.splice(idx, 1); } }
         let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens[pIdx] = tr + "," + tc;
 
         if (cl === 'p') {
-            let pR = (mod?.n === 'Vanguard') ? (pColor === 'W' ? 4 : 3) : (pColor === 'W' ? 0 : 7);
-            if ((pColor === 'W' && tr <= pR) || (pColor === 'B' && tr >= pR)) needsPromotion = true;
+            let promoRank = (mod?.n === 'Vanguard') ? (pColor === 'W' ? 4 : 3) : (pColor === 'W' ? 0 : 7);
+            if ((pColor === 'W' && tr <= promoRank) || (pColor === 'B' && tr >= promoRank)) needsPromotion = true;
         }
 
         if (cl === 'n' && mod?.n === 'Trample') {
-            [{ r: fr + tr - fr, c: fc }, { r: fr, c: fc + tc - fc }].forEach(pos => {
+            let dr = tr - fr, dc = tc - fc;
+            let er1 = fr + dr, ec1 = fc;
+            let er2 = fr, ec2 = fc + dc;
+            [{ r: er1, c: ec1 }, { r: er2, c: ec2 }].forEach(pos => {
                 if (grid[pos.r]?.[pos.c] && grid[pos.r][pos.c].toLowerCase() !== 'k' && (grid[pos.r][pos.c] === grid[pos.r][pos.c].toUpperCase() ? 'W' : 'B') !== pColor) {
                     diedThisTurn.push({ color: enemyColor, piece: grid[pos.r][pos.c], r: pos.r, c: pos.c, isZombie: false });
                     grid[pos.r][pos.c] = ''; pendingAnims.push({ type: 'capture', r: pos.r, c: pos.c, color: enemyColor });
@@ -1177,8 +1233,6 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     }
 
     let finishMove = (promoPiece) => {
-        if (isRemote && remoteSeed !== null) gameSeed = remoteSeed;
-
         if (needsPromotion && promoPiece) { grid[tr][tc] = pColor === 'W' ? promoPiece.toUpperCase() : promoPiece.toLowerCase(); recentSpawns.push({ r: tr, c: tc }); promotedPieces.push({ r: tr, c: tc }); cl = promoPiece.toLowerCase(); mod = getMod(tr, tc, pColor, cl); }
         else if (wasPromoted && !isAttackerDead) promotedPieces.push({ r: tr, c: tc });
 
@@ -1190,86 +1244,148 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
                     if (i === 0 && j === 0) continue; let nr = tr + i, nc = tc + j;
                     if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') {
-                        diedThisTurn.push({ color: enemyColor, piece: grid[nr][nc], r: nr, c: nc, isZombie: zombiePawns.some(z => z.r === nr && z.c === nc) });
-                        grid[nr][nc] = ''; pendingAnims.push({ type: 'capture', r: nr, c: nc, color: enemyColor });
-                        zombiePawns = zombiePawns.filter(z => z.r !== nr || z.c !== nc);
+                        let tExplode = grid[nr][nc]; grid[nr][nc] = '';
+                        let exZombieIdx = zombiePawns.findIndex(pos => pos.r === nr && pos.c === nc);
+                        if (exZombieIdx !== -1) zombiePawns.splice(exZombieIdx, 1);
+                        diedThisTurn.push({ color: enemyColor, piece: tExplode, r: nr, c: nc, isZombie: exZombieIdx !== -1 });
+                        pendingAnims.push({ type: 'capture', r: nr, c: nc, color: enemyColor });
                     }
                 }
             }
             if (cl === 'b' && mod?.n === 'Chain Reaction') {
-                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc);
-                [{ r: tr + dr, c: tc }, { r: tr, c: tc + dc }].forEach(pos => {
-                    if (grid[pos.r]?.[pos.c] && grid[pos.r][pos.c].toLowerCase() !== 'k' && (grid[pos.r][pos.c] === grid[pos.r][pos.c].toUpperCase() ? 'W' : 'B') !== pColor) {
-                        diedThisTurn.push({ color: enemyColor, piece: grid[pos.r][pos.c], r: pos.r, c: pos.c, isZombie: zombiePawns.some(z => z.r === pos.r && z.c === pos.c) });
-                        grid[pos.r][pos.c] = ''; pendingAnims.push({ type: 'capture', r: pos.r, c: pos.c, color: enemyColor });
-                        zombiePawns = zombiePawns.filter(z => z.r !== pos.r || z.c !== pos.c);
+                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let s1r = tr + dr, s1c = tc;
+                if (s1r >= 0 && s1r < 8 && s1c >= 0 && s1c < 8) {
+                    let t1 = grid[s1r][s1c];
+                    if (t1 && t1.toLowerCase() !== 'k' && (t1 === t1.toUpperCase() ? 'W' : 'B') !== pColor) {
+                        grid[s1r][s1c] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === s1r && pos.c === s1c); if (exZ !== -1) zombiePawns.splice(exZ, 1);
+                        diedThisTurn.push({ color: enemyColor, piece: t1, r: s1r, c: s1c, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: s1r, c: s1c, color: enemyColor });
                     }
-                });
+                }
+                let s2r = tr, s2c = tc + dc;
+                if (s2r >= 0 && s2r < 8 && s2c >= 0 && s2c < 8) {
+                    let t2 = grid[s2r][s2c];
+                    if (t2 && t2.toLowerCase() !== 'k' && (t2 === t2.toUpperCase() ? 'W' : 'B') !== pColor) {
+                        grid[s2r][s2c] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === s2r && pos.c === s2c); if (exZ !== -1) zombiePawns.splice(exZ, 1);
+                        diedThisTurn.push({ color: enemyColor, piece: t2, r: s2r, c: s2c, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: s2r, c: s2c, color: enemyColor });
+                    }
+                }
                 let kr = tr + dr, kc = tc + dc;
                 while (kr >= 0 && kr < 8 && kc >= 0 && kc < 8) {
-                    if (grid[kr][kc] && grid[kr][kc].toLowerCase() !== 'k' && (grid[kr][kc] === grid[kr][kc].toUpperCase() ? 'W' : 'B') !== pColor) {
-                        diedThisTurn.push({ color: enemyColor, piece: grid[kr][kc], r: kr, c: kc, isZombie: zombiePawns.some(z => z.r === kr && z.c === kc) });
-                        grid[kr][kc] = ''; pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor });
-                        zombiePawns = zombiePawns.filter(z => z.r !== kr || z.c !== kc);
+                    let tK = grid[kr][kc];
+                    if (tK && tK.toLowerCase() !== 'k' && (tK === tK.toUpperCase() ? 'W' : 'B') !== pColor) {
+                        grid[kr][kc] = ''; let exZ = zombiePawns.findIndex(pos => pos.r === kr && pos.c === kc); if (exZ !== -1) zombiePawns.splice(exZ, 1);
+                        diedThisTurn.push({ color: enemyColor, piece: tK, r: kr, c: kc, isZombie: exZ !== -1 }); pendingAnims.push({ type: 'capture', r: kr, c: kc, color: enemyColor });
                     } kr += dr; kc += dc;
                 }
             }
             if (cl === 'b' && mod?.n === 'Wide Beam') {
-                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc); let cr = fr + dr, cc = fc + dc;
+                let dr = Math.sign(tr - fr), dc = Math.sign(tc - fc);
+                let cr = fr + dr, cc = fc + dc;
                 while (cr !== tr || cc !== tc) {
-                    [{ r: cr + dc, c: cc - dr }, { r: cr - dc, c: cc + dr }].forEach(pos => {
-                        if (grid[pos.r]?.[pos.c] && grid[pos.r][pos.c].toLowerCase() !== 'k' && (grid[pos.r][pos.c] === grid[pos.r][pos.c].toUpperCase() ? 'W' : 'B') !== pColor) {
-                            diedThisTurn.push({ color: enemyColor, piece: grid[pos.r][pos.c], r: pos.r, c: pos.c, isZombie: false });
-                            grid[pos.r][pos.c] = ''; pendingAnims.push({ type: 'capture', r: pos.r, c: pos.c, color: enemyColor });
-                        }
-                    }); cr += dr; cc += dc;
+                    let nr1 = cr + dc, nc1 = cc - dr;
+                    if (nr1 >= 0 && nr1 < 8 && nc1 >= 0 && nc1 < 8 && grid[nr1][nc1] && grid[nr1][nc1].toLowerCase() !== 'k' && (grid[nr1][nc1] === grid[nr1][nc1].toUpperCase() ? 'W' : 'B') !== pColor) {
+                        diedThisTurn.push({ color: enemyColor, piece: grid[nr1][nc1], r: nr1, c: nc1, isZombie: false });
+                        grid[nr1][nc1] = ''; pendingAnims.push({ type: 'capture', r: nr1, c: nc1, color: enemyColor });
+                    }
+                    let nr2 = cr - dc, nc2 = cc + dr;
+                    if (nr2 >= 0 && nr2 < 8 && nc2 >= 0 && nc2 < 8 && grid[nr2][nc2] && grid[nr2][nc2].toLowerCase() !== 'k' && (grid[nr2][nc2] === grid[nr2][nc2].toUpperCase() ? 'W' : 'B') !== pColor) {
+                        diedThisTurn.push({ color: enemyColor, piece: grid[nr2][nc2], r: nr2, c: nc2, isZombie: false });
+                        grid[nr2][nc2] = ''; pendingAnims.push({ type: 'capture', r: nr2, c: nc2, color: enemyColor });
+                    }
+                    cr += dr; cc += dc;
                 }
             }
             if (cl === 'r' && mod?.n === 'Factory' && !wasCloned) {
-                if (fr >= 0 && fr < 8 && fc >= 0 && fc < 8 && !grid[fr][fc]) { grid[fr][fc] = pColor === 'W' ? 'R' : 'r'; recentSpawns.push({ r: fr, c: fc }); clonedPieces.push({ r: fr, c: fc }); }
+                if (fr >= 0 && fr < 8 && fc >= 0 && fc < 8 && !grid[fr][fc]) {
+                    grid[fr][fc] = pColor === 'W' ? 'R' : 'r';
+                    recentSpawns.push({ r: fr, c: fc });
+                    clonedPieces.push({ r: fr, c: fc });
+                }
             }
         }
 
         if (classMods[pColor]['p']?.n === 'Mass Infection') {
-            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) {
-                [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => {
-                    let nr = i + d[0], nc = j + d[1];
-                    if (grid[nr]?.[nc] && (grid[nr][nc] === grid[nr][nc].toUpperCase() ? 'W' : 'B') !== pColor && grid[nr][nc].toLowerCase() !== 'k') {
-                        if (grid[nr][nc].toLowerCase() === 'p') { grid[nr][nc] = pColor === 'W' ? 'P' : 'p'; clonedPieces.push({ r: nr, c: nc }); recentSpawns.push({ r: nr, c: nc }); zombiePawns = zombiePawns.filter(z => z.r !== nr || z.c !== nc); }
-                        else { if ((enemyColor === 'W' && nr === 0) || (enemyColor === 'B' && nr === 7)) { grid[nr][nc] = enemyColor === 'W' ? 'Q' : 'q'; promotedPieces.push({ r: nr, c: nc }); } else { grid[nr][nc] = enemyColor === 'W' ? 'P' : 'p'; clonedPieces.push({ r: nr, c: nc }); } recentSpawns.push({ r: nr, c: nc }); }
-                    }
-                });
+            for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+                if (grid[i][j] && grid[i][j].toLowerCase() === 'p' && (grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B') === pColor) {
+                    [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(d => {
+                        let nr = i + d[0], nc = j + d[1];
+                        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && grid[nr][nc]) {
+                            let t = grid[nr][nc];
+                            if ((t === t.toUpperCase() ? 'W' : 'B') !== pColor && t.toLowerCase() !== 'k') {
+                                if (t.toLowerCase() === 'p') {
+                                    grid[nr][nc] = pColor === 'W' ? 'P' : 'p';
+                                    clonedPieces.push({ r: nr, c: nc }); recentSpawns.push({ r: nr, c: nc });
+                                    let ezIdx = zombiePawns.findIndex(pos => pos.r === nr && pos.c === nc);
+                                    if (ezIdx !== -1) zombiePawns.splice(ezIdx, 1);
+                                } else {
+                                    let isLastRank = (enemyColor === 'W' && nr === 0) || (enemyColor === 'B' && nr === 7);
+                                    if (isLastRank) { grid[nr][nc] = enemyColor === 'W' ? 'Q' : 'q'; promotedPieces.push({ r: nr, c: nc }); }
+                                    else { grid[nr][nc] = enemyColor === 'W' ? 'P' : 'p'; clonedPieces.push({ r: nr, c: nc }); }
+                                    recentSpawns.push({ r: nr, c: nc });
+                                }
+                            }
+                        }
+                    });
+                }
             }
         }
 
         updateCastlingRights(p, fr, fc); lastMove = { piece: p, from: { r: fr, c: fc }, to: { r: tr, c: tc } };
-        promotedPieces = promotedPieces.filter(pos => grid[pos.r][pos.c] !== ''); clonedPieces = clonedPieces.filter(pos => grid[pos.r][pos.c] !== '');
+
+        promotedPieces = promotedPieces.filter(pos => grid[pos.r][pos.c] !== '');
+        clonedPieces = clonedPieces.filter(pos => grid[pos.r][pos.c] !== '');
 
         diedThisTurn.forEach(d => {
             if (d.isZombie) return;
+
             if (classMods[d.color]['p']?.n === 'Necromancy') {
-                let empties = []; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j] && !wouldPawnGiveCheck(i, j, d.color)) empties.push({ r: i, c: j });
-                if (empties.length > 0) { let spot = empties[Math.floor(getGameRandom() * empties.length)]; grid[spot.r][spot.c] = d.color === 'W' ? 'P' : 'p'; zombiePawns.push(spot); clonedPieces.push(spot); recentSpawns.push(spot); }
-                else deadPieces[d.color].push(d.piece);
-            } else deadPieces[d.color].push(d.piece);
+                let empties = [];
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        if (!grid[i][j] && !wouldPawnGiveCheck(i, j, d.color)) {
+                            empties.push({ r: i, c: j });
+                        }
+                    }
+                }
+                if (empties.length > 0) {
+                    let spot = empties[Math.floor(getGameRandom() * empties.length)];
+                    grid[spot.r][spot.c] = d.color === 'W' ? 'P' : 'p';
+                    zombiePawns.push({ r: spot.r, c: spot.c });
+                    clonedPieces.push({ r: spot.r, c: spot.c });
+                    recentSpawns.push({ r: spot.r, c: spot.c });
+                } else {
+                    deadPieces[d.color].push(d.piece);
+                }
+            } else {
+                deadPieces[d.color].push(d.piece);
+            }
         });
 
         stunnedPieces = [];
-        for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (grid[i][j] && grid[i][j].toLowerCase() === 'b' && getMod(i, j, grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B', 'b')?.n === 'Stun Ray') {
-            getMovesPseudoLegal(i, j, grid[i][j] === grid[i][j].toUpperCase() ? 'W' : 'B', grid, false, true).forEach(m => { if (grid[m.r][m.c]) stunnedPieces.push({ r: m.r, c: m.c }); });
+        for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+            let pb = grid[i][j];
+            if (pb && pb.toLowerCase() === 'b' && getMod(i, j, pb === pb.toUpperCase() ? 'W' : 'B', 'b')?.n === 'Stun Ray') {
+                let bColor = pb === pb.toUpperCase() ? 'W' : 'B';
+                let moves = getMovesPseudoLegal(i, j, bColor, grid, false, true);
+                moves.forEach(m => { if (grid[m.r][m.c]) stunnedPieces.push({ r: m.r, c: m.c }); });
+            }
         }
 
         updateScores(); pendingAnims.forEach(a => { if (a.type === 'capture') createCaptureExplosion(a.r, a.c, a.color); });
 
         let gaveDrop = false; let overdriveTriggered = false;
+
         if (!isClassicMode) {
-            let currentTotalDead = deadPieces['W'].length + deadPieces['B'].length; let unlockedTierText = "", unlockedColor = "";
+            let currentTotalDead = deadPieces['W'].length + deadPieces['B'].length; let unlockedTierText = ""; let unlockedColor = "";
             while (nextThresholdIndex < thresholds.length && currentTotalDead >= thresholds[nextThresholdIndex]) {
                 giveModTo('W'); giveModTo('B');
                 if (nextThresholdIndex === 0) { unlockedTierText = "TIER 1 UNLOCKED"; unlockedColor = "mod-c1"; document.body.classList.add('mod-level-1'); }
                 else if (nextThresholdIndex === 1) { unlockedTierText = "TIER 2 UNLOCKED"; unlockedColor = "mod-c2"; document.body.classList.add('mod-level-2'); }
                 else if (nextThresholdIndex === 2) { unlockedTierText = "EPIC TIER UNLOCKED"; unlockedColor = "mod-c3"; document.body.classList.add('mod-level-3'); }
-                nextThresholdIndex++; gaveDrop = true; playNextSong();
+                nextThresholdIndex++; gaveDrop = true;
+
+                playNextSong();
+
                 if (nextThresholdIndex >= thresholds.length) { triggerOverdrive(); overdriveTriggered = true; unlockedTierText = ""; }
             }
             if (unlockedTierText !== "") showModAlert(unlockedTierText, unlockedColor);
@@ -1277,23 +1393,37 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
 
         updateKillsCounter();
         if (target || cl === 'p') halfMoveClock = 0; else halfMoveClock++;
+
         let key = getPositionKey(); positionHistory[key] = (positionHistory[key] || 0) + 1;
 
-        if (cl === 'n' && mod?.n === 'Ghost Rider' && !ghostRiderActive && !isAttackerDead) {
-            ghostRiderActive = { r: tr, c: tc }; document.getElementById('skip-turn-btn').style.display = 'block';
+        let isGhostRiderFirstMove = (cl === 'n' && mod?.n === 'Ghost Rider' && !ghostRiderActive && !isAttackerDead);
+
+        if (isGhostRiderFirstMove) {
+            ghostRiderActive = { r: tr, c: tc };
+            document.getElementById('skip-turn-btn').style.display = 'block';
         } else {
-            ghostRiderActive = null; document.getElementById('skip-turn-btn').style.display = 'none'; turno = (turno === 'W') ? 'B' : 'W';
+            ghostRiderActive = null;
+            document.getElementById('skip-turn-btn').style.display = 'none';
+            turno = (turno === 'W') ? 'B' : 'W';
         }
 
-        draw(); checkGameState();
-        if (isMultiplayer && !isRemote) socket.emit('sendMove', { roomCode: roomCode, moveData: { fr, fc, tr, tc, special, promoPiece, color: pColor, seedSync: gameSeed } });
+        draw();
+        checkGameState();
+
+        // --- INVIO DEL SEED AL SERVER ---
+        if (isMultiplayer && !isRemote) {
+            socket.emit('sendMove', { roomCode: roomCode, moveData: { fr, fc, tr, tc, special, promoPiece, color: pColor, seedSync: startingSeed } });
+        }
         if (isRemote) isRemoteMoveExecuting = false;
-        if (opponentMode === 'AI' && turno === 'B' && !gameOver && !isMultiplayer && !overdriveTriggered) setTimeout(playAI, gaveDrop ? 3000 : 800);
+
+        if (opponentMode === 'AI' && turno === 'B' && !gameOver && !isMultiplayer) { if (!overdriveTriggered) { let delay = gaveDrop ? 3000 : 800; setTimeout(playAI, delay); } }
     };
 
     if (needsPromotion) {
-        if (isRemote) finishMove(remotePromoPiece); else if (opponentMode === 'AI' && pColor === 'B' && !isMultiplayer) finishMove('q'); else showPromotionUI(pColor, finishMove);
-    } else finishMove(null);
+        if (isRemote) finishMove(remotePromoPiece);
+        else if (opponentMode === 'AI' && pColor === 'B' && !isMultiplayer) finishMove('q');
+        else showPromotionUI(pColor, finishMove);
+    } else { finishMove(null); }
 }
 
 function evaluateMove(fr, fc, tr, tc, special) {
