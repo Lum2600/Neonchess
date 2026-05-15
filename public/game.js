@@ -251,7 +251,7 @@ const db = {
     'n': [
         { n: "Cavalry", t: "common", d: "Trasporta gli alleati adiacenti donando loro mosse a L." },
         { n: "L-Slide", t: "common", d: "Può fermarsi lungo il percorso a L." },
-        { n: "Pacifist", t: "rare", d: "I nemici adiacenti (tranne il Re) non possono attaccare." },
+        { n: "Pacifist", t: "epic", d: "I nemici adiacenti (tranne il Re) non possono attaccare." },
         { n: "Mount", t: "rare", d: "Acquisisce i movimenti dell'ultimo pezzo alleato morto." },
         { n: "Trample", t: "epic", d: "Mangia automaticamente le pedine su cui salta." },
         { n: "Explosive", t: "epic", d: "Atterrare polverizza l'area." },
@@ -306,7 +306,7 @@ let classMods = { 'W': {}, 'B': {} };
 let deadPieces = { 'W': [], 'B': [] };
 let castlingRights = { 'W': { k: true, r1: true, r8: true }, 'B': { k: true, r1: true, r8: true } };
 let lastMove = null; let turno = 'W'; let grid = []; let selected = null; let hints = [];
-let nextThresholdIndex = 0; const thresholds = [2, 5, 8, 15];
+let nextThresholdIndex = 0; const thresholds = [2, 5, 8, 12, 15];
 let halfMoveClock = 0; let positionHistory = {}; let gameOver = false; let isAnimating = false;
 let originalQueens = []; let timeLeftW = 0; let timeLeftB = 0; let timerInterval = null; let lastTime = 0;
 let initialPositions = {};
@@ -818,7 +818,14 @@ function draw() {
                 let spawnClass = (gfxLevel !== 'LO' && recentSpawns && (recentSpawns.some(s => s.r === r && s.c === c) || isPromo)) ? 'spawn-anim' : '';
                 let cloneTag = isPromo ? '<span class="clone-tag" style="color:var(--t2); border-color:var(--t2);">[P]</span>' : (isClone ? '<span class="clone-tag">[C]</span>' : '');
 
-                pHTML = `<div class="piece ${color} ${aClass} ${spawnClass} ${animClass}">${glyphs[grid[r][c]]}${cloneTag}</div>`;
+                // --- SISTEMA SKINS ---
+                let iconToDraw = glyphs[grid[r][c]]; // Di base usa l'icona classica
+                if (mod && mod.skin) {
+                    iconToDraw = mod.skin; // Se c'è una skin, usa quella!
+                    animClass += ' custom-skin';
+                }
+
+                pHTML = `<div class="piece ${color} ${aClass} ${spawnClass} ${animClass}">${iconToDraw}${cloneTag}</div>`;
             }
             b.innerHTML += `<div class="${cl}" onclick="clickCell(${r},${c})">${pHTML}</div>`;
         }
@@ -1382,10 +1389,12 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
                 if (nextThresholdIndex === 0) { unlockedTierText = "TIER 1 UNLOCKED"; unlockedColor = "mod-c1"; document.body.classList.add('mod-level-1'); }
                 else if (nextThresholdIndex === 1) { unlockedTierText = "TIER 2 UNLOCKED"; unlockedColor = "mod-c2"; document.body.classList.add('mod-level-2'); }
                 else if (nextThresholdIndex === 2) { unlockedTierText = "EPIC TIER UNLOCKED"; unlockedColor = "mod-c3"; document.body.classList.add('mod-level-3'); }
+                else if (nextThresholdIndex === 3) { unlockedTierText = "LEGEND TIER UNLOCKED"; unlockedColor = "mod-c3"; document.body.classList.add('mod-level-4'); } // Livello 4 aggiunto!
                 nextThresholdIndex++; gaveDrop = true;
 
                 playNextSong();
 
+                // L'Overdrive ora è l'ultimo step (il quinto, a 15 kill)
                 if (nextThresholdIndex >= thresholds.length) { triggerOverdrive(); overdriveTriggered = true; unlockedTierText = ""; }
             }
             if (unlockedTierText !== "") showModAlert(unlockedTierText, unlockedColor);
@@ -1641,7 +1650,8 @@ function updateKillsCounter() {
     el.classList.remove('impatience-1', 'impatience-2', 'impatience-3', 'overdrive-text');
     if (nextThresholdIndex < thresholds.length) {
         let needed = thresholds[nextThresholdIndex]; let left = needed - currentTotalDead;
-        el.innerText = `NEXT MOD IN: ${left} KILL${left !== 1 ? 'S' : ''} (MOD ${nextThresholdIndex + 1}/4)`;
+        // Cambiato il testo per riflettere i 5 stage
+        el.innerText = `NEXT MOD IN: ${left} KILL${left !== 1 ? 'S' : ''} (MOD ${nextThresholdIndex + 1}/5)`;
         if (nextThresholdIndex === 3) el.classList.add('impatience-3'); else if (nextThresholdIndex === 2) el.classList.add('impatience-2'); else if (nextThresholdIndex === 1) el.classList.add('impatience-1');
     } else { el.innerText = `OVERDRIVE MODE ACTIVE`; el.classList.add('overdrive-text'); }
 }
