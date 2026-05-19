@@ -512,6 +512,11 @@ function openTutorial() { let el = document.getElementById('tutorial-overlay'); 
 function closeTutorial() { let el = document.getElementById('tutorial-overlay'); if (el) el.classList.remove('show'); }
 
 function promptDev() {
+    // FIX DEV MODE: Se siamo in locale (niente socket), apri direttamente!
+    if (!socket || !isMultiplayer) {
+        openDev();
+        return;
+    }
     const password = prompt("Inserisci la password di accesso al sistema:");
     if (!password) return;
     socket.emit('tryDevMode', password);
@@ -873,13 +878,17 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
         }
     }
 
+    // --- FIX CAVALRY (Area 3x3 e Scacco abilitato) ---
     let isNextToCavalry = false;
-    if (!isAttackCheck) {
-        [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(d => {
-            let nr = r + d[0], nc = c + d[1];
-            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && testGrid[nr][nc] && testGrid[nr][nc].toLowerCase() === 'n' && (testGrid[nr][nc] === testGrid[nr][nc].toUpperCase() ? 'W' : 'B') === color && getMod(nr, nc, color, 'n')?.n === 'Cavalry') isNextToCavalry = true;
-        });
-    }
+    [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(d => {
+        let nr = r + d[0], nc = c + d[1];
+        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+            let adj = testGrid[nr][nc];
+            if (adj && adj.toLowerCase() === 'n' && (adj === adj.toUpperCase() ? 'W' : 'B') === color && getMod(nr, nc, color, 'n')?.n === 'Cavalry') {
+                isNextToCavalry = true;
+            }
+        }
+    });
 
     if (cl == 'n' || isNextToCavalry || classMods[color]['n']?.n === 'Cavalry Charge') {
         [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(d => {
@@ -894,7 +903,11 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
         }
         if (cl == 'n' && mods?.n == 'Mount' && deadPieces[color].length > 0) {
             let ld = deadPieces[color][deadPieces[color].length - 1].toLowerCase();
-            if (ld !== 'n' && ld !== 'k') { testGrid[r][c] = color === 'W' ? ld.toUpperCase() : ld; m.push(...getMovesPseudoLegal(r, c, color, testGrid, true, isAttackCheck)); testGrid[r][c] = p; }
+            if (ld !== 'n' && ld !== 'k') {
+                testGrid[r][c] = color === 'W' ? ld.toUpperCase() : ld;
+                m.push(...getMovesPseudoLegal(r, c, color, testGrid, true, isAttackCheck));
+                testGrid[r][c] = p;
+            }
         }
     }
 
@@ -1212,8 +1225,10 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         let pIdx = originalQueens.indexOf(fr + "," + fc); if (pIdx !== -1) originalQueens[pIdx] = tr + "," + tc;
 
         if (cl === 'p') {
-            let promoRank = (mod?.n === 'Vanguard') ? (pColor === 'W' ? 4 : 3) : (pColor === 'W' ? 0 : 7);
-            if ((pColor === 'W' && tr <= promoRank) || (pColor === 'B' && tr >= promoRank)) needsPromotion = true;
+            // FIX VANGUARD: Il bianco promuove alla riga 4 (indice <=4), il nero alla riga 5 (indice >=3)
+            let isVanguard = (mod?.n === 'Vanguard');
+            if (pColor === 'W' && (tr === 0 || (isVanguard && tr <= 4))) needsPromotion = true;
+            if (pColor === 'B' && (tr === 7 || (isVanguard && tr >= 3))) needsPromotion = true;
         }
 
         if (cl === 'n' && mod?.n === 'Trample') {
@@ -1721,6 +1736,7 @@ function triggerInstantMods(color, mod) {
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 if (grid[r][c] && grid[r][c].toLowerCase() === 'p' && (grid[r][c] === grid[r][c].toUpperCase() ? 'W' : 'B') === color) {
+                    // FIX VANGUARD ISTANTANEO: Riga 4 per Bianco, Riga 5 per Nero
                     if ((color === 'W' && r <= 4) || (color === 'B' && r >= 3)) {
                         grid[r][c] = color === 'W' ? 'Q' : 'q';
                         promotedPieces.push({ r, c }); recentSpawns.push({ r, c });
