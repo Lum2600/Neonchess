@@ -1191,20 +1191,30 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     }
 
 
+    // --- FIX DEFINITIVO CAVALRY CHARGE (Niente Respawn Infinito) ---
     let globalMod = classMods[enemyColor]['n']?.n === 'Cavalry Charge';
     if (globalMod && target && target.toLowerCase() !== 'k' && target.toLowerCase() !== 'n') {
-        let oldPos = tr + "," + tc;
-        if (!usedBonusLives.includes(oldPos)) {
+        let pieceKey = tr + "," + tc;
+        
+        // Controlliamo se la pedina ha già usato il bonus in questa posizione
+        if (!usedBonusLives.includes(pieceKey)) {
             let empties = [];
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j });
+            
             if (empties.length > 0) {
-                let spot = empties[Math.floor(getGameRandom() * empties.length)];
-                grid[spot.r][spot.c] = target;
-                recentSpawns.push(spot);
+                // Rimuoviamo il target dalla lista dei morti
                 diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc);
-
-                // FIX: Registriamo che il pezzo ha usato la vita nella nuova cella in cui rinasce
+                
+                let spot = empties[Math.floor(getGameRandom() * empties.length)];
+                grid[spot.r][spot.c] = target; // La pedina rinasce qui
+                recentSpawns.push(spot);
+                
+                // Segniamo che questa pedina (nella NUOVA posizione) ha usato il bonus
                 usedBonusLives.push(spot.r + "," + spot.c);
+                
+                // Annulliamo la morte
+                target = null;
+                isAttackerDead = false;
             }
         }
     }
