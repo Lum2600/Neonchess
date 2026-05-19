@@ -321,7 +321,7 @@ let ghostRiderActive = null;
 let zombiePawns = [];
 let pawnShields = [];
 let stunnedPieces = [];
-let usedBonusLives = []; 
+let usedBonusLives = [];
 
 // ==========================================
 // 3. AUDIO PLAYER E CONTROLLI
@@ -890,7 +890,9 @@ function getMovesPseudoLegal(r, c, color, testGrid = grid, ignoreMods = false, i
         }
     });
 
-    if (cl == 'n' || isNextToCavalry || classMods[color]['n']?.n === 'Cavalry Charge') {
+    let hasLegendaryLMove = (classMods[color]['n']?.n === 'Cavalry Charge' && cl !== 'k');
+
+    if (cl == 'n' || isNextToCavalry || hasLegendaryLMove) {
         [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(d => {
             let nr = r + d[0], nc = c + d[1];
             if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && (!testGrid[nr][nc] || (testGrid[nr][nc] == testGrid[nr][nc].toUpperCase() ? 'W' : 'B') != color)) m.push({ r: nr, c: nc });
@@ -1072,8 +1074,13 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     let wasZombie = wasZombieIdx !== -1;
     if (wasZombie) zombiePawns.splice(wasZombieIdx, 1);
 
+    let wasUsedBonusIdx = usedBonusLives.indexOf(fr + "," + fc);
+    let wasBonus = wasUsedBonusIdx !== -1;
+    if (wasBonus) usedBonusLives.splice(wasUsedBonusIdx, 1);
+
     clonedPieces = clonedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
     promotedPieces = promotedPieces.filter(pos => pos.r !== tr || pos.c !== tc);
+    usedBonusLives = usedBonusLives.filter(pos => pos !== (tr + "," + tc));
     if (special && special.isEnPassant) { clonedPieces = clonedPieces.filter(pos => pos.r !== fr || pos.c !== tc); promotedPieces = promotedPieces.filter(pos => pos.r !== fr || pos.c !== tc); }
 
     if (cl === 'q' && mod?.n === 'Annihilation') {
@@ -1183,22 +1190,24 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
         }
     }
 
+
     let globalMod = classMods[enemyColor]['n']?.n === 'Cavalry Charge';
     if (globalMod && target && target.toLowerCase() !== 'k' && target.toLowerCase() !== 'n') {
-        let pieceID = tr + "," + tc;
-        if (!usedBonusLives.includes(pieceID)) {
-            usedBonusLives.push(pieceID);
+        let oldPos = tr + "," + tc;
+        if (!usedBonusLives.includes(oldPos)) {
             let empties = [];
             for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (!grid[i][j]) empties.push({ r: i, c: j });
             if (empties.length > 0) {
                 let spot = empties[Math.floor(getGameRandom() * empties.length)];
                 grid[spot.r][spot.c] = target;
                 recentSpawns.push(spot);
-                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc); 
+                diedThisTurn = diedThisTurn.filter(d => d.r !== tr || d.c !== tc);
+
+                // FIX: Registriamo che il pezzo ha usato la vita nella nuova cella in cui rinasce
+                usedBonusLives.push(spot.r + "," + spot.c);
             }
         }
     }
-
     if (isAttackerDead) {
         diedThisTurn.push({ color: pColor, piece: p, r: fr, c: fc, isZombie: wasZombie });
         pendingAnims.push({ type: 'capture', r: tr, c: tc, color: pColor });
@@ -1255,6 +1264,7 @@ function executeMove(fr, fc, tr, tc, special = null, isRemote = false, remotePro
     }
 
     let finishMove = (promoPiece) => {
+        if (wasBonus && !isAttackerDead) usedBonusLives.push(tr + "," + tc);
         if (needsPromotion && promoPiece) { grid[tr][tc] = pColor === 'W' ? promoPiece.toUpperCase() : promoPiece.toLowerCase(); recentSpawns.push({ r: tr, c: tc }); promotedPieces.push({ r: tr, c: tc }); cl = promoPiece.toLowerCase(); mod = getMod(tr, tc, pColor, cl); }
         else if (wasPromoted && !isAttackerDead) promotedPieces.push({ r: tr, c: tc });
 
